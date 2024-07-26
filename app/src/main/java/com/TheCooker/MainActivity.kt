@@ -48,6 +48,7 @@ class MainActivity : ComponentActivity() {
                     ) {
 
                         LoginNavigator(viewModelLogin, googleClient)
+                        println("Hello")
 
 
                     }

@@ -36,7 +36,6 @@ class GoogleClient(
             null
         }
 
-
         return result?.pendingIntent?.intentSender
     }
 
@@ -98,7 +97,7 @@ class GoogleClient(
             BeginSignInRequest.GoogleIdTokenRequestOptions.builder().
             setSupported(true).
             setFilterByAuthorizedAccounts(false). // Βλεπει αν έχεις κάνει loggin ξανα με το ιδιο account και την δευτερη φορα σε προτρεπει να μπεις με αυτο
-            setServerClientId(context.getString(R.string.web_client_id)).build() // Περνάω το key της εφαρμογης μου για την συνδεση για την επικοινωνια με τις υπηρεσιες google
+            setServerClientId(context.getString(R.string.sample)).build() // Περνάω το key της εφαρμογης μου για την συνδεση για την επικοινωνια με τις υπηρεσιες google
 
         ).setAutoSelectEnabled(false).build() // Αν έχεις μονο ένα google account θα επιλεγετε αυτοματα αυτο
     }
