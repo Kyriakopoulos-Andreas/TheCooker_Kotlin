@@ -1,4 +1,4 @@
-package com.TheCooker.Login.Authentication
+package com.TheCooker.Login.Authentication.GoogleAuth
 
 import android.content.Context
 import android.content.Intent

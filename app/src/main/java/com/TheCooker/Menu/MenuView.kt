@@ -35,7 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import com.TheCooker.NavGraphs.TopBarMenu
 import com.TheCooker.NavGraphs.TopNavGraph
 import com.TheCooker.R
-import com.TheCooker.Login.Authentication.UserData
+import com.TheCooker.Login.Authentication.GoogleAuth.UserData
 
 
 @RequiresApi(Build.VERSION_CODES.O)

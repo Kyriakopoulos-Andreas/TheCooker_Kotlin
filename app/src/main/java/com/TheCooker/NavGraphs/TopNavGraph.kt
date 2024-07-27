@@ -24,7 +24,7 @@ import com.TheCooker.Menu.MenuView
 import com.example.cooker.ChatView.ChatView
 import com.example.cooker.HomeView.HomeView
 import com.example.cooker.ListView.ListView
-import com.TheCooker.Login.Authentication.UserData
+import com.TheCooker.Login.Authentication.GoogleAuth.UserData
 import com.TheCooker.Profile.ProfileView
 import com.TheCooker.SearchToolBar.ApiService.MealDetail
 import com.TheCooker.SearchToolBar.ApiService.MealsCategory

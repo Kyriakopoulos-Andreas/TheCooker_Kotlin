@@ -1,4 +1,4 @@
-package com.TheCooker.Login.Authentication
+package com.TheCooker.Login
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -44,8 +44,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.TheCooker.Login.Authentication.GoogleAuth.SignInState
 import com.TheCooker.R
-import com.TheCooker.Login.LoginViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -418,7 +418,8 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
                             Text(text = "Cancel")
                         }
 
-                        Button(onClick = { popUpCreatePasword = false }) {
+                        Button(onClick = { popUpCreatePasword = false
+                                            viewModel.signUp()}) {
                             Text(text = "Create")
                         }
                     }
