@@ -13,7 +13,8 @@ sealed class TopBarMenu(
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
     val hasNEWS: Boolean,
-    val badgeCount: Int? = null
+    val badgeCount: Int? = null,
+
 ) {
 
     object ListView : TopBarMenu(
@@ -21,6 +22,7 @@ sealed class TopBarMenu(
         selectedIcon = Icons.Filled.List,
         unselectedIcon = Icons.Filled.List,
         hasNEWS = false
+
     )
 
 
@@ -35,7 +37,8 @@ sealed class TopBarMenu(
         route = "HomeView",
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Filled.Home,
-        hasNEWS = false
+        hasNEWS = false,
+
     )
 
     object SearchView : TopBarMenu(
@@ -50,7 +53,8 @@ sealed class TopBarMenu(
         selectedIcon = Icons.Filled.Email,
         unselectedIcon = Icons.Filled.Email,
         hasNEWS = false,
-        badgeCount = 52
+        badgeCount = 52,
+
     )
 
     companion object {

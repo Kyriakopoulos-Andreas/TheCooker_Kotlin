@@ -10,5 +10,5 @@ data class SignInResult(
 data class UserData(
     val userId: String,
     val userName: String?,
-    val profilerPictureUrl: String?
+    var profilerPictureUrl: String?
 ): Serializable

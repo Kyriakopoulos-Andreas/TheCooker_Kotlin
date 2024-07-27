@@ -54,9 +54,12 @@ fun MenuView(userData: UserData?){
 
     Scaffold(
         topBar = {
+
             NavigationBar (tonalElevation = 4.dp,
                 containerColor = Color(0xFF202020)
             ){
+
+
 
                 Column {
                     Box(modifier = Modifier.fillMaxWidth(), ){
@@ -101,8 +104,6 @@ fun MenuView(userData: UserData?){
                                             contentDescription = null
                                         )
                                     }
-
-
                                 },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = Color.Black,
@@ -111,29 +112,15 @@ fun MenuView(userData: UserData?){
                                 ),
 
                                 )
-
-
                         }
-
-
                     }
-
-
                 }
-
-
-
             }
-
-
         }
-
     ) {
 
         TopNavGraph(navController = navController, paddingValues = it, userData)
     }
 
-
-
-
+    
 }
