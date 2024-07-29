@@ -1,5 +1,6 @@
 package com.TheCooker.Login
 
+import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -29,16 +30,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusState
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -47,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import com.TheCooker.Login.Authentication.GoogleAuth.SignInState
 import com.TheCooker.R
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState) {
@@ -60,6 +67,25 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
     var popUpCreatePasword by remember { mutableStateOf(false) }
     var CreatepasswordVisible by remember { mutableStateOf(false) }
     var ConfirmCreatepasswordVisible by remember { mutableStateOf(false) }
+
+    val emailError by viewModel.emailError.collectAsState()
+    val passwordRegError by viewModel.passwordRegError.collectAsState()
+
+    val confirmError by viewModel.confirmError.collectAsState()
+    val userNameRegError by viewModel.userNameRegError.collectAsState()
+
+
+
+    var isPasswordFocused by remember { mutableStateOf(false) }
+    var isConfirmPasswordFocused by remember { mutableStateOf(false) }
+    var isNameFocused by remember { mutableStateOf(true) }
+    var isEmailFocused by remember { mutableStateOf(false) }
+    var userNameRegBool by remember { mutableStateOf(false)}
+    var passwordRegBool by remember { mutableStateOf(false)}
+    var confirmPasswordRegBool by remember { mutableStateOf(false)}
+    var emailBool by remember { mutableStateOf(false)}
+
+
 
     val context = LocalContext.current
     LaunchedEffect(key1 = state.signInError){
@@ -248,7 +274,10 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
                     ) {
                         OutlinedTextField(
                             value = userNameRegister,
-                            onValueChange = { viewModel.onUserNameRegisterChange(it) },
+                            onValueChange = {
+                                viewModel.onUserNameRegisterChange(it)
+
+                            },
                             singleLine = true,
                             label = {
                                 Text(
@@ -271,8 +300,25 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
 
 
                             ),
+                            modifier = Modifier.onFocusChanged { focusState: FocusState ->
+                                isNameFocused = focusState.isFocused
+                                if (!isNameFocused) {
+                                    viewModel.validRegUsername()}
+                            }
                         )
                     }
+
+                    userNameRegError?.let {
+                        val color = if (userNameRegError == "✔") Color.Green else Color.Red
+                        Text(
+                            text = it,
+                            style = TextStyle(color = color, fontFamily = FontFamily.Default)
+                        )
+
+
+                    }
+
+
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -282,7 +328,9 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
                     ) {
                         OutlinedTextField(
                             value = passwordReg,
-                            onValueChange = { viewModel.onPasswordRegChange(it) },
+                            onValueChange = { viewModel.onPasswordRegChange(it)
+                                if (!isNameFocused) {
+                                    viewModel.validRegPassword()}},
                             singleLine = true,
                             label = {
                                 Text(
@@ -316,8 +364,21 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
                                     )
                                 }
                             },
-                            visualTransformation = if (CreatepasswordVisible) VisualTransformation.None else PasswordVisualTransformation()
+                            visualTransformation = if (CreatepasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            modifier = Modifier.onFocusChanged { focusState: FocusState ->
+                                isPasswordFocused = focusState.isFocused
+
+
+                            }
                         )
+                    }
+                    passwordRegError?.let{
+                        val color = if (passwordRegError == "✔") Color.Green else Color.Red
+                        Text(
+                            text = it,
+                            style = TextStyle(color = color, fontFamily = FontFamily.Default)
+                        )
+
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -328,7 +389,12 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
                     ) {
                         OutlinedTextField(
                             value = ConfirmPassReg,
-                            onValueChange = { viewModel.onConfirmPassRegChange(it) },
+                            onValueChange = {
+                                viewModel.onConfirmPassRegChange(it)
+                                if (!isPasswordFocused) {
+                                    viewModel.validConfirmPassword()
+                                }
+                            },
                             singleLine = true,
                             label = {
                                 Text(
@@ -362,9 +428,28 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
 
 
                             ),
-                            visualTransformation = if (ConfirmCreatepasswordVisible) VisualTransformation.None else PasswordVisualTransformation()
+                            visualTransformation = if (ConfirmCreatepasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            modifier = Modifier.onFocusChanged { focus ->
+                                isConfirmPasswordFocused = focus.isFocused
+
+                            }
+                        )
+
+                    }
+                    confirmError?.let {
+                        val color = if (confirmError == "✔") Color.Green else Color.Red
+
+                        Text(
+                            text = it,
+                            style = TextStyle(color = color, fontFamily = FontFamily.Default)
                         )
                     }
+
+
+
+
+
+
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -373,8 +458,15 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
                         horizontalArrangement = Arrangement.Absolute.Center
                     ) {
                         OutlinedTextField(
-                            value = Email,
-                            onValueChange = { viewModel.onEmailChange(it) },
+                            value = Email, // Χρησιμοποιήστε το Email.value
+                            onValueChange = { email ->
+                                viewModel.onEmailChange(email) // Ενημερώστε το ViewModel
+
+
+
+
+
+                            },
                             singleLine = true,
                             label = {
                                 Text(
@@ -384,7 +476,6 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
                                 )
                             },
                             shape = RoundedCornerShape(16.dp),
-
                             colors = TextFieldDefaults.outlinedTextFieldColors(
                                 focusedBorderColor = Color(0xFFFFC107),
                                 unfocusedBorderColor = Color(0xAAFFC107),
@@ -394,11 +485,34 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
                                 focusedTextColor = Color(0xFFFFC107),
                                 unfocusedTextColor = Color(0xAAFFC107),
                                 containerColor = Color.Transparent
-
-
                             ),
+                            modifier = Modifier.onFocusChanged { focusState: FocusState ->
+                                isEmailFocused = focusState.isFocused // Ενημέρωση της κατάστασης εστίασης
+
+                                // Όταν το πεδίο χάνει την εστίαση, κάντε επικύρωση
+                                if (!isEmailFocused && Email.isNotBlank()) {
+                                    viewModel.validateEmail()
+                                }
+                            }
                         )
                     }
+
+// Εμφάνιση σφάλματος
+
+                    emailError?.let {
+                        if (!isEmailFocused) {
+                            val color1 = if (confirmError == "✔") Color.Green else Color.Red
+                            Text(
+                                text = it,
+                                style = TextStyle(color = color1, fontFamily = FontFamily.Default)
+                            )
+                        }
+                    }
+
+
+
+
+
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -413,15 +527,30 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
                                 viewModel.onEmailChange("")
                                 viewModel.onPasswordRegChange("")
                                 popUpCreatePasword = false
-                            }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                contentColor = Color.White,
+                                containerColor = Color(0xFFFFC107)
+                            )
+
                         ) {
                             Text(text = "Cancel")
                         }
 
-                        Button(onClick = { popUpCreatePasword = false
-                                            viewModel.signUp()}) {
+                        Button(
+                            onClick = {
+                                viewModel.signUp()
+                                viewModel.validateEmail()
+
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                contentColor = Color.White,
+                                containerColor = Color(0xFFFFC107)
+                            )
+                        ) {
                             Text(text = "Create")
                         }
+
                     }
                 }
             }
@@ -429,3 +558,9 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
     }
 }
 
+
+
+
+/*if(viewModel.authResult.value != null )
+                                    emailError = viewModel.authResult.value.toString()
+                                } */
