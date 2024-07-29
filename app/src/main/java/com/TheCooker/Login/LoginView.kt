@@ -391,9 +391,6 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
                             value = ConfirmPassReg,
                             onValueChange = {
                                 viewModel.onConfirmPassRegChange(it)
-                                if (!isPasswordFocused) {
-                                    viewModel.validConfirmPassword()
-                                }
                             },
                             singleLine = true,
                             label = {
@@ -431,6 +428,9 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
                             visualTransformation = if (ConfirmCreatepasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             modifier = Modifier.onFocusChanged { focus ->
                                 isConfirmPasswordFocused = focus.isFocused
+                                if (!isPasswordFocused) {
+                                    viewModel.validConfirmPassword()
+                                }
 
                             }
                         )
@@ -501,7 +501,7 @@ fun LoginView(viewModel: LoginViewModel, onclick: () -> Unit, state: SignInState
 
                     emailError?.let {
                         if (!isEmailFocused) {
-                            val color1 = if (confirmError == "✔") Color.Green else Color.Red
+                            val color1 = if (emailError == "✔") Color.Green else Color.Red
                             Text(
                                 text = it,
                                 style = TextStyle(color = color1, fontFamily = FontFamily.Default)

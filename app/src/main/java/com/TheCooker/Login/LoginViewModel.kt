@@ -141,7 +141,7 @@ class LoginViewModel: ViewModel() {
 
                         is MyResult.Error -> {
                             var errorMessage = when (result.exception) {
-                                is FirebaseAuthUserCollisionException -> "Η διεύθυνση email χρησιμοποιείται ήδη."
+                                is FirebaseAuthUserCollisionException -> "Email is already is used."
                                 is FirebaseNetworkException -> "Σφάλμα σύνδεσης στο διαδίκτυο."
                                 // ... άλλες εξαιρέσεις
                                 else -> "${result.exception}"
@@ -161,7 +161,10 @@ class LoginViewModel: ViewModel() {
     }
 
     fun validConfirmPassword(){
-        if(_passwordReg.value != _ConfirmPassReg.value
+        if(_passwordReg.value.isBlank()){
+            _confirmError.value = null
+        }
+       else if(_passwordReg.value != _ConfirmPassReg.value
             && _ConfirmPassReg.value.isNotBlank()
           ){
             _confirmError.value = "Confirm password does not match with password"
