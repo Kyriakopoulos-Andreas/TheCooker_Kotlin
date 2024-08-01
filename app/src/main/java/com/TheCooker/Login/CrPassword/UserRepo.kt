@@ -5,13 +5,14 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
 class UserRepo(
-    private val auth: FirebaseAuth,
+    internal val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore
 ) {
     suspend fun signUp(
-        passwordName: String,
+        firstName: String,
         password: String,
-        email: String
+        email: String,
+        lastName: String
     ): MyResult<Boolean> {
         return try {
             auth.createUserWithEmailAndPassword(email, password).await()
@@ -20,9 +21,10 @@ class UserRepo(
 
             // Προσθήκη χρήστη στο Firestore
             val user = User(
-                passwordName = passwordName,
+                firstName = firstName,
                 password = password,
-                email = email
+                email = email,
+                lastName = lastName
             )
             saveUserToFirestore(user = user)
 
@@ -39,4 +41,34 @@ class UserRepo(
         // Προσθήκη καταγραφής
         println("User saved to Firestore with email: ${user.email}")
     }
+
+
+    suspend fun login(email: String, password: String): MyResult<Boolean> =
+    try {
+        auth.signInWithEmailAndPassword(email, password).await()
+        MyResult.Success(true)
+    }catch (e: Exception){
+        MyResult.Error(e)
+    }
+
+    suspend fun getUserDetails(email: String): MyResult<User> {
+        return try {
+            val querySnapshot = firestore.collection("users").whereEqualTo("email", email).get().await()
+            if (querySnapshot.isEmpty) {
+                MyResult.Error(Exception("User not found"))
+            } else {
+                val documentSnapshot = querySnapshot.documents.firstOrNull()
+                val user = documentSnapshot?.toObject(User::class.java)
+                if (user != null) {
+                    MyResult.Success(user)
+                } else {
+                    MyResult.Error(Exception("User object is null"))
+                }
+            }
+        } catch (e: Exception) {
+            MyResult.Error(e)
+        }
+    }
+
+
 }

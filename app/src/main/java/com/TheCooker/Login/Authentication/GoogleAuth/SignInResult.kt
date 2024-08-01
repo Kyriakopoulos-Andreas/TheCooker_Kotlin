@@ -4,7 +4,8 @@ import java.io.Serializable
 
 data class SignInResult(
     val data: UserData?,
-    val errorMessage: String?
+    val errorMessage: String?,
+    val isSignInSuccessfulwithGoogle: Boolean
 )
 
 data class UserData(

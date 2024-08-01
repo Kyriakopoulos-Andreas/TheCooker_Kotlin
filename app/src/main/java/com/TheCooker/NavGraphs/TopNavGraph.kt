@@ -25,6 +25,7 @@ import com.example.cooker.ChatView.ChatView
 import com.example.cooker.HomeView.HomeView
 import com.example.cooker.ListView.ListView
 import com.TheCooker.Login.Authentication.GoogleAuth.UserData
+import com.TheCooker.Login.CrPassword.User
 import com.TheCooker.Profile.ProfileView
 import com.TheCooker.SearchToolBar.ApiService.MealDetail
 import com.TheCooker.SearchToolBar.ApiService.MealsCategory
@@ -37,7 +38,7 @@ import com.TheCooker.SearchToolBar.Views.SearchView
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TopNavGraph(navController: NavController, paddingValues: PaddingValues, user: UserData?) {
+fun TopNavGraph(navController: NavController, paddingValues: PaddingValues, user: UserData?, loginUser: User?) {
     val recipeViewModel: SearchCategoryViewModel = viewModel()
     val recipeState by recipeViewModel.categoriesState
     val mealsViewModel: MealsViewModel = viewModel()
@@ -55,7 +56,7 @@ fun TopNavGraph(navController: NavController, paddingValues: PaddingValues, user
 
         NavHost(navController = navController as NavHostController, startDestination = TopBarMenu.HomeView.route) {
             composable(route = "MenuView") {
-                MenuView(user)
+                MenuView(user, loginUserData = loginUser)
             }
 
             composable(route = TopBarMenu.SearchView.route) {
@@ -127,7 +128,7 @@ fun TopNavGraph(navController: NavController, paddingValues: PaddingValues, user
                 ListView()
             }
             composable(route = TopBarMenu.ProfileView.route) {
-                ProfileView(userData = user)
+                ProfileView(userData = user, loginUser)
             }
             composable(route = TopBarMenu.ChatView.route) {
                 ChatView()

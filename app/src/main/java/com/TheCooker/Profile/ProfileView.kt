@@ -29,15 +29,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import coil.compose.rememberImagePainter
+import com.TheCooker.Login.Authentication.GoogleAuth.SignInState
 import com.TheCooker.Login.Authentication.GoogleAuth.UserData
+import com.TheCooker.Login.CrPassword.User
+import com.TheCooker.Login.LoginViewModel
+import com.TheCooker.R
 
 
 @Composable
-fun ProfileView(userData: UserData?) {
+fun ProfileView(userData: UserData?, loginUser: User?) {
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    println(loginUser?.lastName)
+
+
+
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -46,6 +58,17 @@ fun ProfileView(userData: UserData?) {
             imageUri = it
             userData?.profilerPictureUrl = it.toString()
         }
+    }
+
+    var isGoogleSignIn by remember { mutableStateOf(false) }
+
+   if (userData?.profilerPictureUrl != null) isGoogleSignIn = true
+
+    val defaultProfileImage = painterResource(id = R.drawable.logo)
+    // Εμφανίστε την εικόνα του χρήστη αν υπάρχει, αλλιώς εμφάνιση της εικόνας του Google ή της προεπιλεγμένης εικόνας
+    val painter = when {
+        isGoogleSignIn -> userData?.profilerPictureUrl
+        else -> R.drawable.logo
     }
 
     Column(
@@ -63,7 +86,7 @@ fun ProfileView(userData: UserData?) {
                     .clip(shape = CircleShape)
             ) {
                 AsyncImage(
-                    model = imageUri ?: userData.profilerPictureUrl,
+                    model = painter,
                     contentDescription = "ProfilePicture",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop

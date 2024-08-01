@@ -54,7 +54,8 @@ class GoogleClient(
                         profilerPictureUrl = photoUrl?.toString()
                     )
                 },
-                errorMessage = null
+                errorMessage = null,
+                isSignInSuccessfulwithGoogle = true
 
             )
 
@@ -63,7 +64,8 @@ class GoogleClient(
             if(e is CancellationException) throw e // Ρίψη Εξαίρεσης: Χρησιμοποιείται για να αναγγείλει μια εξαίρεση και να σταματήσει η τρέχουσα ροή εκτέλεσης για να επιτραπεί σε άλλο τμήμα του προγράμματος να την διαχειριστεί.
             SignInResult(
                 data = null,
-                errorMessage = e.message
+                errorMessage = e.message,
+                isSignInSuccessfulwithGoogle = false
             )
 
         }

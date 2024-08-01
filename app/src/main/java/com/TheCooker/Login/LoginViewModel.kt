@@ -9,22 +9,27 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.TheCooker.Login.Authentication.GoogleAuth.SignInResult
 import com.TheCooker.Login.Authentication.GoogleAuth.SignInState
+import com.TheCooker.Login.Authentication.GoogleAuth.UserData
 import com.TheCooker.Login.CrPassword.Injection
 import com.TheCooker.Login.CrPassword.MyResult
+import com.TheCooker.Login.CrPassword.User
 import com.TheCooker.Login.CrPassword.UserRepo
+import com.google.android.recaptcha.RecaptchaException
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class LoginViewModel: ViewModel() {
 
     private val userRepo: UserRepo
+
     init {
         userRepo = UserRepo(
             FirebaseAuth.getInstance(),
@@ -32,63 +37,103 @@ class LoginViewModel: ViewModel() {
         )
     }
 
+    //Crate Handle
     private val _authResult = MutableLiveData<MyResult<Boolean>>()
     val authResult: LiveData<MyResult<Boolean>> get() = _authResult
 
+    private val _userData = MutableLiveData<User>()
+    val userData: LiveData<User> get() = _userData
+
+
+
+
     private val _emailError = MutableStateFlow<String?>(null)
     val emailError: StateFlow<String?> get() = _emailError
-
     private val _confirmError = MutableStateFlow<String?>(null)
     val confirmError: StateFlow<String?> get() = _confirmError
-
-    private val _userNameRegError = MutableStateFlow<String?>(null)
-    val userNameRegError: StateFlow<String?> get() = _userNameRegError
-
+    private val _firstNameError = MutableStateFlow<String?>(null)
+    val firstNameError: StateFlow<String?> get() = _firstNameError
+    private val _lastNameError = MutableStateFlow<String?>(null)
+    val latsNameError: StateFlow<String?> get() = _lastNameError
     private val _passwordRegError = MutableStateFlow<String?>(null)
     val passwordRegError: StateFlow<String?> get() = _passwordRegError
 
+    private val _firstNameBool = MutableStateFlow<Boolean>(false)
+    val firstNameBool: StateFlow<Boolean> get() = _firstNameBool
+    private val _lastNameBool = MutableStateFlow<Boolean>(false)
+    val lastNameBool: StateFlow<Boolean> get() = _lastNameBool
+    private val _passwordRegBool = MutableStateFlow<Boolean>(false)
+    val passwordRegBool: StateFlow<Boolean> get() = _passwordRegBool
+    private val _confirmPasswordRegBool = MutableStateFlow<Boolean>(false)
+    val confirmPasswordRegBool: StateFlow<Boolean> get() = _confirmPasswordRegBool
+
+    private val _emailBool = MutableStateFlow<Boolean>(false)
+    val emailBool: StateFlow<Boolean> get() = _emailBool
 
 
-
-
-    private val _userName = mutableStateOf("")
+    private val _emailLogin = mutableStateOf("")
     private val _password = mutableStateOf("")
-    private val _userNameRegister = mutableStateOf("")
-    private val _ConfirmPassReg = mutableStateOf("")
-    private val _Email = mutableStateOf("")
+    private val _firstName = mutableStateOf("")
+    private val _lastName = mutableStateOf("")
+    private val _confirmPassReg = mutableStateOf("")
+    private val _emailRegister = mutableStateOf("")
     private val _passwordReg = mutableStateOf("")
 
     private val _state = MutableStateFlow(SignInState())
     val state = _state.asStateFlow()
 
 
-
-
-    val userName: State<String> = _userName
+    val emailLogin: State<String> = _emailLogin
     val password: State<String> = _password
-    val userNameRegister: State<String> = _userNameRegister
-    val ConfirmPassReg: State<String> = _ConfirmPassReg
-    val Email: State<String> = _Email
+    val firstName: State<String> = _firstName
+    val lastName: State<String> = _lastName
+    val ConfirmPassReg: State<String> = _confirmPassReg
+    val emailRegister: State<String> = _emailRegister
     val passwordReg: State<String> = _passwordReg
 
+
+    fun createPasswordInit() {
+        _emailError.value = null
+        _firstNameError.value = ""
+        _lastNameError.value = ""
+        _passwordRegError.value = ""
+        _confirmError.value = ""
+        _emailBool.value = false
+        _passwordRegBool.value = false
+        _firstNameBool.value = false
+        _lastNameBool.value = false
+        _confirmPasswordRegBool.value = false
+        _firstName.value = ""
+        _lastName.value = ""
+        _confirmPassReg.value = ""
+        _passwordReg.value = ""
+        _emailRegister.value = ""
+
+
+    }
+
     fun onUserNameChange(newUserName: String) {
-        _userName.value = newUserName
+        _emailLogin.value = newUserName
     }
 
     fun onPasswordChange(newPassword: String) {
         _password.value = newPassword
     }
 
-    fun onUserNameRegisterChange(newUserNameRegister: String) {
-        _userNameRegister.value = newUserNameRegister
+    fun onFirstNameRegisterChange(firstName: String) {
+        _firstName.value = firstName
+    }
+
+    fun onLastNameRegisterChange(lastName: String) {
+        _lastName.value = lastName
     }
 
     fun onConfirmPassRegChange(newConfirmPassReg: String) {
-        _ConfirmPassReg.value = newConfirmPassReg
+        _confirmPassReg.value = newConfirmPassReg
     }
 
     fun onEmailChange(newEmail: String) {
-        _Email.value = newEmail
+        _emailRegister.value = newEmail
 
 
     }
@@ -101,128 +146,224 @@ class LoginViewModel: ViewModel() {
     fun signUp() {
         viewModelScope.launch {
             Log.d("LoginViewModel", "signUp called")
-            Log.d("LoginViewModel", "email: ${_Email.value}, password: ${_passwordReg.value}, userName: ${_userNameRegister.value}")
-            val result = userRepo.signUp(
-                passwordName = _userNameRegister.value,
-                password = _passwordReg.value,
-                email = _Email.value
+            Log.d(
+                "LoginViewModel",
+                "email: ${_emailRegister.value}, password: ${_passwordReg.value}, userName: ${_firstName.value}"
             )
-            _authResult.value = result
-            Log.d("LoginViewModel", "signUp result: $result")
-        }
-    }
-    private suspend fun checkEmailExists(email: String): Boolean {
-        val trimmedEmail = email.trim() // Αφαίρεση κενών από την αρχή και το τέλος
-        return try {
-            val result = FirebaseAuth.getInstance().fetchSignInMethodsForEmail(trimmedEmail).await()
-            println("!!!!!!!!!!!!!!!!!!!!!!! $result")
-            // Ελέγχει αν το signInMethods δεν είναι null και αν η λίστα δεν είναι κενή
-            result.signInMethods?.isNotEmpty() == true
-        } catch (e: Exception) {
-            Log.e("YourViewModel", "Error checking email existence", e)
-            false
+
+            // Επικύρωση των στοιχείων πριν την εγγραφή
+
+            if (_passwordRegBool.value && _confirmPasswordRegBool.value && _firstNameBool.value && _lastNameBool.value
+            ) {
+                val result = userRepo.signUp(
+                    firstName = _firstName.value,
+                    password = _passwordReg.value,
+                    email = _emailRegister.value,
+                    lastName = _lastName.value
+                )
+                _authResult.value = result
+
+
+            }
         }
     }
 
-    fun validateEmail() {
+
+    suspend fun validateEmail(): Boolean {
         val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
-        val email = _Email.value
+        val email = _emailRegister.value
 
-        if (_Email.value.isNotBlank()) {
-            if (!emailRegex.containsMatchIn(email)) {
-                _emailError.value = "Email is invalid"
-            } else {
-                if (_Email.toString().isNotBlank()) {
+        return withContext(Dispatchers.IO) {
+            if (email.isNotBlank()) {
+                if (!emailRegex.containsMatchIn(email)) {
+                    _emailError.value = "Email is invalid"
+                    _emailBool.value = false
+                    return@withContext false
+                } else {
                     val result = _authResult.value
                     when (result) {
                         is MyResult.Success -> {
-                            // Επιτυχής εγγραφή
+                            _emailBool.value = true
                         }
 
                         is MyResult.Error -> {
-                            var errorMessage = when (result.exception) {
-                                is FirebaseAuthUserCollisionException -> "Email is already is used."
+                            val errorMessage = when (result.exception) {
+                                is FirebaseAuthUserCollisionException -> "Email is already in use."
                                 is FirebaseNetworkException -> "Σφάλμα σύνδεσης στο διαδίκτυο."
-                                // ... άλλες εξαιρέσεις
+                                is RecaptchaException -> " test"
                                 else -> "${result.exception}"
                             }
                             _emailError.value = errorMessage
+                            _emailBool.value = false
                         }
 
                         null -> {
-                            _emailError.value = "✔"
+                            if (_emailError.value == null) {
+                                _emailError.value = "✔"
+                                _emailBool.value = true
+                            }
                         }
                     }
+                    return@withContext _emailBool.value
                 }
+            } else {
+                _emailError.value = "Email cannot be empty"
+                _emailBool.value = false
+                return@withContext false
             }
-        } else {
-            _emailError.value = "✔"
         }
     }
 
-    fun validConfirmPassword(){
-        if(_passwordReg.value.isBlank()){
+    fun validConfirmPassword(createRequest: Boolean) {
+        if (_passwordReg.value.isBlank()) {
             _confirmError.value = null
-        }
-       else if(_passwordReg.value != _ConfirmPassReg.value
-            && _ConfirmPassReg.value.isNotBlank()
-          ){
+            _confirmPasswordRegBool.value = false
+            if (_passwordReg.value.isBlank() && createRequest) {
+                _confirmError.value = "Confirm password cannot be empty"
+            }
+        } else if (_passwordReg.value != _confirmPassReg.value
+            && _confirmPassReg.value.isNotBlank()
+        ) {
             _confirmError.value = "Confirm password does not match with password"
-        }else if(_passwordReg.value == _ConfirmPassReg.value
-            && _ConfirmPassReg.value.isNotBlank()){
+            _confirmPasswordRegBool.value = false
+        } else if (_passwordReg.value == _confirmPassReg.value
+            && _confirmPassReg.value.isNotBlank()
+        ) {
 
             _confirmError.value = "✔"
+            _confirmPasswordRegBool.value = true
         }
 
     }
 
-    fun validRegUsername(){
-        if(_userNameRegister.value.isBlank())
-        {
-            _userNameRegError.value = null
-        }
-        else if (_userNameRegister.value.length in 1..6
+
+    fun validFirstName(createRequest: Boolean) {
+        if (_firstName.value.isBlank()) {
+            _firstNameError.value = null
+            _firstNameBool.value = false
+            if (_firstName.value.isBlank() && createRequest) {
+                _firstNameError.value = "First Name cannot be empty"
+                _firstNameBool.value = false
+            }
+        } else if (_firstName.value.length in 1..2
         ) {
-            _userNameRegError.value = "Username should be at least 6 characters"
-        }
-        else{
-            _userNameRegError.value = "✔"
+            _firstNameError.value = "First Name should be at least 2 characters"
+            _firstNameBool.value = false
+        } else {
+            _firstNameError.value = "✔"
+            _firstNameBool.value = true
         }
     }
 
-    fun validRegPassword(){
+    fun validLastName(createRequest: Boolean) {
+        if (_lastName.value.isBlank()) {
+            _lastNameError.value = null
+            _lastNameBool.value = false
+            if (_lastName.value.isBlank() && createRequest) {
+                _lastNameError.value = "Last Name cannot be empty"
+                _lastNameBool.value = false
+            }
+        } else if (_lastName.value.length in 1..2
+        ) {
+            _lastNameError.value = "First Name should be at least 2 characters"
+            _lastNameBool.value = false
+        } else {
+            _lastNameError.value = "✔"
+            _lastNameBool.value = true
+        }
+    }
+
+    fun validRegPassword(createRequest: Boolean) {
         val hasSpecialCharacter =
             Regex("[^a-zA-Z0-9]").containsMatchIn(_passwordReg.value)
-        if(_passwordReg.value.isBlank()){
+        if (_passwordReg.value.isBlank()) {
             _passwordRegError.value = null
-        }
-        else if (_passwordReg.value.length in 1..6
+            _passwordRegBool.value = false
+            if (_passwordReg.value.isBlank() && createRequest) {
+                _passwordRegError.value = "Password cannot be empty"
+                _passwordRegBool.value = false
+            }
+        } else if (_passwordReg.value.length in 1..5
         ) {
             _passwordRegError.value = "Password should be at least 6 characters"
+            _passwordRegBool.value = false
 
         } else if (!hasSpecialCharacter &&
             _passwordReg.value.length >= 6
         ) {
             _passwordRegError.value = "Password must contain at least one special character"
+            _passwordRegBool.value = false
 
-        }else{
+        } else if (_passwordReg.value.isBlank()) {
+            _passwordRegError.value = "Password cannot be empty"
+        } else {
             _passwordRegError.value = "✔"
+            _passwordRegBool.value = true
+
+        }
+
+    }
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            _authResult.value = userRepo.login(email, password)
+            println(_authResult.value)
+            if (_authResult.value is MyResult.Success) {
+                val currentUser = userRepo.auth.currentUser
+                if (currentUser != null) {
+                    val userDetails = userRepo.getUserDetails(currentUser.email ?: "")
+                    if (userDetails is MyResult.Success) {
+                        _userData.value = userDetails.data
+                        println("!!!!!!!! ${_userData.value}")
+                    }
+                }
+            }
+        }
+    }
+
+        fun onSignInResult(result: SignInResult) {
+            _state.update {
+                it.copy(
+                    isSignInSuccessful = true,
+                    signInError = result.errorMessage
+                )
+            }
+        }
+
+        fun resetState() {
+            _state.update { SignInState() }
         }
 
     }
 
 
-    fun onSignInResult(result: SignInResult){
-        _state.update { it.copy(
-            isSignInSuccessful = true,
-            signInError = result.errorMessage
-        ) }
-    }
 
-    fun resetState(){
-        _state.update { SignInState() }
-    }
 
-}
 
+/*   suspend fun checkEmailExists(): Boolean {
+       val trimmedEmail = _Email.value.trim() // Αφαίρεση κενών από την αρχή και το τέλος
+       return try {
+           val result = FirebaseAuth.getInstance().fetchSignInMethodsForEmail(trimmedEmail).await()
+
+           // Εξαγωγή της λίστας signInMethods
+           val signInMethods = result.signInMethods
+           if (signInMethods != null) {
+               // Εκτύπωση της λίστας στην κονσόλα
+               println("Sign-in methods for email $trimmedEmail: $signInMethods")
+
+               // Για Android Logcat
+               Log.d("YourViewModel", "Sign-in methods for email $trimmedEmail: $signInMethods")
+           } else {
+               println("No sign-in methods found for email $trimmedEmail.")
+               Log.d("YourViewModel", "No sign-in methods found for email $trimmedEmail.")
+           }
+
+           // Ελέγχει αν το signInMethods δεν είναι null και αν η λίστα δεν είναι κενή
+           signInMethods?.isNotEmpty() == true
+
+       } catch (e: Exception) {
+           Log.e("YourViewModel", "Error checking email existence", e)
+           false
+       }
+   } */
 

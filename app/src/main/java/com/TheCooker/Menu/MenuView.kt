@@ -20,6 +20,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -36,13 +37,14 @@ import com.TheCooker.NavGraphs.TopBarMenu
 import com.TheCooker.NavGraphs.TopNavGraph
 import com.TheCooker.R
 import com.TheCooker.Login.Authentication.GoogleAuth.UserData
+import com.TheCooker.Login.CrPassword.User
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MenuView(userData: UserData?){
+fun MenuView(userData: UserData?, loginUserData: User?){
     val navController = rememberNavController()
 
 
@@ -119,7 +121,7 @@ fun MenuView(userData: UserData?){
         }
     ) {
 
-        TopNavGraph(navController = navController, paddingValues = it, userData)
+        TopNavGraph(navController = navController, paddingValues = it, userData, loginUserData)
     }
 
     
