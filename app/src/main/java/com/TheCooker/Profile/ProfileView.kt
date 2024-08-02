@@ -48,6 +48,9 @@ fun ProfileView(userData: UserData?, loginUser: User?) {
 
     println(loginUser?.lastName)
 
+    val fullName = loginUser?.firstName + " " + loginUser?.lastName
+
+    val profile = userData ?:loginUser
 
 
 
@@ -68,7 +71,7 @@ fun ProfileView(userData: UserData?, loginUser: User?) {
     // Εμφανίστε την εικόνα του χρήστη αν υπάρχει, αλλιώς εμφάνιση της εικόνας του Google ή της προεπιλεγμένης εικόνας
     val painter = when {
         isGoogleSignIn -> userData?.profilerPictureUrl
-        else -> R.drawable.logo
+        else -> R.drawable.tt
     }
 
     Column(
@@ -78,7 +81,7 @@ fun ProfileView(userData: UserData?, loginUser: User?) {
     ) {
         Spacer(modifier = Modifier.height(20.dp))
         Spacer(modifier = Modifier.padding(end = 30.dp))
-        if (userData != null) {
+        if (userData != null || loginUser != null) {
             Box(
                 contentAlignment = Alignment.BottomEnd,
                 modifier = Modifier
@@ -111,13 +114,26 @@ fun ProfileView(userData: UserData?, loginUser: User?) {
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            userData.userName?.let {
+            userData?.userName?.let {
                 Text(
                     text = it,
                     style = androidx.compose.ui.text.TextStyle(color = Color.White),
                     fontSize = 24.sp
                 )
             }
+
+            fullName.let {
+                Text(
+                    text = it,
+                    style = androidx.compose.ui.text.TextStyle(color = Color.White),
+                    fontSize = 24.sp
+                )
+            }
+
+
+
+
+
         }
     }
 }
