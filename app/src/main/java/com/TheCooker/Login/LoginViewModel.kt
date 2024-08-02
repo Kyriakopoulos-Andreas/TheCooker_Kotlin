@@ -7,12 +7,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.TheCooker.Login.Authentication.GoogleAuth.SignInResult
+import com.TheCooker.Login.Authentication.GoogleAuth.CreateResults
+import com.TheCooker.Login.Authentication.GoogleAuth.LoginResults
+
 import com.TheCooker.Login.Authentication.GoogleAuth.SignInState
 import com.TheCooker.Login.Authentication.GoogleAuth.UserData
 import com.TheCooker.Login.CrPassword.Injection
-import com.TheCooker.Login.CrPassword.MyResult
-import com.TheCooker.Login.CrPassword.User
+
 import com.TheCooker.Login.CrPassword.UserRepo
 import com.google.android.recaptcha.RecaptchaException
 import com.google.firebase.FirebaseNetworkException
@@ -38,11 +39,14 @@ class LoginViewModel: ViewModel() {
     }
 
     //Crate Handle
-    private val _authResult = MutableLiveData<MyResult<Boolean>>()
-    val authResult: LiveData<MyResult<Boolean>> get() = _authResult
+    private val _authCreateResult = MutableLiveData<CreateResults<Boolean>>()
+    val authCreateResult: LiveData<CreateResults<Boolean>> get() = _authCreateResult
 
-    private val _userData = MutableLiveData<User>()
-    val userData: LiveData<User> get() = _userData
+    private val _authLoginResult = MutableLiveData<LoginResults<Boolean>>()
+    val authLoginResult: LiveData<LoginResults<Boolean>> get() = _authLoginResult
+
+    private val _userData = MutableLiveData<UserData>()
+    val userData: LiveData<UserData> get() = _userData
 
 
 
@@ -161,7 +165,7 @@ class LoginViewModel: ViewModel() {
                     email = _emailRegister.value,
                     lastName = _lastName.value
                 )
-                _authResult.value = result
+                _authCreateResult.value = result
 
 
             }
@@ -180,20 +184,20 @@ class LoginViewModel: ViewModel() {
                     _emailBool.value = false
                     return@withContext false
                 } else {
-                    val result = _authResult.value
+                    val result = _authCreateResult.value
                     when (result) {
-                        is MyResult.Success -> {
-                            _emailBool.value = true
-                        }
+                        is CreateResults.Success<*> -> {
+                            CreateResults.Success(true)
 
-                        is MyResult.Error -> {
+                        }
+                        is CreateResults.Error -> {
                             val errorMessage = when (result.exception) {
                                 is FirebaseAuthUserCollisionException -> "Email is already in use."
                                 is FirebaseNetworkException -> "Σφάλμα σύνδεσης στο διαδίκτυο."
-                                is RecaptchaException -> " test"
-                                else -> "${result.exception}"
+                                is RecaptchaException -> "Test" // Προσαρμόστε ανάλογα
+                                else -> result.exception // Βεβαιωθείτε ότι το result.errorMessage είναι String
                             }
-                            _emailError.value = errorMessage
+                            _emailError.value = errorMessage.toString()
                             _emailBool.value = false
                         }
 
@@ -213,6 +217,7 @@ class LoginViewModel: ViewModel() {
             }
         }
     }
+
 
     fun validConfirmPassword(createRequest: Boolean) {
         if (_passwordReg.value.isBlank()) {
@@ -306,29 +311,44 @@ class LoginViewModel: ViewModel() {
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
-            _authResult.value = userRepo.login(email, password)
-            println(_authResult.value)
-            if (_authResult.value is MyResult.Success) {
+            _authLoginResult.value = userRepo.login(email, password)
+            println("Login result: ${userRepo.login(email, password)}")
+            if (_authLoginResult.value is LoginResults.Success) {
                 val currentUser = userRepo.auth.currentUser
+                println("Current userooooooooooo: $currentUser")
                 if (currentUser != null) {
                     val userDetails = userRepo.getUserDetails(currentUser.email ?: "")
-                    if (userDetails is MyResult.Success) {
-                        _userData.value = userDetails.data
-                        println("!!!!!!!! ${_userData.value}")
+                    println("User detailskkkkkkkk: $userDetails")
+                    if (userDetails is LoginResults.Success<*>) {
+                        _userData.value = userDetails.data as UserData?
+                        println("!!!!!!eeee!!!!!!!!!!!!!!!!!! ${_userData.value}")
                     }
                 }
             }
         }
     }
 
-        fun onSignInResult(result: SignInResult) {
-            _state.update {
-                it.copy(
-                    isSignInSuccessful = true,
-                    signInError = result.errorMessage
-                )
+    fun onSignInResult(result: LoginResults<UserData>) {
+        _state.update {
+            when (result) {
+                is LoginResults.Success -> {
+                    // Ενημερώνουμε την κατάσταση ως επιτυχία και δεν εμφανίζουμε σφάλμα
+                    it.copy(
+                        isSignInSuccessful = true,
+                        signInError = null
+                    )
+                }
+                is LoginResults.Error -> {
+                    // Ενημερώνουμε την κατάσταση με το μήνυμα σφάλματος
+                    it.copy(
+                        isSignInSuccessful = false,
+                        signInError = result.exception?.message
+                    )
+                }
             }
         }
+    }
+
 
         fun resetState() {
             _state.update { SignInState() }

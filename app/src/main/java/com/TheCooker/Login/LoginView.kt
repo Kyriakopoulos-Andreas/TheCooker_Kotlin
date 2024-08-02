@@ -55,8 +55,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
+import com.TheCooker.Login.Authentication.GoogleAuth.LoginResults
 import com.TheCooker.Login.Authentication.GoogleAuth.SignInState
-import com.TheCooker.Login.CrPassword.MyResult
 import com.TheCooker.R
 import kotlinx.coroutines.launch
 
@@ -100,15 +100,19 @@ fun LoginView(viewModel: LoginViewModel,
     var isLastNameFocused by remember { mutableStateOf(true) }
     var isEmailFocused by remember { mutableStateOf(false) }
 
-    val authResult by viewModel.authResult.observeAsState()
 
+    val loginAuthResult by viewModel.authLoginResult.observeAsState()
 
+    val userData by viewModel.userData.observeAsState()
 
 
 
     val context = LocalContext.current
     LaunchedEffect(key1 = state.signInError){
-        state.signInError?.let { error ->
+        println("!!!!!!!!!!!!${state.signInError}")
+
+        val exception = state.signInError
+        exception?.let { error ->
             Toast.makeText(
                 context,
                 error,
@@ -117,19 +121,22 @@ fun LoginView(viewModel: LoginViewModel,
         }
     }
 
-    LaunchedEffect(key1 = authResult) {
-        when(authResult){
-            is MyResult.Success -> {
-                onLoginButtonClick()
+    LaunchedEffect(loginAuthResult, userData) {
+        when (loginAuthResult) {
+            is LoginResults.Success<*> -> {
+                // Ενημερώνουμε το userData αν είναι διαθέσιμο
+                if (userData != null) {
+                    // Κάνε την μετάβαση στο MenuView με τα δεδομένα χρήστη
+                    onLoginButtonClick()
+                }
+                Toast.makeText(context, "Welcome Chef!", Toast.LENGTH_SHORT).show()
             }
-            is MyResult.Error -> {
-                Toast.makeText(context, "\t\t\t\t\t\t Login failed\n Invalid email or password", Toast.LENGTH_SHORT).show()
-
-            }else ->{
-
-
-        }
-
+            is LoginResults.Error -> {
+                Toast.makeText(context, "Login failed\nInvalid email or password", Toast.LENGTH_SHORT).show()
+            }
+            else -> {
+                // Διαχείριση άλλων καταστάσεων αν χρειάζεται
+            }
         }
     }
 
@@ -220,9 +227,6 @@ fun LoginView(viewModel: LoginViewModel,
             Row {
                 Button(
                     onClick = {viewModel.login(userName, password)
-
-
-
 
                               },
                     colors = ButtonDefaults.buttonColors(
@@ -644,7 +648,10 @@ fun LoginView(viewModel: LoginViewModel,
                                         isFirstNameFocused = false
                                         isLastNameFocused = false
 
-                                        if (passwordRegBool && confirmPasswordRegBool && firstNameBool) {
+                                        if (passwordRegBool &&
+                                            confirmPasswordRegBool &&
+                                            firstNameBool &&
+                                            lastNameBool) {
                                             popUpCreatePasword = false
                                             Handler(Looper.getMainLooper()).postDelayed({
                                                 viewModel.createPasswordInit()

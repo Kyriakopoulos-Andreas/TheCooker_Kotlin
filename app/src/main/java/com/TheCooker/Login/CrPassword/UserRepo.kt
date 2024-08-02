@@ -1,5 +1,8 @@
 package com.TheCooker.Login.CrPassword
 
+import com.TheCooker.Login.Authentication.GoogleAuth.CreateResults
+import com.TheCooker.Login.Authentication.GoogleAuth.LoginResults
+import com.TheCooker.Login.Authentication.GoogleAuth.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -13,60 +16,59 @@ class UserRepo(
         password: String,
         email: String,
         lastName: String
-    ): MyResult<Boolean> {
+    ): CreateResults<Boolean> {
         return try {
             auth.createUserWithEmailAndPassword(email, password).await()
             // Προσθήκη καταγραφής
             println("User created with email: $email")
 
             // Προσθήκη χρήστη στο Firestore
-            val user = User(
-                firstName = firstName,
+            val user = UserData(
+                userName = "$firstName $lastName",
                 password = password,
-                email = email,
-                lastName = lastName
+                email = email
             )
             saveUserToFirestore(user = user)
 
-            MyResult.Success(true)
+            CreateResults.Success(true)
         } catch (e: Exception) {
             // Προσθήκη καταγραφής
             println("Error during signUp: ${e.message}")
-            MyResult.Error(e)
+            CreateResults.Error(e)
         }
     }
 
-    private suspend fun saveUserToFirestore(user: User) {
-        firestore.collection("users").document(user.email).set(user).await()
+    private suspend fun saveUserToFirestore(user: UserData) {
+        firestore.collection("users").document(user.email.toString()).set(user).await()
         // Προσθήκη καταγραφής
         println("User saved to Firestore with email: ${user.email}")
     }
 
+    suspend fun login(email: String, password: String): LoginResults<Boolean> =
+        try {
+            auth.signInWithEmailAndPassword(email, password).await()
+            LoginResults.Success(true)
+        } catch (e: Exception) {
+            LoginResults.Error(e)
+        }
 
-    suspend fun login(email: String, password: String): MyResult<Boolean> =
-    try {
-        auth.signInWithEmailAndPassword(email, password).await()
-        MyResult.Success(true)
-    }catch (e: Exception){
-        MyResult.Error(e)
-    }
 
-    suspend fun getUserDetails(email: String): MyResult<User> {
+    suspend fun getUserDetails(email: String): LoginResults<UserData> {
         return try {
             val querySnapshot = firestore.collection("users").whereEqualTo("email", email).get().await()
             if (querySnapshot.isEmpty) {
-                MyResult.Error(Exception("User not found"))
+                LoginResults.Error(Exception("User not found"))
             } else {
                 val documentSnapshot = querySnapshot.documents.firstOrNull()
-                val user = documentSnapshot?.toObject(User::class.java)
+                val user = documentSnapshot?.toObject(UserData::class.java)
                 if (user != null) {
-                    MyResult.Success(user)
+                    LoginResults.Success(user)
                 } else {
-                    MyResult.Error(Exception("User object is null"))
+                    LoginResults.Error(Exception("User object is null"))
                 }
             }
         } catch (e: Exception) {
-            MyResult.Error(e)
+            LoginResults.Error(e)
         }
     }
 

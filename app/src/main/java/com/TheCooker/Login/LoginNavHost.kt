@@ -9,10 +9,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshots.SnapshotApplyResult
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
@@ -20,9 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.TheCooker.Login.Authentication.GoogleAuth.GoogleClient
 import com.TheCooker.Login.Authentication.GoogleAuth.UserData
-import com.TheCooker.Login.CrPassword.MyResult
 import com.TheCooker.Menu.MenuView
-import kotlinx.coroutines.delay
 
 import kotlinx.coroutines.launch
 
@@ -70,7 +66,7 @@ fun LoginNavigator(viewModel: LoginViewModel, client: GoogleClient) {
                         Toast.LENGTH_LONG
                     ).show()
 
-                    navController2.currentBackStackEntry?.savedStateHandle?.set("User", client.getSingedInUser())
+                    navController2.currentBackStackEntry?.savedStateHandle?.set("User", client.getSignedInUser())
                     navController2.navigate("MenuView")
                     viewModel.resetState()
 
@@ -86,7 +82,7 @@ fun LoginNavigator(viewModel: LoginViewModel, client: GoogleClient) {
                 state = state,
                 onGoogleClick = {
                     coroutineScope.launch {
-                        val signInIntentSender = client.signIn(context)
+                        val signInIntentSender = client.signIn()
 
                         signInIntentSender?.let {
                             val intentSenderRequest = IntentSenderRequest.Builder(it).build()
@@ -114,7 +110,8 @@ fun LoginNavigator(viewModel: LoginViewModel, client: GoogleClient) {
         composable(route = "MenuView") {
             val user = navController2.previousBackStackEntry?.savedStateHandle?.get<UserData>("User")
 
-                MenuView(user, viewModel.userData.value)
+
+                MenuView(viewModel.userData.value ?: user)
 
         }
 

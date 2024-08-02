@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,20 +38,17 @@ import coil.compose.AsyncImage
 import coil.compose.rememberImagePainter
 import com.TheCooker.Login.Authentication.GoogleAuth.SignInState
 import com.TheCooker.Login.Authentication.GoogleAuth.UserData
-import com.TheCooker.Login.CrPassword.User
+
 import com.TheCooker.Login.LoginViewModel
 import com.TheCooker.R
 
 
 @Composable
-fun ProfileView(userData: UserData?, loginUser: User?) {
+fun ProfileView(userData: UserData?) {
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    println("pfffffffffffffffffffff${userData?.password}")
 
-    println(loginUser?.lastName)
 
-    val fullName = loginUser?.firstName + " " + loginUser?.lastName
-
-    val profile = userData ?:loginUser
 
 
 
@@ -67,7 +65,7 @@ fun ProfileView(userData: UserData?, loginUser: User?) {
 
    if (userData?.profilerPictureUrl != null) isGoogleSignIn = true
 
-    val defaultProfileImage = painterResource(id = R.drawable.logo)
+
     // Εμφανίστε την εικόνα του χρήστη αν υπάρχει, αλλιώς εμφάνιση της εικόνας του Google ή της προεπιλεγμένης εικόνας
     val painter = when {
         isGoogleSignIn -> userData?.profilerPictureUrl
@@ -81,7 +79,7 @@ fun ProfileView(userData: UserData?, loginUser: User?) {
     ) {
         Spacer(modifier = Modifier.height(20.dp))
         Spacer(modifier = Modifier.padding(end = 30.dp))
-        if (userData != null || loginUser != null) {
+        if (userData != null) {
             Box(
                 contentAlignment = Alignment.BottomEnd,
                 modifier = Modifier
@@ -98,7 +96,10 @@ fun ProfileView(userData: UserData?, loginUser: User?) {
                     modifier = Modifier
                         .size(32.dp)
                         .align(Alignment.BottomEnd)
-                        .offset(x = (-12).dp, y = (-16).dp) // Adjust the offset to fit inside the circle
+                        .offset(
+                            x = (-12).dp,
+                            y = (-16).dp
+                        ) // Adjust the offset to fit inside the circle
                         .clip(CircleShape)
                         .background(Color.Transparent)
                         .clickable { launcher.launch("image/*") },
@@ -114,6 +115,7 @@ fun ProfileView(userData: UserData?, loginUser: User?) {
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+
             userData?.userName?.let {
                 Text(
                     text = it,
@@ -121,18 +123,6 @@ fun ProfileView(userData: UserData?, loginUser: User?) {
                     fontSize = 24.sp
                 )
             }
-
-            fullName.let {
-                Text(
-                    text = it,
-                    style = androidx.compose.ui.text.TextStyle(color = Color.White),
-                    fontSize = 24.sp
-                )
-            }
-
-
-
-
 
         }
     }

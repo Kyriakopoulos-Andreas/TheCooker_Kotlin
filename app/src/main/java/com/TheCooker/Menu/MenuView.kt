@@ -37,14 +37,14 @@ import com.TheCooker.NavGraphs.TopBarMenu
 import com.TheCooker.NavGraphs.TopNavGraph
 import com.TheCooker.R
 import com.TheCooker.Login.Authentication.GoogleAuth.UserData
-import com.TheCooker.Login.CrPassword.User
+
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MenuView(userData: UserData?, loginUserData: User?){
+fun MenuView(userData: UserData?){
     val navController = rememberNavController()
 
 
@@ -121,7 +121,7 @@ fun MenuView(userData: UserData?, loginUserData: User?){
         }
     ) {
 
-        TopNavGraph(navController = navController, paddingValues = it, userData, loginUserData)
+        TopNavGraph(navController = navController, paddingValues = it, userData)
     }
 
     
