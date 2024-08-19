@@ -1,4 +1,4 @@
-package com.TheCooker.Login
+package com.TheCooker.NavGraphs
 
 import android.app.Activity
 import android.os.Build
@@ -17,7 +17,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.TheCooker.Login.Authentication.GoogleAuth.GoogleClient
-import com.TheCooker.Login.Authentication.GoogleAuth.UserData
+import com.TheCooker.Login.LoginView
+import com.TheCooker.Login.LoginViewModel
+import com.TheCooker.Login.SignIn.UserData
 import com.TheCooker.Menu.MenuView
 
 import kotlinx.coroutines.launch

@@ -55,8 +55,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
-import com.TheCooker.Login.Authentication.GoogleAuth.LoginResults
-import com.TheCooker.Login.Authentication.GoogleAuth.SignInState
+import com.TheCooker.Login.SignIn.LoginResults
+import com.TheCooker.Login.SignIn.SignInState
 import com.TheCooker.R
 import kotlinx.coroutines.launch
 

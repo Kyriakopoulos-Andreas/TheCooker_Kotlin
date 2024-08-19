@@ -7,14 +7,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.TheCooker.Login.Authentication.GoogleAuth.CreateResults
-import com.TheCooker.Login.Authentication.GoogleAuth.LoginResults
 
-import com.TheCooker.Login.Authentication.GoogleAuth.SignInState
-import com.TheCooker.Login.Authentication.GoogleAuth.UserData
+import com.TheCooker.Login.SignIn.SignInState
 import com.TheCooker.Login.CrPassword.Injection
 
 import com.TheCooker.Login.CrPassword.UserRepo
+import com.TheCooker.Login.SignIn.CreateResults
+import com.TheCooker.Login.SignIn.LoginResults
+import com.TheCooker.Login.SignIn.UserData
 import com.google.android.recaptcha.RecaptchaException
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth

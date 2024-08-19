@@ -16,7 +16,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.TheCooker.Login.Authentication.GoogleAuth.GoogleClient
 
-import com.TheCooker.Login.LoginNavigator
+import com.TheCooker.NavGraphs.LoginNavigator
 import com.TheCooker.Login.LoginViewModel
 import com.google.android.gms.auth.api.identity.Identity
 

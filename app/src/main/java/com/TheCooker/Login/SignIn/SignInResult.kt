@@ -1,4 +1,4 @@
-package com.TheCooker.Login.Authentication.GoogleAuth
+package com.TheCooker.Login.SignIn
 
 import java.io.Serializable
 

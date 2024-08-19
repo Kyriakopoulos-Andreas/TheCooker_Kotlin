@@ -1,8 +1,8 @@
 package com.TheCooker.Login.CrPassword
 
-import com.TheCooker.Login.Authentication.GoogleAuth.CreateResults
-import com.TheCooker.Login.Authentication.GoogleAuth.LoginResults
-import com.TheCooker.Login.Authentication.GoogleAuth.UserData
+import com.TheCooker.Login.SignIn.CreateResults
+import com.TheCooker.Login.SignIn.LoginResults
+import com.TheCooker.Login.SignIn.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await

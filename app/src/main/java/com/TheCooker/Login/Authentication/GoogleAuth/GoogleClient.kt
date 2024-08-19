@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.widget.Toast
+import com.TheCooker.Login.SignIn.LoginResults
+import com.TheCooker.Login.SignIn.UserData
 
 import com.TheCooker.R
 import com.google.android.gms.auth.api.identity.BeginSignInRequest

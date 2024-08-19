@@ -23,8 +23,8 @@ import androidx.navigation.compose.composable
 import com.TheCooker.Menu.MenuView
 import com.example.cooker.ChatView.ChatView
 import com.example.cooker.HomeView.HomeView
-import com.example.cooker.ListView.ListView
-import com.TheCooker.Login.Authentication.GoogleAuth.UserData
+import com.example.cooker.ListView.DrawerContent
+import com.TheCooker.Login.SignIn.UserData
 
 import com.TheCooker.Profile.ProfileView
 import com.TheCooker.SearchToolBar.ApiService.MealDetail
@@ -124,9 +124,7 @@ fun TopNavGraph(navController: NavController, paddingValues: PaddingValues, user
             composable(route = TopBarMenu.HomeView.route) {
                 HomeView()
             }
-            composable(route = TopBarMenu.ListView.route) {
-                ListView()
-            }
+
             composable(route = TopBarMenu.ProfileView.route) {
                 ProfileView(userData = user)
             }

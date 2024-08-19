@@ -1,6 +1,4 @@
-package com.TheCooker.Login.Authentication.GoogleAuth
-
-import java.lang.Error
+package com.TheCooker.Login.SignIn
 
 data class SignInState(
     val isSignInSuccessful: Boolean = false,
