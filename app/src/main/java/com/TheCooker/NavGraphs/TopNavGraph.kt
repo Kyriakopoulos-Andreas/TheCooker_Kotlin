@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -20,10 +21,16 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.TheCooker.Drawer.Calendar.Calendar
+import com.TheCooker.Drawer.DrawerScreens
+import com.TheCooker.Drawer.Help.Help
+import com.TheCooker.Drawer.Informations.Information
+import com.TheCooker.Drawer.Options.Options
+import com.TheCooker.Login.Authentication.GoogleAuth.GoogleClient
+import com.TheCooker.Login.LoginViewModel
 import com.TheCooker.Menu.MenuView
 import com.example.cooker.ChatView.ChatView
 import com.example.cooker.HomeView.HomeView
-import com.example.cooker.ListView.DrawerContent
 import com.TheCooker.Login.SignIn.UserData
 
 import com.TheCooker.Profile.ProfileView
@@ -38,7 +45,15 @@ import com.TheCooker.SearchToolBar.Views.SearchView
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TopNavGraph(navController: NavController, paddingValues: PaddingValues, user: UserData?) {
+fun TopNavGraph(
+    navController: NavController,
+    paddingValues: PaddingValues,
+    user: UserData?,
+    client: GoogleClient,
+    navLogin: NavHostController,
+    loginViewModel: LoginViewModel,
+    topBarRoute: MutableState<Boolean>
+) {
     val recipeViewModel: SearchCategoryViewModel = viewModel()
     val recipeState by recipeViewModel.categoriesState
     val mealsViewModel: MealsViewModel = viewModel()
@@ -56,8 +71,25 @@ fun TopNavGraph(navController: NavController, paddingValues: PaddingValues, user
 
         NavHost(navController = navController as NavHostController, startDestination = TopBarMenu.HomeView.route) {
             composable(route = "MenuView") {
-                MenuView(user)
+                MenuView(user, googleClient = client, navLogin, loginViewModel)
             }
+            composable(DrawerScreens.drawerScreensList[0].route){
+                Calendar(topBarRoute = topBarRoute)
+            }
+
+            composable(DrawerScreens.drawerScreensList[1].route){
+                Options(topBarRoute = topBarRoute)
+            }
+
+            composable(DrawerScreens.drawerScreensList[2].route) {
+                Information(topBarRoute = topBarRoute)
+            }
+
+            composable(DrawerScreens.drawerScreensList[3].route) {
+                Help(topBarRoute = topBarRoute)
+            }
+
+
 
             composable(route = TopBarMenu.SearchView.route) {
                 var shouldNavigate by remember { mutableStateOf(false) }

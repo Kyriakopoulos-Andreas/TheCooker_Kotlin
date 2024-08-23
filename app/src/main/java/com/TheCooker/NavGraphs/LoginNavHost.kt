@@ -10,6 +10,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -21,6 +22,7 @@ import com.TheCooker.Login.LoginView
 import com.TheCooker.Login.LoginViewModel
 import com.TheCooker.Login.SignIn.UserData
 import com.TheCooker.Menu.MenuView
+import kotlinx.coroutines.delay
 
 import kotlinx.coroutines.launch
 
@@ -30,6 +32,7 @@ fun LoginNavigator(viewModel: LoginViewModel, client: GoogleClient) {
     val navController2 = rememberNavController()
 
     val context = LocalContext.current
+    val userData by viewModel.userData.observeAsState() /// ΧΡΗΣΙΜΟΠΟΙΗΣΕ ΤΟ ΓΙΑ ΤΟ LOG IN ΓΙΑ ΝΑ ΒΛΕΠΕΙΣ ΑΝ ΦΩΡΤΟΣΕ ΤΑ ΣΤΟΙΧΕΙΑ ΤΟΥ ΧΡΗΣΤΗ
 
 
 
@@ -61,16 +64,22 @@ fun LoginNavigator(viewModel: LoginViewModel, client: GoogleClient) {
             }
 
             LaunchedEffect(key1 = state.isSignInSuccessful) {
+
                 if(state.isSignInSuccessful){
                     Toast.makeText(
                         context,
-                        "Sign in successful",
+                        "Welcome Chef",
                         Toast.LENGTH_LONG
                     ).show()
 
                     navController2.currentBackStackEntry?.savedStateHandle?.set("User", client.getSignedInUser())
-                    navController2.navigate("MenuView")
-                    viewModel.resetState()
+                    navController2.navigate("MenuView"){
+
+
+                    }
+                    viewModel.resetState() // Επαναφερει το state isSignInSuccessful σε false ετσι ωστε να μπορει να γινει Log out
+
+
 
 
                 }
@@ -100,9 +109,7 @@ fun LoginNavigator(viewModel: LoginViewModel, client: GoogleClient) {
                 },
                 onLoginButtonClick = {
                     navController2.navigate("MenuView"){
-                        popUpTo("LoginView"){
-                            inclusive = true
-                        }
+
                     }
 
                 }
@@ -113,9 +120,11 @@ fun LoginNavigator(viewModel: LoginViewModel, client: GoogleClient) {
             val user = navController2.previousBackStackEntry?.savedStateHandle?.get<UserData>("User")
 
 
-                MenuView(viewModel.userData.value ?: user)
+                MenuView(viewModel.userData.value ?: user, client, navController2, loginViewModel = viewModel)
 
         }
 
 }
 }
+
+

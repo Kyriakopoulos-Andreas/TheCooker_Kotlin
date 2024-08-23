@@ -34,7 +34,7 @@ fun MealDetailView(
     val detailState = detailViewModel.mealsDetailState.value
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.wrapContentSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (detailState!!.loading) {

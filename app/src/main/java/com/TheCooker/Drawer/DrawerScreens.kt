@@ -26,7 +26,7 @@ sealed class DrawerScreens(
     object settings : DrawerScreens(
         route = "Options",
         hasNews = false,
-        title = "options",
+        title = "Options",
         icon = R.drawable.baseline_settings_24
 
     )
@@ -35,13 +35,13 @@ sealed class DrawerScreens(
     object Information : DrawerScreens(
         route = "Information",
         hasNews = false,
-        title = "information",
+        title = "Information",
         icon = R.drawable.information
 
     )
 
     object Help : DrawerScreens(
-        route = "log out",
+        route = "Help",
         title = "Help",
         icon = R.drawable.baseline_help_24
 
@@ -49,7 +49,7 @@ sealed class DrawerScreens(
 
     object logout : DrawerScreens(
         route = "LogOut",
-        title = "log out",
+        title = "Log out",
         icon = R.drawable.baseline_logout_24
 
     )

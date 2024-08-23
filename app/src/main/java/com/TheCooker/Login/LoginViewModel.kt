@@ -2,7 +2,10 @@ package com.TheCooker.Login
 
 import android.util.Log
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -37,6 +40,8 @@ class LoginViewModel: ViewModel() {
             Injection.instance()
         )
     }
+
+
 
     //Crate Handle
     private val _authCreateResult = MutableLiveData<CreateResults<Boolean>>()
@@ -94,6 +99,28 @@ class LoginViewModel: ViewModel() {
     val ConfirmPassReg: State<String> = _confirmPassReg
     val emailRegister: State<String> = _emailRegister
     val passwordReg: State<String> = _passwordReg
+
+    private val _isDialogVisible =mutableStateOf(false)
+    val isDialogVisible: State<Boolean> = _isDialogVisible
+
+
+
+
+    fun showDialog() {
+        _isDialogVisible.value = true
+    }
+
+    fun hideDialog() {
+        _isDialogVisible.value = false
+    }
+
+    fun loginInit(){
+        _emailLogin.value = ""
+        _password.value = ""
+
+    }
+
+
 
 
     fun createPasswordInit() {
@@ -350,11 +377,16 @@ class LoginViewModel: ViewModel() {
     }
 
 
-        fun resetState() {
-            _state.update { SignInState() }
-        }
+    fun resetState() {
+        _state.update { SignInState() }
+    }
+    fun logout() {
+        _authLoginResult.value = LoginResults.Success(false)
+    }
+
 
     }
+
 
 
 
