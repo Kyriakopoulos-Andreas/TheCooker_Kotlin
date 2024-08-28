@@ -3,7 +3,9 @@ package com.TheCooker.Login.Authentication.GoogleAuth
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.util.Log
 import android.widget.Toast
+import com.TheCooker.Login.CrPassword.UserRepo
 import com.TheCooker.Login.SignIn.LoginResults
 import com.TheCooker.Login.SignIn.UserData
 
@@ -21,13 +23,15 @@ import java.util.concurrent.CancellationException
 
 class GoogleClient(
     private val context: Context,
-    private val client: SignInClient
+    private val client: SignInClient,
+    private val userRepo: UserRepo
 ) {
     private val auth = Firebase.auth // Υποκείμενη υπηρεσία αυθεντικοποίησης
 
     suspend fun signIn(): IntentSender? {
         val result = try {
             client.beginSignIn(buildSignInRequest()).await()
+
         } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e
@@ -44,6 +48,24 @@ class GoogleClient(
 
         return try {
             val user = auth.signInWithCredential(googleCredentials).await().user
+            val userExists = userRepo.checkIfUserExistsInFirestore(user?.email ?: "")
+
+            println("User exists: $userExists")
+            println("Email: ${user?.email}")
+            println("Name: ${user?.displayName}")
+
+            // Login με google. Την πρωτη φορα που θα γραφτει γραφεται και στο firestore
+            if (!userExists) {
+                val userData = UserData(
+                    userName = user?.displayName ?: "",
+                    email = user?.email ?: "",
+                    commonUserId = user?.uid ?: "",
+                    googleUserId = user?.uid,
+                    profilerPictureUrl = user?.photoUrl?.toString()
+                )
+                userRepo.saveUserToFirestore(userData)
+            }
+
            LoginResults.Success(
                 UserData(
                     commonUserId = user?.uid ?: "",
@@ -52,6 +74,11 @@ class GoogleClient(
                     profilerPictureUrl = user?.photoUrl?.toString()
                 )
             )
+
+
+
+
+
         } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e

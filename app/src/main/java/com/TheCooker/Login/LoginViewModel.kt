@@ -2,10 +2,7 @@ package com.TheCooker.Login
 
 import android.util.Log
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -32,14 +29,16 @@ import kotlinx.coroutines.withContext
 
 class LoginViewModel: ViewModel() {
 
-    private val userRepo: UserRepo
+    private val _userRepo: UserRepo
+
 
     init {
-        userRepo = UserRepo(
+        _userRepo = UserRepo(
             FirebaseAuth.getInstance(),
             Injection.instance()
         )
     }
+    var userRepo: UserRepo = _userRepo
 
 
 
@@ -174,7 +173,7 @@ class LoginViewModel: ViewModel() {
     }
 
 
-    fun signUp() {
+    fun  signUp(){
         viewModelScope.launch {
             Log.d("LoginViewModel", "signUp called")
             Log.d(
@@ -186,7 +185,7 @@ class LoginViewModel: ViewModel() {
 
             if (_passwordRegBool.value && _confirmPasswordRegBool.value && _firstNameBool.value && _lastNameBool.value
             ) {
-                val result = userRepo.signUp(
+                val result = _userRepo.signUp(
                     firstName = _firstName.value,
                     password = _passwordReg.value,
                     email = _emailRegister.value,
@@ -205,45 +204,30 @@ class LoginViewModel: ViewModel() {
         val email = _emailRegister.value
 
         return withContext(Dispatchers.IO) {
+            val userExists = userRepo.checkIfUserExistsInFirestore(email)
+
             if (email.isNotBlank()) {
                 if (!emailRegex.containsMatchIn(email)) {
                     _emailError.value = "Email is invalid"
                     _emailBool.value = false
-                    return@withContext false
+                    false // επιστρέφουμε false εδώ
+                } else if(userExists) {
+                    _emailError.value = "Email already exists"
+                    _emailBool.value = false
+                    false // επιστρέφουμε false εδώ
                 } else {
-                    val result = _authCreateResult.value
-                    when (result) {
-                        is CreateResults.Success<*> -> {
-                            CreateResults.Success(true)
-
-                        }
-                        is CreateResults.Error -> {
-                            val errorMessage = when (result.exception) {
-                                is FirebaseAuthUserCollisionException -> "Email is already in use."
-                                is FirebaseNetworkException -> "Σφάλμα σύνδεσης στο διαδίκτυο."
-                                is RecaptchaException -> "Test" // Προσαρμόστε ανάλογα
-                                else -> result.exception // Βεβαιωθείτε ότι το result.errorMessage είναι String
-                            }
-                            _emailError.value = errorMessage.toString()
-                            _emailBool.value = false
-                        }
-
-                        null -> {
-                            if (_emailError.value == null) {
-                                _emailError.value = "✔"
-                                _emailBool.value = true
-                            }
-                        }
-                    }
-                    return@withContext _emailBool.value
+                    _emailError.value = "✔"
+                    _emailBool.value = true
+                    true // επιστρέφουμε true εδώ
                 }
             } else {
                 _emailError.value = "Email cannot be empty"
                 _emailBool.value = false
-                return@withContext false
+                false // επιστρέφουμε false εδώ
             }
         }
     }
+
 
 
     fun validConfirmPassword(createRequest: Boolean) {
@@ -338,13 +322,13 @@ class LoginViewModel: ViewModel() {
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
-            _authLoginResult.value = userRepo.login(email, password)
-            println("Login result: ${userRepo.login(email, password)}")
+            _authLoginResult.value = _userRepo.login(email, password)
+            println("Login result: ${_userRepo.login(email, password)}")
             if (_authLoginResult.value is LoginResults.Success) {
-                val currentUser = userRepo.auth.currentUser
+                val currentUser = _userRepo.auth.currentUser
                 println("Current userooooooooooo: $currentUser")
                 if (currentUser != null) {
-                    val userDetails = userRepo.getUserDetails(currentUser.email ?: "")
+                    val userDetails = _userRepo.getUserDetails(currentUser.email ?: "")
                     println("User detailskkkkkkkk: $userDetails")
                     if (userDetails is LoginResults.Success<*>) {
                         _userData.value = userDetails.data as UserData?

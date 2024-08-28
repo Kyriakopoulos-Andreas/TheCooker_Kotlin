@@ -4,6 +4,10 @@ import android.annotation.SuppressLint
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
+import androidx.compose.material.DrawerDefaults
+import androidx.compose.material.DrawerState
+import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material.TopAppBar
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -59,6 +63,7 @@ fun MenuView(
     val currentRoute = navBackStackEntry?.destination?.route
 
     val scaffoldState = rememberScaffoldState()
+
     val scope = rememberCoroutineScope()
 
 
@@ -97,7 +102,9 @@ fun MenuView(
                 DrawerTopBar(title = title.value, topBarRoute, navController, scaffoldState, scope, previousRoute)
             }
 
+
         },
+
 
         drawerContent = {
 

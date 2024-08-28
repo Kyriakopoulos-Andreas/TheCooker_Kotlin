@@ -28,6 +28,7 @@ class UserRepo(
                 password = password,
                 email = email
             )
+
             saveUserToFirestore(user = user)
 
             CreateResults.Success(true)
@@ -38,7 +39,7 @@ class UserRepo(
         }
     }
 
-    private suspend fun saveUserToFirestore(user: UserData) {
+    suspend fun saveUserToFirestore(user: UserData) {
         firestore.collection("users").document(user.email.toString()).set(user).await()
         // Προσθήκη καταγραφής
         println("User saved to Firestore with email: ${user.email}")
@@ -70,6 +71,11 @@ class UserRepo(
         } catch (e: Exception) {
             LoginResults.Error(e)
         }
+    }
+    suspend fun checkIfUserExistsInFirestore(email: String): Boolean {
+        val querySnapshot = firestore.collection("users").whereEqualTo("email", email).get().await()
+        return !querySnapshot.isEmpty
+
     }
 
 

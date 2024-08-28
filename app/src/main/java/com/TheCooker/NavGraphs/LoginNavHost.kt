@@ -1,5 +1,6 @@
 package com.TheCooker.NavGraphs
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Build
 import android.widget.Toast
@@ -26,6 +27,7 @@ import kotlinx.coroutines.delay
 
 import kotlinx.coroutines.launch
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun LoginNavigator(viewModel: LoginViewModel, client: GoogleClient) {
@@ -33,6 +35,7 @@ fun LoginNavigator(viewModel: LoginViewModel, client: GoogleClient) {
 
     val context = LocalContext.current
     val userData by viewModel.userData.observeAsState() /// ΧΡΗΣΙΜΟΠΟΙΗΣΕ ΤΟ ΓΙΑ ΤΟ LOG IN ΓΙΑ ΝΑ ΒΛΕΠΕΙΣ ΑΝ ΦΩΡΤΟΣΕ ΤΑ ΣΤΟΙΧΕΙΑ ΤΟΥ ΧΡΗΣΤΗ
+
 
 
 
@@ -71,6 +74,7 @@ fun LoginNavigator(viewModel: LoginViewModel, client: GoogleClient) {
                         "Welcome Chef",
                         Toast.LENGTH_LONG
                     ).show()
+
 
                     navController2.currentBackStackEntry?.savedStateHandle?.set("User", client.getSignedInUser())
                     navController2.navigate("MenuView"){
@@ -118,6 +122,7 @@ fun LoginNavigator(viewModel: LoginViewModel, client: GoogleClient) {
         }
         composable(route = "MenuView") {
             val user = navController2.previousBackStackEntry?.savedStateHandle?.get<UserData>("User")
+
 
 
                 MenuView(viewModel.userData.value ?: user, client, navController2, loginViewModel = viewModel)

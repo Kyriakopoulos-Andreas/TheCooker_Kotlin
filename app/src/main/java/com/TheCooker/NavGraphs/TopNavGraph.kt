@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -39,12 +40,16 @@ import com.TheCooker.SearchToolBar.ApiService.MealsCategory
 import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
+import com.TheCooker.SearchToolBar.Views.CreateMeal
 import com.TheCooker.SearchToolBar.Views.MealDetailView
 import com.TheCooker.SearchToolBar.Views.MealsView
 import com.TheCooker.SearchToolBar.Views.SearchView
+import dagger.hilt.android.AndroidEntryPoint
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
+
 fun TopNavGraph(
     navController: NavController,
     paddingValues: PaddingValues,
@@ -54,12 +59,12 @@ fun TopNavGraph(
     loginViewModel: LoginViewModel,
     topBarRoute: MutableState<Boolean>
 ) {
-    val recipeViewModel: SearchCategoryViewModel = viewModel()
+    val recipeViewModel: SearchCategoryViewModel = hiltViewModel()
     val recipeState by recipeViewModel.categoriesState
-    val mealsViewModel: MealsViewModel = viewModel()
+    val mealsViewModel: MealsViewModel = hiltViewModel()
     val mealState by mealsViewModel.mealState.observeAsState(MealsViewModel.MealsState())
 
-    val detailViewModel: MealsDetailViewModel = viewModel()
+    val detailViewModel: MealsDetailViewModel = hiltViewModel()
 
     val detailState by detailViewModel.mealsDetailState.observeAsState(initial = MealsDetailViewModel.MealsDetailState())
 
@@ -87,6 +92,10 @@ fun TopNavGraph(
 
             composable(DrawerScreens.drawerScreensList[3].route) {
                 Help(topBarRoute = topBarRoute)
+            }
+
+            composable(route = "CreateMeal"){
+                CreateMeal()
             }
 
 
@@ -132,7 +141,9 @@ fun TopNavGraph(
                     },
                     fetchDetails = { mealName ->
                         mealsViewModel.fetchMeals(mealName)
-                    }
+                    },
+                    navController = navController
+
                 )
                 LaunchedEffect(detailState.list){
                     if (shouldNavigate && detailViewModel.mealsDetailState.value!!.list.isNotEmpty()) {

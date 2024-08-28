@@ -14,19 +14,31 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.TheCooker.Login.Authentication.GoogleAuth.GoogleClient
 
 import com.TheCooker.NavGraphs.LoginNavigator
 import com.TheCooker.Login.LoginViewModel
+import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
+import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
+import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
 import com.google.android.gms.auth.api.identity.Identity
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.HiltAndroidApp
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    val viewModelLogin: LoginViewModel by viewModels()
+
+
+
 
     private val googleClient by lazy {
         GoogleClient(
             context = applicationContext,
-            client = Identity.getSignInClient(applicationContext)
+            client = Identity.getSignInClient(applicationContext),
+            userRepo = viewModelLogin.userRepo
         )
     }
 
@@ -41,6 +53,9 @@ class MainActivity : ComponentActivity() {
 
             // Ορίζουμε το ViewModelStore για τη διαχείριση των ViewModels
             TheCookerTheme {
+                val searchCategoryViewModel = hiltViewModel<SearchCategoryViewModel>()
+                val mealsDetailViewModel = hiltViewModel<MealsDetailViewModel>()
+                val mealsViewModel = hiltViewModel<MealsViewModel>()
 
                     Surface(
                         modifier = Modifier.fillMaxSize(),

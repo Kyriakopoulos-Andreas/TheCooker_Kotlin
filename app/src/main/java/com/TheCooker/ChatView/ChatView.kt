@@ -1,5 +1,6 @@
 package com.example.cooker.ChatView
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,8 +15,11 @@ fun ChatView(){
     Column(modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center) {
-        Text(text = "ChatScreen")
+        Text(text = "ChatScreen",
+            modifier = Modifier.clickable {  })
 
 
     }
+
+
 }

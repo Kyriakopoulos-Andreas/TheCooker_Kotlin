@@ -1,19 +1,29 @@
 package com.TheCooker.SearchToolBar.ViewModels
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.TheCooker.R
+import com.TheCooker.SearchToolBar.ApiService.ApiService
 import com.TheCooker.SearchToolBar.ApiService.Category
 import com.TheCooker.SearchToolBar.ApiService.MealDetail
 import com.TheCooker.SearchToolBar.ApiService.MealsCategory
-import com.TheCooker.SearchToolBar.ApiService.recipeService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
-class SearchCategoryViewModel: ViewModel() {
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class SearchCategoryViewModel @Inject constructor(
+    private val apiService: ApiService
+): ViewModel() {
 
     data class RecipeState(
         val error: String? = null,
@@ -31,9 +41,9 @@ class SearchCategoryViewModel: ViewModel() {
     }
 
     private fun fetchCategories(){
-        viewModelScope.launch(Dispatchers.IO){
+        viewModelScope.launch(){
             try{
-                val response = recipeService.getCategories()
+                val response = apiService.getCategories()
                 _categoriesState.value = _categoriesState.value.copy(
                     loading = false,
                     error = null,
@@ -52,7 +62,10 @@ class SearchCategoryViewModel: ViewModel() {
     }
 }
 
-class MealsViewModel : ViewModel() {
+@HiltViewModel
+class MealsViewModel@Inject constructor(
+   private val apiService: ApiService
+): ViewModel() {
 
     data class MealsState(
         val loading: Boolean = false,
@@ -66,9 +79,11 @@ class MealsViewModel : ViewModel() {
     fun fetchMeals(mealCategory: String) {
         _mealState.value = MealsState(loading = true)
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch() {
             try {
-                val responseMeals = recipeService.getMeals(mealCategory)
+                val responseMeals = apiService.getMeals(mealCategory)
+
+
                 _mealState.postValue(
                     MealsState(
                         loading = false,
@@ -76,6 +91,7 @@ class MealsViewModel : ViewModel() {
                         list = responseMeals.meals
                     )
                 )
+
             } catch (e: Exception) {
                 _mealState.postValue(
                     MealsState(
@@ -89,48 +105,36 @@ class MealsViewModel : ViewModel() {
 }
 
 
+@HiltViewModel
+class MealsDetailViewModel @Inject constructor(
+    private val apiService: ApiService
+) : ViewModel() {
 
-class MealsDetailViewModel: ViewModel() {
     data class MealsDetailState(
         val loading: Boolean = false,
         val error: String? = null,
         val list: List<MealDetail> = emptyList()
     )
-   private val _mealsDetailState = MutableLiveData(MealsDetailState())
+
+    private val _mealsDetailState = MutableLiveData(MealsDetailState())
     val mealsDetailState: LiveData<MealsDetailState> = _mealsDetailState
 
-
-    fun fetchDetails(meal: String){
+    fun fetchDetails(meal: String) {
         _mealsDetailState.value = MealsDetailState(loading = true)
-        viewModelScope.launch(Dispatchers.IO){
+        viewModelScope.launch() {
             try {
-                val response= recipeService.getMealDetail(meal)
-                _mealsDetailState.postValue(
-                    MealsDetailState(
-                        loading = false,
-                        error = null,
-                        list = response.meals
-
-                    )
+                val response = apiService.getMealDetail(meal)
+                _mealsDetailState.value = MealsDetailState(
+                    loading = false,
+                    error = null,
+                    list = response.meals
                 )
-
-
-            }catch (e: Exception){
-                _mealsDetailState.postValue(
-                    MealsDetailState(
-                        loading = false,
-                        error = "Error occured ${e.message}"
-
-                    )
-
+            } catch (e: Exception) {
+                _mealsDetailState.value = MealsDetailState(
+                    loading = false,
+                    error = "Error occurred ${e.message}"
                 )
-
-
-
             }
-
         }
-
     }
-
 }
