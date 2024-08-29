@@ -6,9 +6,10 @@ import com.TheCooker.Login.SignIn.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class UserRepo(
-    internal val auth: FirebaseAuth,
+class UserRepo@Inject constructor(
+    val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore
 ) {
     suspend fun signUp(

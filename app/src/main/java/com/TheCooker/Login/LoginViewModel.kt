@@ -9,16 +9,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.TheCooker.Login.SignIn.SignInState
-import com.TheCooker.Login.CrPassword.Injection
+import com.TheCooker.Login.CrPassword.FirebaseModule
 
 import com.TheCooker.Login.CrPassword.UserRepo
 import com.TheCooker.Login.SignIn.CreateResults
 import com.TheCooker.Login.SignIn.LoginResults
 import com.TheCooker.Login.SignIn.UserData
-import com.google.android.recaptcha.RecaptchaException
-import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.firestore.FirebaseFirestore
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,18 +25,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-class LoginViewModel: ViewModel() {
-
-    private val _userRepo: UserRepo
+import javax.inject.Inject
 
 
-    init {
-        _userRepo = UserRepo(
-            FirebaseAuth.getInstance(),
-            Injection.instance()
-        )
-    }
+@HiltViewModel
+class LoginViewModel @Inject constructor(
+  private val _userRepo: UserRepo
+) : ViewModel() {
+
+
     var userRepo: UserRepo = _userRepo
 
 
@@ -370,8 +366,6 @@ class LoginViewModel: ViewModel() {
 
 
     }
-
-
 
 
 

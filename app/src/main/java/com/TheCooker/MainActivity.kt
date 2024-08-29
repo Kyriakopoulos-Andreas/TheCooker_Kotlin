@@ -29,18 +29,7 @@ import dagger.hilt.android.HiltAndroidApp
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    val viewModelLogin: LoginViewModel by viewModels()
 
-
-
-
-    private val googleClient by lazy {
-        GoogleClient(
-            context = applicationContext,
-            client = Identity.getSignInClient(applicationContext),
-            userRepo = viewModelLogin.userRepo
-        )
-    }
 
 
 
@@ -56,8 +45,16 @@ class MainActivity : ComponentActivity() {
                 val searchCategoryViewModel = hiltViewModel<SearchCategoryViewModel>()
                 val mealsDetailViewModel = hiltViewModel<MealsDetailViewModel>()
                 val mealsViewModel = hiltViewModel<MealsViewModel>()
+                val loginViewModel = hiltViewModel<LoginViewModel>()
+                val googleClient by lazy {
+                    GoogleClient(
+                        context = applicationContext,
+                        client = Identity.getSignInClient(applicationContext),
+                        userRepo = viewModelLogin.userRepo
+                    )
+                }
 
-                    Surface(
+                Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {

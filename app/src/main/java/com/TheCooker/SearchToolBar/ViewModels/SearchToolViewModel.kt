@@ -7,16 +7,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.TheCooker.R
 import com.TheCooker.SearchToolBar.ApiService.ApiService
 import com.TheCooker.SearchToolBar.ApiService.Category
 import com.TheCooker.SearchToolBar.ApiService.MealDetail
 import com.TheCooker.SearchToolBar.ApiService.MealsCategory
 
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
