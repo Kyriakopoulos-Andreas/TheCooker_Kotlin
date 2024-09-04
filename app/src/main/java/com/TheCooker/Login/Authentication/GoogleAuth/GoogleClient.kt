@@ -8,6 +8,7 @@ import android.widget.Toast
 import com.TheCooker.Login.CrPassword.UserRepo
 import com.TheCooker.Login.SignIn.LoginResults
 import com.TheCooker.Login.SignIn.UserData
+import com.TheCooker.Login.SignIn.UserDataProvider
 
 import com.TheCooker.R
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
@@ -15,16 +16,19 @@ import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.CancellationException
+import javax.inject.Inject
 
-class GoogleClient(
-    private val context: Context,
+
+class GoogleClient@Inject constructor(
+    @ApplicationContext private val context: Context,
     private val client: SignInClient,
-    private val userRepo: UserRepo
+    private val userRepo: UserRepo,
+    private val userDataProvider: UserDataProvider
 ) {
     private val auth = Firebase.auth // Υποκείμενη υπηρεσία αυθεντικοποίησης
 
@@ -59,24 +63,22 @@ class GoogleClient(
                 val userData = UserData(
                     userName = user?.displayName ?: "",
                     email = user?.email ?: "",
-                    commonUserId = user?.uid ?: "",
+                    uid = user?.uid ?: "",
                     googleUserId = user?.uid,
                     profilerPictureUrl = user?.photoUrl?.toString()
                 )
                 userRepo.saveUserToFirestore(userData)
             }
 
-           LoginResults.Success(
-                UserData(
-                    commonUserId = user?.uid ?: "",
-                    googleUserId = user?.uid,
-                    userName = user?.displayName,
-                    profilerPictureUrl = user?.photoUrl?.toString()
-                )
+            val userData = UserData(
+                uid = user?.uid ?: "",
+                googleUserId = user?.uid,
+                userName = user?.displayName,
+                profilerPictureUrl = user?.photoUrl?.toString()
             )
+            userDataProvider.userData = userData
 
-
-
+            LoginResults.Success(userData)
 
 
         } catch (e: Exception) {

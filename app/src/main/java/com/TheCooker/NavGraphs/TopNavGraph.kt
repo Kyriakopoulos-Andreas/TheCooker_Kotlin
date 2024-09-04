@@ -56,7 +56,7 @@ fun TopNavGraph(
     user: UserData?,
     client: GoogleClient,
     navLogin: NavHostController,
-    loginViewModel: LoginViewModel,
+    loginViewModel: LoginViewModel = hiltViewModel(),
     topBarRoute: MutableState<Boolean>
 ) {
     val recipeViewModel: SearchCategoryViewModel = hiltViewModel()

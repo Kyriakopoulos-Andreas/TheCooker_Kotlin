@@ -19,12 +19,14 @@ import com.TheCooker.Login.Authentication.GoogleAuth.GoogleClient
 
 import com.TheCooker.NavGraphs.LoginNavigator
 import com.TheCooker.Login.LoginViewModel
+import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
 import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -32,12 +34,14 @@ class MainActivity : ComponentActivity() {
 
 
 
+    @Inject
+    lateinit var googleClient: GoogleClient
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val viewModelLogin: LoginViewModel by viewModels()
+
 
 
             // Ορίζουμε το ViewModelStore για τη διαχείριση των ViewModels
@@ -46,20 +50,14 @@ class MainActivity : ComponentActivity() {
                 val mealsDetailViewModel = hiltViewModel<MealsDetailViewModel>()
                 val mealsViewModel = hiltViewModel<MealsViewModel>()
                 val loginViewModel = hiltViewModel<LoginViewModel>()
-                val googleClient by lazy {
-                    GoogleClient(
-                        context = applicationContext,
-                        client = Identity.getSignInClient(applicationContext),
-                        userRepo = viewModelLogin.userRepo
-                    )
-                }
+                val createMealViewModel = hiltViewModel<CreateMealViewModel>()
 
                 Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
 
-                        LoginNavigator(viewModelLogin, googleClient)
+                        LoginNavigator(loginViewModel, googleClient)
                         println("Hello")
 
 

@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,11 +31,11 @@ import kotlinx.coroutines.launch
 @SuppressLint("CoroutineCreationDuringComposition")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun LoginNavigator(viewModel: LoginViewModel, client: GoogleClient) {
+fun LoginNavigator(viewModel: LoginViewModel = hiltViewModel(), client: GoogleClient) {
     val navController2 = rememberNavController()
 
     val context = LocalContext.current
-    val userData by viewModel.userData.observeAsState() /// ΧΡΗΣΙΜΟΠΟΙΗΣΕ ΤΟ ΓΙΑ ΤΟ LOG IN ΓΙΑ ΝΑ ΒΛΕΠΕΙΣ ΑΝ ΦΩΡΤΟΣΕ ΤΑ ΣΤΟΙΧΕΙΑ ΤΟΥ ΧΡΗΣΤΗ
+
 
 
 

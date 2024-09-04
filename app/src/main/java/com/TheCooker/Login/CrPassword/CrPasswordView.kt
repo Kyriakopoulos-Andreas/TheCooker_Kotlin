@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
 import com.TheCooker.Login.LoginViewModel
 import kotlinx.coroutines.launch
@@ -52,7 +53,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrPasswordView(
-    viewModel: LoginViewModel,
+    viewModel: LoginViewModel = hiltViewModel(),
 ){
     var CreatepasswordVisible by remember { mutableStateOf(false) }
     var ConfirmCreatepasswordVisible by remember { mutableStateOf(false) }

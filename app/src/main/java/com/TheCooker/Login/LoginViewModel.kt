@@ -185,7 +185,8 @@ class LoginViewModel @Inject constructor(
                     firstName = _firstName.value,
                     password = _passwordReg.value,
                     email = _emailRegister.value,
-                    lastName = _lastName.value
+                    lastName = _lastName.value,
+                    profilePictureUrl = ""
                 )
                 _authCreateResult.value = result
 
@@ -200,7 +201,7 @@ class LoginViewModel @Inject constructor(
         val email = _emailRegister.value
 
         return withContext(Dispatchers.IO) {
-            val userExists = userRepo.checkIfUserExistsInFirestore(email)
+            val userExists = _userRepo.checkIfUserExistsInFirestore(email)
 
             if (email.isNotBlank()) {
                 if (!emailRegex.containsMatchIn(email)) {

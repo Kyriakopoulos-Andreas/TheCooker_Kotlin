@@ -1,9 +1,11 @@
 package com.TheCooker.Login.CrPassword
 
+import android.util.Log
 import com.TheCooker.Login.SignIn.CreateResults
 import com.TheCooker.Login.SignIn.LoginResults
 import com.TheCooker.Login.SignIn.UserData
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -16,21 +18,33 @@ class UserRepo@Inject constructor(
         firstName: String,
         password: String,
         email: String,
-        lastName: String
+        lastName: String,
+        profilePictureUrl: String?
     ): CreateResults<Boolean> {
         return try {
-            auth.createUserWithEmailAndPassword(email, password).await()
+            val authResult = auth.createUserWithEmailAndPassword(email, password).await()
+            val firebaseUser: FirebaseUser? = authResult.user
+
+            val uid = firebaseUser?.uid
+            Log.d("!!!!!!!!!!!!!!!!!!!!!!!!!!!", "uid")
+
             // Προσθήκη καταγραφής
             println("User created with email: $email")
 
-            // Προσθήκη χρήστη στο Firestore
-            val user = UserData(
-                userName = "$firstName $lastName",
-                password = password,
-                email = email
-            )
+            if(uid != null) {
+                // Προσθήκη χρήστη στο Firestore
+                val user = UserData(
+                    uid = uid ?:"",
+                    userName = "$firstName $lastName",
+                    password = password,
+                    email = email,
+                    profilerPictureUrl = profilePictureUrl
+                )
 
-            saveUserToFirestore(user = user)
+                saveUserToFirestore(user = user)
+            }else{
+                CreateResults.Error(Exception("Failed to create user"))
+            }
 
             CreateResults.Success(true)
         } catch (e: Exception) {

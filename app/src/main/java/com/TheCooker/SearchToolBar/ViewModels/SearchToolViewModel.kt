@@ -25,9 +25,9 @@ class SearchCategoryViewModel @Inject constructor(
         val error: String? = null,
         val loading: Boolean = false,
         val list: List<Category> = emptyList()
-    ) {
+    )
 
-    }
+
 
     private val _categoriesState = mutableStateOf(RecipeState())
     val categoriesState: State<RecipeState> = _categoriesState
