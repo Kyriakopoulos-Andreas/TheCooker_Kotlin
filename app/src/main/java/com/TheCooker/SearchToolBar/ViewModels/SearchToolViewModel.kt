@@ -1,24 +1,27 @@
 package com.TheCooker.SearchToolBar.ViewModels
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.TheCooker.SearchToolBar.ApiService.ApiService
-import com.TheCooker.SearchToolBar.ApiService.Category
+import com.TheCooker.SearchToolBar.RecipeRepo.Category
 import com.TheCooker.SearchToolBar.ApiService.MealDetail
-import com.TheCooker.SearchToolBar.ApiService.MealsCategory
+import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
+import com.TheCooker.SearchToolBar.RecipeRepo.MealsCategory
+import com.TheCooker.SearchToolBar.RecipeRepo.RecipeRepo
+import com.TheCooker.SearchToolBar.RecipeRepo.UserRecipe
 
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SearchCategoryViewModel @Inject constructor(
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val recipeRepo: RecipeRepo
 ): ViewModel() {
 
     data class RecipeState(
@@ -29,62 +32,99 @@ class SearchCategoryViewModel @Inject constructor(
 
 
 
-    private val _categoriesState = mutableStateOf(RecipeState())
-    val categoriesState: State<RecipeState> = _categoriesState
+
+    private val _categoriesState = MutableStateFlow(RecipeState())
+    val categoriesState: StateFlow<RecipeState> = _categoriesState
 
     init {
         fetchCategories()
     }
 
-    private fun fetchCategories(){
-        viewModelScope.launch(){
-            try{
-                val response = apiService.getCategories()
-                _categoriesState.value = _categoriesState.value.copy(
+    private fun fetchCategories() {
+        viewModelScope.launch {
+            try {
+                _categoriesState.value = RecipeState(loading = true)
+
+                // Λήψη τοπικών κατηγοριών από τη βάση δεδομένων
+                val localCategories = recipeRepo.getCategories()
+                println("Local categories: $localCategories")
+                _categoriesState.value = RecipeState(
                     loading = false,
-                    error = null,
-                    list = response.categories
+                    list = localCategories
                 )
 
-            }catch(e: Exception){
-                _categoriesState.value = _categoriesState.value.copy(
+                // Συγχρονισμός κατηγοριών με το API
+                val response = apiService.getCategories()
+                val categoriesFromApi = response.categories
+                recipeRepo.syncApiCategoriesWithFirebase(categoriesFromApi)
+
+                // Λήψη ενημερωμένων κατηγοριών από τη βάση δεδομένων
+                val updatedCategories = recipeRepo.getCategories()
+                println("Updated categories: $updatedCategories")
+                _categoriesState.value = RecipeState(
+                    loading = false,
+                    error = null,
+                    list = updatedCategories
+                )
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+                _categoriesState.value = RecipeState(
                     loading = false,
                     error = "Error occurred"
                 )
-
             }
-
         }
     }
+
+
 }
 
 @HiltViewModel
 class MealsViewModel@Inject constructor(
-   private val apiService: ApiService
+    private val apiService: ApiService,
+    private val recipeRepo: RecipeRepo
 ): ViewModel() {
 
     data class MealsState(
         val loading: Boolean = false,
-        val list: List<MealsCategory> = emptyList(),
+        val list: List<MealItem> = emptyList(),
         val error: String? = null
     )
 
     private val _mealState = MutableLiveData(MealsState())
     val mealState: LiveData<MealsState> get() = _mealState
 
-    fun fetchMeals(mealCategory: String) {
+    fun fetchMeals(mealCategory: String, categoryId: String?) {
         _mealState.value = MealsState(loading = true)
+
+
 
         viewModelScope.launch() {
             try {
+                val meals = recipeRepo.getRecipes(categoryId ?: "")
                 val responseMeals = apiService.getMeals(mealCategory)
+
+                val  mealItems: List<MealItem> = responseMeals.meals.map {
+                    MealsCategory(
+                        it.strMeal ?: "",
+                        it.strMealThumb ?: "",
+                        it.idMeal ?: ""
+                    )
+                } + meals.map {
+                    UserRecipe(
+                        it.categoryId,
+                        it.recipeId,
+                        it.recipeName
+
+                    )
+                }
 
 
                 _mealState.postValue(
                     MealsState(
                         loading = false,
                         error = null,
-                        list = responseMeals.meals
+                        list = mealItems
                     )
                 )
 

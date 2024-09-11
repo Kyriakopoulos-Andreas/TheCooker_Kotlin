@@ -28,17 +28,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
+import coil.request.ImageRequest
+import coil.size.Size
 import com.TheCooker.R
-import com.TheCooker.SearchToolBar.ApiService.MealsCategory
+import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
+import com.TheCooker.SearchToolBar.RecipeRepo.MealsCategory
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun MealsView(mealsState: MealsViewModel.MealsState,
               meals: List<MealsCategory>,
-              navigateToDetails: (MealsCategory) -> Unit,
+              navigateToDetails: (MealItem) -> Unit,
               fetchDetails: (String) -> Unit,
-              navController: NavController) {
+              navController: NavController,
+              createMeal: () -> Unit,) {
 
 
 
@@ -54,18 +59,19 @@ fun MealsView(mealsState: MealsViewModel.MealsState,
                 Toast.makeText(context, "There was an error!", Toast.LENGTH_SHORT).show()
             }
             else -> {
-                ViewMealsList(meals = meals, navigateToDetails, fetchDetails, navController)
+                ViewMealsList(meals = meals, navigateToDetails, fetchDetails, createMeal)
             }
         }
     }
 }
 
 @Composable
-fun ViewMealsList(meals: List<MealsCategory>,
-                  navigateToDetails: (MealsCategory)->Unit,
+fun ViewMealsList(meals: List<MealItem>,
+                  navigateToDetails: (MealItem)->Unit,
                   fetchDetails: (String) -> Unit,
-                  navController: NavController
+                  createMeal: () -> Unit
               ){
+
 
     LazyColumn(modifier = Modifier
         .fillMaxSize()
@@ -100,36 +106,49 @@ fun ViewMealsList(meals: List<MealsCategory>,
                         .fillMaxSize()
                         .aspectRatio(1f)
                         .padding(8.dp)
-                        .clickable {navController.navigate("CreateMeal")}
+                        .clickable {
+                            createMeal()}
                 )
             }
         items(meals){meals ->
 
-            ViewMeal(mealsCategory = meals, navigateToDetails,fetchDetails)
+            ViewMeal(meals, navigateToDetails,fetchDetails)
 
         }
     }
 }
 
+
+
 @Composable
-fun ViewMeal(mealsCategory: MealsCategory,
-             navigateToDetails: (MealsCategory)->Unit,
-             fetchDetails: (String) -> Unit){
+fun ViewMeal(mealItem: MealItem,
+             navigateToDetails: (MealItem) -> Unit,
+             fetchDetails: (String) -> Unit) {
     Column(modifier = Modifier
         .fillMaxSize()
         .padding(8.dp)
         .clickable {
-            navigateToDetails(mealsCategory)
-            fetchDetails(mealsCategory.strMeal)
-        },   //  ,<-------------------------------------------
+            navigateToDetails(mealItem)
+            fetchDetails(mealItem.name ?: "")
+        },
         horizontalAlignment = Alignment.Start) {
 
+        // Check if mealItem.image is not null and handle it accordingly
+        val imagePainter = rememberImagePainter(
+            ImageRequest.Builder(LocalContext.current)
+                .data(mealItem.image)
+                .size(Size.ORIGINAL) // Optional: define the size you need
+                .build()
+        )
 
-        Image(painter = rememberAsyncImagePainter(model = mealsCategory.strMealThumb),
+        Image(
+            painter = imagePainter,
             contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
-                .aspectRatio(1f))
+                .aspectRatio(1f),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+        )
 
         Box(
             modifier = Modifier
@@ -137,7 +156,7 @@ fun ViewMeal(mealsCategory: MealsCategory,
                 .padding(8.dp)
         ) {
             Text(
-                text = mealsCategory.strMeal,
+                text = mealItem.name ?: "",
                 modifier = Modifier
                     .padding(top = 4.dp)
                     .align(Alignment.Center),
@@ -145,11 +164,8 @@ fun ViewMeal(mealsCategory: MealsCategory,
                 color = Color.White,
                 fontSize = 20.sp,
                 fontFamily = FontFamily.Monospace
-
             )
         }
         Spacer(modifier = Modifier.padding(16.dp))
-
     }
-
 }

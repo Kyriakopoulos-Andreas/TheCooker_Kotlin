@@ -1,15 +1,12 @@
 package com.TheCooker.SearchToolBar.ViewModels
 
 
-import android.service.autofill.UserData
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.TheCooker.Login.CrPassword.UserRepo
 import com.TheCooker.Login.SignIn.UserDataProvider
-import com.TheCooker.SearchToolBar.ApiService.Category
 import com.TheCooker.SearchToolBar.RecipeRepo.RecipeRepo
 import com.TheCooker.SearchToolBar.RecipeRepo.UserRecipe
 import dagger.hilt.android.lifecycle.HiltViewModel

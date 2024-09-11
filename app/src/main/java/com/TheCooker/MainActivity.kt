@@ -22,6 +22,7 @@ import com.TheCooker.Login.LoginViewModel
 import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
+
 import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
 import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.AndroidEntryPoint

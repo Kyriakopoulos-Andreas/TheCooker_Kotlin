@@ -23,7 +23,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import com.TheCooker.SearchToolBar.ApiService.Category
+import com.TheCooker.SearchToolBar.RecipeRepo.Category
 import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
 
 
@@ -79,7 +79,8 @@ fun ShowCategories(categories: List<Category>,
         items(categories){
 
             Category ->
-            ShowItem(category = Category, navigateToMeals, fetchMeals)
+            println(Category.strCategory)
+            ShowItem(category = Category, navigateToMeals, fetchMeals,)
         }
     }
 
@@ -93,7 +94,7 @@ fun ShowItem(category: Category,
         .fillMaxSize()
         .padding(8.dp)
         .clickable {
-            fetchMeals(category.strCategory)
+            fetchMeals(category.strCategory?: "")
             navigateToMeals(category)
         },
         horizontalAlignment = Alignment.CenterHorizontally) {
@@ -104,8 +105,8 @@ fun ShowItem(category: Category,
             modifier = Modifier
                 .fillMaxSize()
                 .aspectRatio(1f))
-        
-        Text(text = category.strCategory, modifier = Modifier.padding(top = 8.dp),
+
+        Text(text = category.strCategory?: "", modifier = Modifier.padding(top = 8.dp),
             style = TextStyle(fontWeight = FontWeight.SemiBold),
             color = Color.White
         )

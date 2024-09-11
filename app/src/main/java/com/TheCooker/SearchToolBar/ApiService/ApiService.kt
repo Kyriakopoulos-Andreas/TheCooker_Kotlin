@@ -1,7 +1,8 @@
 package com.TheCooker.SearchToolBar.ApiService
 
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import com.TheCooker.SearchToolBar.RecipeRepo.CategoriesResponse
+import com.TheCooker.SearchToolBar.RecipeRepo.MealsCategory
+import com.TheCooker.SearchToolBar.RecipeRepo.MealsCategoryResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 

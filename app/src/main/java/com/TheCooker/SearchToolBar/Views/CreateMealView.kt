@@ -1,7 +1,6 @@
 package com.TheCooker.SearchToolBar.Views
 
 import android.net.Uri
-import android.service.autofill.UserData
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -67,11 +66,11 @@ import java.util.UUID
 @Composable
 fun CreateMeal(
     viewmodel: CreateMealViewModel = hiltViewModel(),
+    categoryId: String?
                ) {
 
     val creatorId  = remember { mutableStateOf(viewmodel.creatorId)}
 
-    val painter = "android.resource://com.TheCooker/" + R.drawable.addmeal
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     val createMealViewModel: CreateMealViewModel = viewModel()
 
@@ -96,6 +95,8 @@ fun CreateMeal(
         }
     }
 
+
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top
@@ -112,7 +113,7 @@ fun CreateMeal(
                         .padding(8.dp)
                 ) {
                     AsyncImage(
-                        model = painter,
+                        model = imageUri ?: "android.resource://com.TheCooker/${R.drawable.addmeal}",
                         contentDescription = "Add Meal Image",
                         modifier = Modifier
                             .fillMaxSize()
@@ -355,6 +356,7 @@ fun CreateMeal(
                             recipeImage = imageUri.toString(),
                             creatorId = creatorId.value ?: "",
                             recipeId =  UUID.randomUUID().toString(),
+                            categoryId = categoryId ?: ""
                         )
                     )
 
