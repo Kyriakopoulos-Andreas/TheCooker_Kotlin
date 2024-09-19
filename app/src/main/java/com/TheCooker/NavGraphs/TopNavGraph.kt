@@ -1,5 +1,6 @@
 package com.TheCooker.NavGraphs
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -15,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,6 +40,7 @@ import com.TheCooker.Login.SignIn.UserData
 import com.TheCooker.Profile.ProfileView
 import com.TheCooker.SearchToolBar.ApiService.MealDetail
 import com.TheCooker.SearchToolBar.RecipeRepo.MealsCategory
+import com.TheCooker.SearchToolBar.RecipeRepo.UserRecipe
 import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
@@ -45,8 +48,10 @@ import com.TheCooker.SearchToolBar.Views.CreateMeal
 import com.TheCooker.SearchToolBar.Views.MealDetailView
 import com.TheCooker.SearchToolBar.Views.MealsView
 import com.TheCooker.SearchToolBar.Views.SearchView
+import kotlinx.coroutines.launch
 
 
+@SuppressLint("MutableCollectionMutableState")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 
@@ -62,11 +67,17 @@ fun TopNavGraph(
     val recipeViewModel: SearchCategoryViewModel = hiltViewModel()
     val recipeState by recipeViewModel.categoriesState.collectAsState()
     val mealsViewModel: MealsViewModel = hiltViewModel()
-    val mealState by mealsViewModel.mealState.observeAsState(MealsViewModel.MealsState())
+    val mealState by mealsViewModel.mealState.observeAsState(MealsViewModel.ApiMealsState())
+    val userMealState by mealsViewModel.userMealState.observeAsState(MealsViewModel.UserMealsState())
+
+    val combinedMeals by mealsViewModel.combinedMeals.observeAsState(mutableListOf())
 
     val detailViewModel: MealsDetailViewModel = hiltViewModel()
 
     val detailState by detailViewModel.mealsDetailState.observeAsState(initial = MealsDetailViewModel.MealsDetailState())
+    val userRecipeBool by mealsViewModel.userRecipeBool.observeAsState(false)
+    val scope = rememberCoroutineScope()
+
 
     Box(
         modifier = Modifier
@@ -74,60 +85,93 @@ fun TopNavGraph(
             .background(color = Color(0xFF292929))
     ) {
 
-        NavHost(navController = navController as NavHostController, startDestination = TopBarMenu.HomeView.route) {
+        NavHost(
+            navController = navController as NavHostController,
+            startDestination = TopBarMenu.HomeView.route
+        ) {
             composable(route = "MenuView") {
                 MenuView(user, googleClient = client, navLogin, loginViewModel)
             }
-            composable(DrawerScreens.drawerScreensList[0].route){
+            composable(DrawerScreens.drawerScreensList[0].route) {
                 Calendar(topBarRoute = topBarRoute)
             }
-
-            composable(DrawerScreens.drawerScreensList[1].route){
+            composable(DrawerScreens.drawerScreensList[1].route) {
                 Options(topBarRoute = topBarRoute)
             }
-
             composable(DrawerScreens.drawerScreensList[2].route) {
                 Information(topBarRoute = topBarRoute)
             }
-
             composable(DrawerScreens.drawerScreensList[3].route) {
                 Help(topBarRoute = topBarRoute)
             }
-
             composable(route = "CreateMeal") {
-                val categoryId = navController.previousBackStackEntry?.savedStateHandle?.get<String>("categoryId")
-                CreateMeal(categoryId = categoryId ?: "")
+                val categoryId =
+                    navController.previousBackStackEntry?.savedStateHandle?.get<String>("categoryId")
+                Log.d("MealsBeforeCreate", combinedMeals.toString())
+                CreateMeal(
+                    categoryId = categoryId ?: "",
+                    saveNavigateBack = navController::popBackStack,
+                    navController = navController,
+                    combineMeals = combinedMeals
+                )
             }
-
-
-
             composable(route = TopBarMenu.SearchView.route) {
                 var shouldNavigate by remember { mutableStateOf(false) }
+                val newRecipe =
+                    navController.currentBackStackEntry?.savedStateHandle?.get<UserRecipe>("newRecipe")
 
                 SearchView(
                     recipeState = recipeState,
                     navigateToMeals = { category ->
-                        navController.currentBackStackEntry?.savedStateHandle?.set("categoryId", category.idCategory)
-                        mealsViewModel.fetchMeals(category.strCategory ?: "", categoryId = category.idCategory)
-                        shouldNavigate = true // Θέτουμε το flag ότι θα γίνει πλοήγηση
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            "categoryId",
+                            category.idCategory
+                        )
+                        scope.launch {
+                            mealsViewModel.fetchMeals(
+                                category.strCategory ?: "",
+                                category.idCategory
+                            )
+                            shouldNavigate = true
+                        }
                     },
                     fetchMeals = { categoryName ->
-                        val categoryId = navController.currentBackStackEntry?.savedStateHandle?.get<String>("categoryId") ?: ""
-                        mealsViewModel.fetchMeals(categoryName, categoryId = categoryId)
-                    }
+                        val categoryId =
+                            navController.currentBackStackEntry?.savedStateHandle?.get<String>("categoryId")
+                                ?: ""
+                        scope.launch {
+                            mealsViewModel.fetchMeals(categoryName, categoryId = categoryId)
+                        }
+                    },
                 )
 
-                // Εάν πρέπει να γίνει πλοήγηση και η λίστα των γευμάτων δεν είναι κενή
-                LaunchedEffect(mealState.list) {
-                    if (shouldNavigate && mealState.list.isNotEmpty()) {
-                        // Αποθήκευση της λίστας των γευμάτων στο savedStateHandle του currentBackStackEntry
-                        navController.currentBackStackEntry?.savedStateHandle?.set("meals", mealState.list)
-                        // Πλοήγηση στην οθόνη MealsView
-                        navController.navigate("MealsView")
-                        shouldNavigate = false // Επαναφορά του shouldNavigate σε false
+                LaunchedEffect(mealState, userMealState, shouldNavigate, newRecipe) {
+                    if (newRecipe != null) {
+                        mealsViewModel.addRecipe(newRecipe, combinedMeals) // Προσθήκη της νέας συνταγής στο ViewModel
+                        navController.currentBackStackEntry?.savedStateHandle?.remove<UserRecipe>("newRecipe")
+                    }
+                    if (shouldNavigate && !mealState.loading && !userMealState.loading) {
+                        if (mealState.list.isNotEmpty() || userRecipeBool) {
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                "meals",
+                                mealState.list
+                            )
+                            navController.navigate("MealsView")
+                            shouldNavigate = false
+                        } else {
+                            // Αν δεν υπάρχουν δεδομένα από τον χρήστη και το API, πλοηγηθείτε παρόλα αυτά
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                "meals",
+                                mealState.list
+                            )
+                            navController.navigate("MealsView")
+                            shouldNavigate = false
+                        }
                     }
                 }
             }
+
+
 
 
             composable(route = "MealsView") {
@@ -138,7 +182,7 @@ fun TopNavGraph(
                 var shouldNavigate by remember { mutableStateOf(false) }
 
                 MealsView(
-                    mealsState = MealsViewModel.MealsState(),
+                    apiMealsState = MealsViewModel.ApiMealsState(list = mealState.list),
                     meals = meals,
                     navigateToDetails = { meal ->
                         detailViewModel.fetchDetails(meal.name ?: "")
@@ -146,13 +190,15 @@ fun TopNavGraph(
                     },
                     fetchDetails = { mealName ->
                         Log.d("CategoryIdHost", "Fetching details for meal: $categoryId")
-                        mealsViewModel.fetchMeals(mealName, categoryId = categoryId)
+                        scope.launch {  mealsViewModel.fetchMeals(mealName, categoryId = categoryId) }
+
                     },
                     createMeal = {
                         navController.currentBackStackEntry?.savedStateHandle?.set("categoryId", categoryId)
                         navController.navigate("CreateMeal")
                     },
                     navController = navController,
+
                 )
 
                 LaunchedEffect(detailState.list) {

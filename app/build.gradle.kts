@@ -64,6 +64,8 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
 
+    implementation ("com.google.firebase:firebase-storage-ktx")
+
     implementation("com.google.dagger:hilt-android:2.52")
     kapt("com.google.dagger:hilt-compiler:2.52") // Ενημέρωσε την έκδοση
     //implementation("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")

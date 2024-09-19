@@ -1,5 +1,7 @@
-package com.TheCooker.Login.SignIn
+package com.TheCooker.Modules
 
+import com.TheCooker.Login.SignIn.UserData
+import com.TheCooker.Login.SignIn.UserDataProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,4 +16,6 @@ object UserModule {
     fun provideUserDataProvider(): UserDataProvider {
         return UserDataProvider()
     }
+
+
 }

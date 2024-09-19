@@ -1,6 +1,7 @@
 package com.TheCooker.SearchToolBar.Views
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -28,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import coil.request.ImageRequest
 import coil.size.Size
 import com.TheCooker.R
@@ -38,7 +39,7 @@ import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun MealsView(mealsState: MealsViewModel.MealsState,
+fun MealsView(apiMealsState: MealsViewModel.ApiMealsState,
               meals: List<MealsCategory>,
               navigateToDetails: (MealItem) -> Unit,
               fetchDetails: (String) -> Unit,
@@ -52,10 +53,10 @@ fun MealsView(mealsState: MealsViewModel.MealsState,
 
     Box(modifier = Modifier.wrapContentSize()) {
         when {
-            mealsState.loading -> {
+            apiMealsState.loading -> {
                 CircularProgressIndicator()
             }
-            mealsState.error != null -> {
+            apiMealsState.error != null -> {
                 Toast.makeText(context, "There was an error!", Toast.LENGTH_SHORT).show()
             }
             else -> {
@@ -120,26 +121,33 @@ fun ViewMealsList(meals: List<MealItem>,
 
 
 
-@Composable
-fun ViewMeal(mealItem: MealItem,
-             navigateToDetails: (MealItem) -> Unit,
-             fetchDetails: (String) -> Unit) {
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(8.dp)
-        .clickable {
-            navigateToDetails(mealItem)
-            fetchDetails(mealItem.name ?: "")
-        },
-        horizontalAlignment = Alignment.Start) {
 
-        // Check if mealItem.image is not null and handle it accordingly
-        val imagePainter = rememberImagePainter(
-            ImageRequest.Builder(LocalContext.current)
+
+@Composable
+fun ViewMeal(
+    mealItem: MealItem,
+    navigateToDetails: (MealItem) -> Unit,
+    fetchDetails: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)
+            .clickable {
+                navigateToDetails(mealItem)
+                fetchDetails(mealItem.name ?: "")
+            },
+        horizontalAlignment = Alignment.Start
+    ) {
+        val imagePainter = rememberAsyncImagePainter(
+            model = ImageRequest.Builder(LocalContext.current)
                 .data(mealItem.image)
-                .size(Size.ORIGINAL) // Optional: define the size you need
+                .size(Size.ORIGINAL)
                 .build()
         )
+        Log.d("MealItem", "Image URL: ${mealItem.image}")
+        Log.d("MealItem", "Image URL: ${mealItem.name}")
+        Log.d("MealItem", "Image URL: ${mealItem.id}")
 
         Image(
             painter = imagePainter,
@@ -147,12 +155,12 @@ fun ViewMeal(mealItem: MealItem,
             modifier = Modifier
                 .fillMaxSize()
                 .aspectRatio(1f),
-            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+            contentScale = ContentScale.Crop
         )
 
         Box(
             modifier = Modifier
-                .fillMaxWidth()  // Γεμίζει το πλάτος της οθόνης
+                .fillMaxWidth()
                 .padding(8.dp)
         ) {
             Text(

@@ -1,5 +1,6 @@
-package com.TheCooker.SearchToolBar.ApiService
+package com.TheCooker.Modules
 
+import com.TheCooker.SearchToolBar.ApiService.ApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

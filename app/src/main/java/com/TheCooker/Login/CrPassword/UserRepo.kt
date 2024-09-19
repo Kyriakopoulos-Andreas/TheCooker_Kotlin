@@ -12,7 +12,8 @@ import javax.inject.Inject
 
 class UserRepo@Inject constructor(
     val auth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+
 ) {
     suspend fun signUp(
         firstName: String,

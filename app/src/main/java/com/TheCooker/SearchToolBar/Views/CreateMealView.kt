@@ -54,10 +54,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.TheCooker.R
+import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
 import com.TheCooker.SearchToolBar.RecipeRepo.UserRecipe
 import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
+import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.example.cooker.ListView.CustomDivider
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -66,7 +69,11 @@ import java.util.UUID
 @Composable
 fun CreateMeal(
     viewmodel: CreateMealViewModel = hiltViewModel(),
-    categoryId: String?
+    categoryId: String?,
+    saveNavigateBack: () -> Unit,
+    navController: NavController,
+    mealsViewModel: MealsViewModel = hiltViewModel(),
+    combineMeals: MutableList<MealItem>
                ) {
 
     val creatorId  = remember { mutableStateOf(viewmodel.creatorId)}
@@ -348,18 +355,20 @@ fun CreateMeal(
                 verticalAlignment = Alignment.CenterVertically
                 ) {
                 Button(
-                    onClick = { viewmodel.saveRecipe(
-                        UserRecipe(
-                            recipeName = createMealViewModel.mealName.value,
-                            recipeIngredients = createMealViewModel.ingredients,
-                            steps = createMealViewModel.steps,
-                            recipeImage = imageUri.toString(),
-                            creatorId = creatorId.value ?: "",
-                            recipeId =  UUID.randomUUID().toString(),
-                            categoryId = categoryId ?: ""
+                    onClick = {
+                        val newRecipe = UserRecipe(
+                            creatorId = creatorId.value,
+                            recipeIngredients = ingredients,
+                            recipeName = mealName,
+                            steps = steps,
+                            categoryId = categoryId,
+                            recipeImage = null,
+                            recipeId = UUID.randomUUID().toString(),
                         )
-                    )
-
+                        createMealViewModel.saveRecipe(newRecipe, imageUri)
+                        mealsViewModel.addRecipe(newRecipe, combineMeals)
+                        navController.previousBackStackEntry?.savedStateHandle?.set("newRecipe", newRecipe)
+                        saveNavigateBack()
                               },
                     modifier = Modifier.width(150.dp),
                     colors = ButtonColors(

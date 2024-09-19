@@ -9,14 +9,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.TheCooker.Login.SignIn.SignInState
-import com.TheCooker.Login.CrPassword.FirebaseModule
 
 import com.TheCooker.Login.CrPassword.UserRepo
 import com.TheCooker.Login.SignIn.CreateResults
 import com.TheCooker.Login.SignIn.LoginResults
 import com.TheCooker.Login.SignIn.UserData
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

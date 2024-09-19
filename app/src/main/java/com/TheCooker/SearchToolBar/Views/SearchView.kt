@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.TheCooker.SearchToolBar.RecipeRepo.Category
+import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
 
 
@@ -32,8 +34,8 @@ fun SearchView(
     recipeState: SearchCategoryViewModel.RecipeState,
     navigateToMeals: (Category) -> Unit,
     fetchMeals: (String) -> Unit,
-               ){
 
+               ){
 
 
     val context = LocalContext.current

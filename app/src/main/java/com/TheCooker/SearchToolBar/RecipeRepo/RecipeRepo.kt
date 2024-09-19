@@ -1,13 +1,21 @@
 package com.TheCooker.SearchToolBar.RecipeRepo
 
+import android.net.Uri
 import android.util.Log
+import com.TheCooker.Login.SignIn.UserData
+import com.TheCooker.Login.SignIn.UserDataProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 import javax.inject.Inject
 
 class RecipeRepo@Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val storage: FirebaseStorage,
+    private val userData: UserDataProvider
 
 ) {
 
@@ -19,11 +27,29 @@ class RecipeRepo@Inject constructor(
             .await()
     }
 
+    suspend fun uploadImageAndGetUrl(imageUri: Uri): String? {
+        return try {
+            val storageRef = storage.reference
+            val imageRef = storageRef.child("recipes/images/${UUID.randomUUID()}.jpg")
+            val uploadTask = imageRef.putFile(imageUri).await()
+            imageRef.downloadUrl.await().toString()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+
     suspend fun getRecipes(categoryId: String): List<UserRecipe> {
         return try {
+            Log.d("RecipeRepo", "CreatorId: ${userData.userData?.uid}")
             val querySnapshot = firestore.collection("recipes")
                 .whereEqualTo("categoryId", categoryId)
+                .whereEqualTo("creatorId", userData.userData?.uid)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
+                .addOnFailureListener { e -> // Διαχειριζομαι τα σφαλαματα του firestore
+                    Log.e("RecipeRepo", "Error fetching recipes: ${e.message}")
+                }
                 .await()
 
             val recipes = querySnapshot.toObjects(UserRecipe::class.java)

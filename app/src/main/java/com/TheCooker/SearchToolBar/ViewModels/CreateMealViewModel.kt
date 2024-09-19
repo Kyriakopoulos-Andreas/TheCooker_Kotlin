@@ -1,6 +1,7 @@
 package com.TheCooker.SearchToolBar.ViewModels
 
 
+import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -17,6 +18,7 @@ import javax.inject.Inject
 class CreateMealViewModel @Inject constructor(
     private val userDataProvider: UserDataProvider,
     private val recipeRepo: RecipeRepo,
+
 ): ViewModel()  {
 
     data class UserRecipeState(
@@ -88,29 +90,34 @@ class CreateMealViewModel @Inject constructor(
         }
     }
 
-    fun saveRecipe(recipe: UserRecipe){
+    fun saveRecipe(recipe: UserRecipe, imageUri: Uri?) {
+        _saveState.value = _saveState.value.copy(isSaving = true)
         viewModelScope.launch {
-            try{
-                 recipeRepo.saveRecipe(recipe)
+            try {
+                if (imageUri != null) {
+                    val downloadUrl = recipeRepo.uploadImageAndGetUrl(imageUri)
+                    if (downloadUrl != null) {
+                        recipe.recipeImage = downloadUrl // Ενημέρωση μόνο του πεδίου recipeImage
+                    }
+                }
+
+                recipeRepo.saveRecipe(recipe) // Αποθήκευση της συνταγής
                 _saveState.value = _saveState.value.copy(
                     isSaving = false,
                     error = null,
                     saveSuccess = true
                 )
-
-
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 _saveState.value = _saveState.value.copy(
                     isSaving = false,
                     error = "Error occurred ${e.message}",
                     saveSuccess = false
                 )
-
             }
-
         }
-
     }
+
+
 
 
 

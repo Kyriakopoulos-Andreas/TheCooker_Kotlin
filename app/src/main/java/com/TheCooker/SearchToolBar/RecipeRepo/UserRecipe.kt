@@ -9,7 +9,7 @@ data class UserRecipe(
     val recipeName: String? = null,
     val recipeIngredients: List<String>? = null,
     val steps: List<String>? = null,
-    val recipeImage: String? = null,
+    var recipeImage: String? = null,
     val creatorId: String? = null,
     val timestamp: Long = System.currentTimeMillis()
 ) : Parcelable, MealItem {

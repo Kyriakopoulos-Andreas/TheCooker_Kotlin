@@ -1,7 +1,6 @@
-package com.TheCooker.Login.Authentication.GoogleAuth
+package com.TheCooker.Modules
 
 import android.content.Context
-import com.TheCooker.Login.CrPassword.UserRepo
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import dagger.Module
