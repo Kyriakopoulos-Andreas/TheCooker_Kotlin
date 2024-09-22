@@ -34,11 +34,14 @@ fun SearchView(
     recipeState: SearchCategoryViewModel.RecipeState,
     navigateToMeals: (Category) -> Unit,
     fetchMeals: (String) -> Unit,
-
+    mealsViewModel: MealsViewModel
                ){
 
 
     val context = LocalContext.current
+    val create = if(mealsViewModel.mealState.value?.loading == true || mealsViewModel.mealState.value?.loading == true)
+        false
+    else true
 
 
 
@@ -57,7 +60,7 @@ fun SearchView(
             }
             else ->{
 
-                ShowCategories(categories = recipeState.list, navigateToMeals, fetchMeals)
+                ShowCategories(categories = recipeState.list, navigateToMeals, fetchMeals,create)
             }
         }
     }
@@ -69,7 +72,8 @@ fun SearchView(
 fun ShowCategories(categories: List<Category>,
                    navigateToMeals: (Category) -> Unit,
 
-                   fetchMeals: (String) -> Unit){
+                   fetchMeals: (String) -> Unit,
+                   create: Boolean){
 
 
 
@@ -82,7 +86,7 @@ fun ShowCategories(categories: List<Category>,
 
             Category ->
             println(Category.strCategory)
-            ShowItem(category = Category, navigateToMeals, fetchMeals,)
+            ShowItem(category = Category, navigateToMeals, fetchMeals,create)
         }
     }
 
@@ -91,13 +95,15 @@ fun ShowCategories(categories: List<Category>,
 @Composable
 fun ShowItem(category: Category,
              navigateToMeals: (Category) -> Unit,
-             fetchMeals: (String) -> Unit){
+             fetchMeals: (String) -> Unit,
+             create: Boolean){
     Column(modifier = Modifier
         .fillMaxSize()
         .padding(8.dp)
-        .clickable {
+        .clickable (enabled = create){ //ΑΠΕΝΕΡΓΟΠΟΕΙ ΤΑ ΚΟΥΜΠΙΑ ΕΝΟΣΩ ΤΟ DOWNLOAD ΕΙΝΑΙ ΣΕ ΚΑΤΑΣΤΑΣΗ LOADING!!!!!!
             fetchMeals(category.strCategory?: "")
             navigateToMeals(category)
+
         },
         horizontalAlignment = Alignment.CenterHorizontally) {
 

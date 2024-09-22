@@ -58,7 +58,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.TheCooker.R
 import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
-import com.TheCooker.SearchToolBar.RecipeRepo.UserRecipe
+import com.TheCooker.SearchToolBar.ApiService.UserRecipe
 import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.example.cooker.ListView.CustomDivider

@@ -22,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import com.TheCooker.SearchToolBar.ApiService.MealDetail
+import com.TheCooker.SearchToolBar.RecipeRepo.MealDetail
 import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -64,7 +64,7 @@ fun ViewDetails(detail: MealDetail) {
             style = androidx.compose.ui.text.TextStyle(fontWeight = FontWeight.W500),
             modifier = Modifier.padding(4.dp),
             color = Color.White
-            )
+        )
 
 
         Image(
@@ -117,6 +117,76 @@ fun ViewDetails(detail: MealDetail) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@RequiresApi(Build.VERSION_CODES.O)
+//@Composable
+//fun ViewUserMealDetails(userMealDetail: UserRecipe?) {
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .verticalScroll(rememberScrollState()),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        if (userMealDetail != null) {
+//            userMealDetail.name?.let {
+//                Text(
+//                    text = it,
+//                    textAlign = TextAlign.Center,
+//                    style = androidx.compose.ui.text.TextStyle(fontWeight = FontWeight.W500),
+//                    modifier = Modifier.padding(4.dp),
+//                    color = Color.White
+//                )
+//            }
+//        }
+//
+//
+//        if (userMealDetail != null) {
+//            Image(
+//                painter = rememberAsyncImagePainter(model = userMealDetail?.image),
+//                contentDescription = "${userMealDetail.name} Thumbnail",
+//                modifier = Modifier
+//                    .wrapContentSize()
+//                    .aspectRatio(1f)
+//            )
+//        }
+//
+//        if (userMealDetail != null) {
+//            for (ingredient in userMealDetail.recipeIngredients!!) {
+//                Text(
+//                    text = ingredient,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//
+//                        .padding(8.dp),
+//                    style = androidx.compose.ui.text.TextStyle(fontWeight = FontWeight.Bold),
+//                    color = Color.White
+//                )
+//            }
+//        }
+//
+//        Text(
+//            text = userMealDetail?.steps.toString(),
+//            textAlign = TextAlign.Justify,
+//            modifier = Modifier.padding(8.dp),
+//            color = Color.White
+//        )
+//
+//    }
+//}
 
 
 

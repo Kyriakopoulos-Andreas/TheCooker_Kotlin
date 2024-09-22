@@ -2,8 +2,11 @@ package com.TheCooker.SearchToolBar.RecipeRepo
 
 import android.net.Uri
 import android.util.Log
-import com.TheCooker.Login.SignIn.UserData
+import androidx.compose.runtime.State
 import com.TheCooker.Login.SignIn.UserDataProvider
+import com.TheCooker.SearchToolBar.ApiService.UserRecipe
+import com.TheCooker.SearchToolBar.ApiService.UserResponse
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
@@ -20,6 +23,49 @@ class RecipeRepo@Inject constructor(
 ) {
 
     // RECIPES
+
+    suspend fun getDetails(meal: String): UserResponse {
+        return try {
+            val response = firestore.collection("recipes")
+                .whereEqualTo("name", meal)
+                .get()
+                .await()
+
+            // Ελέγχει αν υπάρχει κάποιο έγγραφο στο αποτέλεσμα
+            val recipe = if (response.documents.isNotEmpty()) {
+                response.documents[0].toUserRecipe()
+            } else {
+                null
+            }
+
+            UserResponse(userMeal = recipe)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Επιστρέφει έναν UserResponse με null αν συμβεί σφάλμα
+            UserResponse(userMeal = null)
+        }
+    }
+
+    // Extension function για τη μετατροπή DocumentSnapshot σε UserRecipe
+    private fun DocumentSnapshot.toUserRecipe(): UserRecipe? {
+        return try {
+            UserRecipe(
+                categoryId = getString("categoryId"),
+                recipeId = getString("recipeId"),
+                recipeName = getString("recipeName"),
+                recipeIngredients = get("recipeIngredients") as? List<String>,
+                steps = get("steps") as? List<String>,
+                recipeImage = getString("recipeImage"),
+                creatorId = getString("creatorId"),
+                timestamp = getLong("timestamp") ?: System.currentTimeMillis()
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+
     suspend fun saveRecipe(recipe: UserRecipe) {
         firestore.collection("recipes")
             .document(recipe.recipeId ?: "")
@@ -61,6 +107,63 @@ class RecipeRepo@Inject constructor(
         }
     }
 
+    suspend fun getApiRecipesFromFirestore(categoryId: String): List<MealsCategory> {
+        return try {
+            val querySnapshot = firestore.collection("recipesFromApi")
+                .whereEqualTo("categoryId", categoryId)
+                .get()
+                .await()
+
+            // Καταγραφή των εγγράφων στο log
+            querySnapshot.documents.forEach { document ->
+                Log.d("queryDB", "Fetched recipe document: ${document.data}")
+            }
+
+           val recipes =  querySnapshot.toObjects(MealsCategory::class.java)
+            recipes
+        } catch (e: Exception) {
+            Log.e("RecipeRepo", "Error fetching recipes: ${e.message}")
+            emptyList()
+        }
+    }
+
+
+
+    suspend fun syncApiMealsWithFirebase(
+        categoryId: String,
+        apiMeals: List<MealsCategory>,
+    ) {
+        // Λήψη των τοπικών γευμάτων από τη βάση δεδομένων για την καθορισμένη κατηγορία
+        val localMeals = getApiRecipesFromFirestore(categoryId)
+        Log.d("CheckForCategoryId", "categoryId: $categoryId")
+
+        // Δημιουργία συνόλου με τα ids των τοπικών γευμάτων για σύγκριση
+        val localMealIds = localMeals.map { it.idMeal }.toSet()
+
+        // Φιλτράρισμα των νέων γευμάτων που δεν υπάρχουν στις τοπικές γεύσεις
+        val newMeals = apiMeals.filter { it.idMeal !in localMealIds }
+
+        // Αποθήκευση των νέων γευμάτων στη βάση δεδομένων
+        newMeals.forEach { meal ->
+            saveApiMeals(meal, categoryId)
+        }
+    }
+
+
+    private fun generateId(name: String): String {
+        return name.hashCode().toString()
+    }
+
+
+    suspend fun saveApiMeals(meal: MealsCategory, categoryId: String) {
+        val mealWithCategoryId = meal.copy(categoryId = categoryId)
+        firestore.collection("recipesFromApi")
+            .document(meal.idMeal ?: "")
+            .set(mealWithCategoryId)
+            .await()
+    }
+
+
     suspend fun deleteRecipe(recipeId: String){
         firestore.collection("recipes")
             .document(recipeId)
@@ -84,6 +187,9 @@ class RecipeRepo@Inject constructor(
 
     }
 
+
+
+
     suspend fun getCategories(): List<Category>{
         return firestore.collection("categories").get().await().toObjects(Category::class.java)
     }
@@ -104,14 +210,15 @@ class RecipeRepo@Inject constructor(
         val newCategories = apiCategories.filter { it.strCategory !in localCategoryNames }
 
         newCategories.forEach{category ->
-            val newId = generateCategoryId(category.strCategory?: "")
+            val newId = generateId(category.strCategory?: "")
             saveCategory(category.copy(idCategory = newId))
         }
     }
 
-    private fun generateCategoryId(name: String): String {
-        return name.hashCode().toString()
-    }
+
+
+
+
 
 
 }

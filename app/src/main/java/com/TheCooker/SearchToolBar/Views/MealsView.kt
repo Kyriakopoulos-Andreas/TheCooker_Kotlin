@@ -44,7 +44,11 @@ fun MealsView(apiMealsState: MealsViewModel.ApiMealsState,
               navigateToDetails: (MealItem) -> Unit,
               fetchDetails: (String) -> Unit,
               navController: NavController,
-              createMeal: () -> Unit,) {
+              createMeal: () -> Unit,
+              userMealsState: MealsViewModel.UserMealsState,
+              mealsViewModel: MealsViewModel
+) {
+
 
 
 
@@ -70,7 +74,7 @@ fun MealsView(apiMealsState: MealsViewModel.ApiMealsState,
 fun ViewMealsList(meals: List<MealItem>,
                   navigateToDetails: (MealItem)->Unit,
                   fetchDetails: (String) -> Unit,
-                  createMeal: () -> Unit
+                  createMeal: () -> Unit,
               ){
 
 
@@ -100,6 +104,7 @@ fun ViewMealsList(meals: List<MealItem>,
 
             item {
                 val imageUrl = "android.resource://com.TheCooker/" + R.drawable.add_meal2
+                val context = LocalContext.current
                 Image(
                     painter = rememberAsyncImagePainter(model = imageUrl),
                     contentDescription = null,
@@ -108,7 +113,7 @@ fun ViewMealsList(meals: List<MealItem>,
                         .aspectRatio(1f)
                         .padding(8.dp)
                         .clickable {
-                            createMeal()}
+                           createMeal()}
                 )
             }
         items(meals){meals ->

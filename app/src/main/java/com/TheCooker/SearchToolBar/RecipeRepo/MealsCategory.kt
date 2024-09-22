@@ -4,24 +4,31 @@ import android.os.Parcel
 import android.os.Parcelable
 
 data class MealsCategory(
-    val strMeal: String,
-    val strMealThumb: String,
-    val idMeal: String
+    val strMeal: String = "",
+    val strMealThumb: String = "",
+    val idMeal: String = "",
+    val categoryId: String? = null,
+    val isUserRecipe: Boolean = false
 ) : Parcelable, MealItem {
     override val id: String? get() = idMeal
     override val name: String? get() = strMeal
     override val image: String? get() = strMealThumb
+    override val isUserMeal: Boolean get() = isUserRecipe
 
     constructor(parcel: Parcel) : this(
         parcel.readString().toString(),
         parcel.readString().toString(),
-        parcel.readString().toString()
+        parcel.readString().toString(),
+        parcel.readString(),
+        parcel.readByte() != 0.toByte()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(strMeal)
         parcel.writeString(strMealThumb)
         parcel.writeString(idMeal)
+        parcel.writeString(categoryId)
+        parcel.writeByte(if (isUserRecipe) 1 else 0)
     }
 
     override fun describeContents(): Int {
@@ -39,7 +46,4 @@ data class MealsCategory(
     }
 }
 
-
 data class MealsCategoryResponse(val meals: List<MealsCategory>)
-
-

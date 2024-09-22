@@ -24,9 +24,11 @@ import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 
 import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
+import com.TheCooker.UpdateWorkers.scheduleMonthlySync
 import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.HiltAndroidApp
+
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -41,7 +43,9 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        scheduleMonthlySync(this)
         setContent {
+
 
 
 

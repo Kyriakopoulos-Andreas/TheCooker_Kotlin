@@ -67,10 +67,16 @@ dependencies {
     implementation ("com.google.firebase:firebase-storage-ktx")
 
     implementation("com.google.dagger:hilt-android:2.52")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation("androidx.hilt:hilt-common:1.2.0")
+    implementation("androidx.hilt:hilt-work:1.2.0")
     kapt("com.google.dagger:hilt-compiler:2.52") // Ενημέρωσε την έκδοση
     //implementation("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
     kapt("androidx.hilt:hilt-compiler:1.0.0-alpha01")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    implementation ("com.squareup.inject:assisted-inject-annotations-dagger2:0.5.2")
+    kapt ("com.squareup.inject:assisted-inject-processor-dagger2:0.5.2")
 
 
 

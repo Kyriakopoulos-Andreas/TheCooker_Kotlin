@@ -1,17 +1,19 @@
 package com.TheCooker.SearchToolBar.ViewModels
 
 import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.TheCooker.SearchToolBar.ApiService.ApiService
 import com.TheCooker.SearchToolBar.RecipeRepo.Category
-import com.TheCooker.SearchToolBar.ApiService.MealDetail
+import com.TheCooker.SearchToolBar.RecipeRepo.MealDetail
 import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
 import com.TheCooker.SearchToolBar.RecipeRepo.MealsCategory
 import com.TheCooker.SearchToolBar.RecipeRepo.RecipeRepo
-import com.TheCooker.SearchToolBar.RecipeRepo.UserRecipe
+import com.TheCooker.SearchToolBar.ApiService.UserRecipe
 
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +59,13 @@ class SearchCategoryViewModel @Inject constructor(
                 // Συγχρονισμός κατηγοριών με το API
                 val response = apiService.getCategories()
                 val categoriesFromApi = response.categories
+                categoriesFromApi.forEach { meal ->
+                    Log.d("!!!!!!!!!!", "Categorie: ${meal.idCategory}, ID: ${meal.strCategory}")
+                }
+
+
+
+
                 recipeRepo.syncApiCategoriesWithFirebase(categoriesFromApi)
 
                 // Λήψη ενημερωμένων κατηγοριών από τη βάση δεδομένων
@@ -131,14 +140,29 @@ class MealsViewModel @Inject constructor(
         )
     }
 
-    suspend fun fetchMeals(mealCategory: String, categoryId: String?) {
+    suspend fun fetchMeals(mealCategory: String, categoryId: String?){
         try {
+            if(_userMealState.value?.loading == true || _mealState.value?.loading == true){
+                return
+            }
+
             _userMealState.value = UserMealsState(loading = true)
             _mealState.value = ApiMealsState(loading = true)
 
             val meals = recipeRepo.getRecipes(categoryId ?: "")
             val responseMeals = apiService.getMeals(mealCategory)
-            Log.d("responseMeals", meals.toString())
+            val mealsFromApi = responseMeals.meals
+
+            mealsFromApi.forEach { meal ->
+                Log.d("fetchMeals", "API Meal: ${meal.strMeal}, ID: ${meal.idMeal}")
+            }
+
+            if (categoryId != null) {
+                recipeRepo.syncApiMealsWithFirebase(categoryId, mealsFromApi)
+            }
+
+            val apiMealsFromApiFirebase = recipeRepo.getApiRecipesFromFirestore(categoryId ?: "")
+
 
             val userRecipes = meals.map {
                 UserRecipe(
@@ -148,14 +172,11 @@ class MealsViewModel @Inject constructor(
                     recipeImage = it.recipeImage
                 )
             }
+           val apiMeals = apiMealsFromApiFirebase.map {
+               MealsCategory(it.strMeal, it.strMealThumb, it.idMeal)
+           }
 
-            val apiMeals = responseMeals.meals.map {
-                MealsCategory(
-                    it.strMeal ?: "",
-                    it.strMealThumb ?: "",
-                    it.idMeal ?: ""
-                )
-            }
+
 
             _combinedMeals.value = (apiMeals + userRecipes + userAddedRecipes).toMutableList()
             Log.d("CombinedMeals2", _combinedMeals.value.toString())
@@ -204,37 +225,106 @@ class MealsViewModel @Inject constructor(
 
 
 
-    @HiltViewModel
-    class MealsDetailViewModel @Inject constructor(
-        private val apiService: ApiService
-    ) : ViewModel() {
 
-        data class MealsDetailState(
-            val loading: Boolean = false,
-            val error: String? = null,
-            val list: List<MealDetail> = emptyList()
-        )
 
-        private val _mealsDetailState = MutableLiveData(MealsDetailState())
-        val mealsDetailState: LiveData<MealsDetailState> = _mealsDetailState
 
-        fun fetchDetails(meal: String) {
-            _mealsDetailState.value = MealsDetailState(loading = true)
-            viewModelScope.launch() {
-                try {
-                    val response = apiService.getMealDetail(meal)
-                    _mealsDetailState.value = MealsDetailState(
-                        loading = false,
-                        error = null,
-                        list = response.meals
-                    )
-                } catch (e: Exception) {
-                    _mealsDetailState.value = MealsDetailState(
-                        loading = false,
-                        error = "Error occurred ${e.message}"
-                    )
-                }
+@HiltViewModel
+class MealsDetailViewModel @Inject constructor(
+    private val apiService: ApiService
+) : ViewModel() {
+
+    data class MealsDetailState(
+        val loading: Boolean = false,
+        val error: String? = null,
+        val list: List<MealDetail> = emptyList()
+    )
+
+    private val _mealsDetailState = MutableLiveData(MealsDetailState())
+    val mealsDetailState: LiveData<MealsDetailState> = _mealsDetailState
+
+    fun fetchDetails(meal: String) {
+        _mealsDetailState.value = MealsDetailState(loading = true)
+        viewModelScope.launch() {
+            try {
+                val response = apiService.getMealDetail(meal)
+                _mealsDetailState.value = MealsDetailState(
+                    loading = false,
+                    error = null,
+                    list = response.meals
+                )
+            } catch (e: Exception) {
+                _mealsDetailState.value = MealsDetailState(
+                    loading = false,
+                    error = "Error occurred ${e.message}"
+                )
             }
         }
     }
+}
 
+
+
+        //    @HiltViewModel
+//    class MealsDetailViewModel @Inject constructor(
+//        private val apiService: ApiService,
+//        private val recipeRepo: RecipeRepo
+//    ) : ViewModel() {
+//
+//        data class MealsDetailState(
+//            val loading: Boolean = false,
+//            val error: String? = null,
+//            val list: List<MealDetail> = emptyList()
+//        )
+//
+//        data class UserMealDetailState(
+//            val loading: Boolean = false,
+//            val error: String? = null,
+//            val userRecipe: UserRecipe? = null
+//        )
+//
+//        private val _mealsDetailState = MutableLiveData(MealsDetailState())
+//        val mealsDetailState: LiveData<MealsDetailState> = _mealsDetailState
+//
+//        private val _userMealDetailState = MutableLiveData(UserMealDetailState())
+//        val userMealDetailState: LiveData<UserMealDetailState> = _userMealDetailState
+//
+//        fun fetchDetails(meal: String, isUserRecipe: Boolean) {
+//
+//            if (isUserRecipe) {
+//                _mealsDetailState.value = MealsDetailState(loading = true)
+//                viewModelScope.launch() {
+//                    try{
+//                    val response = recipeRepo.getDetails(meal)
+//                    _userMealDetailState.value = UserMealDetailState(
+//                        loading = false,
+//                        error = null,
+//                        userRecipe = response.userMeal)
+//                    }catch (e: Exception) {
+//                        _userMealDetailState.value = UserMealDetailState(
+//                            loading = false,
+//                            error = "Error occurred ${e.message}"
+//                        )
+//                    }
+//                }
+//            }
+//            else {
+//                _mealsDetailState.value = MealsDetailState(loading = true)
+//        viewModelScope.launch() {
+//            try {
+//                val response = apiService.getMealDetail(meal)
+//                _mealsDetailState.value = MealsDetailState(
+//                    loading = false,
+//                    error = null,
+//                    list = response.meals
+//                )
+//            } catch (e: Exception) {
+//                _mealsDetailState.value = MealsDetailState(
+//                    loading = false,
+//                    error = "Error occurred ${e.message}"
+//                )
+//            }
+//        }
+//
+//            }
+//        }
+//    }

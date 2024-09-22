@@ -8,8 +8,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.TheCooker.Login.SignIn.UserDataProvider
+import com.TheCooker.R
 import com.TheCooker.SearchToolBar.RecipeRepo.RecipeRepo
-import com.TheCooker.SearchToolBar.RecipeRepo.UserRecipe
+import com.TheCooker.SearchToolBar.ApiService.UserRecipe
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -99,6 +100,9 @@ class CreateMealViewModel @Inject constructor(
                     if (downloadUrl != null) {
                         recipe.recipeImage = downloadUrl // Ενημέρωση μόνο του πεδίου recipeImage
                     }
+                }
+                else{
+                    recipe.recipeImage = "android.resource://com.TheCooker/${R.drawable.testmeal}"
                 }
 
                 recipeRepo.saveRecipe(recipe) // Αποθήκευση της συνταγής

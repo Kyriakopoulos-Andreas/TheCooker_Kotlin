@@ -1,7 +1,10 @@
-package com.TheCooker.SearchToolBar.RecipeRepo
+package com.TheCooker.SearchToolBar.ApiService
 
+import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.annotation.RequiresApi
+import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
 
 data class UserRecipe(
     val categoryId: String? = null,
@@ -11,12 +14,16 @@ data class UserRecipe(
     val steps: List<String>? = null,
     var recipeImage: String? = null,
     val creatorId: String? = null,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val isUserRecipe: Boolean = true
 ) : Parcelable, MealItem {
     override val id: String? get() = recipeId
     override val name: String? get() = recipeName
     override val image: String? get() = recipeImage
+    override val isUserMeal: Boolean get() = isUserRecipe
 
+
+    @RequiresApi(Build.VERSION_CODES.Q)
     constructor(parcel: Parcel) : this(
         parcel.readString(),
         parcel.readString(),
@@ -25,9 +32,11 @@ data class UserRecipe(
         parcel.createStringArrayList(),
         parcel.readString(),
         parcel.readString(),
-        parcel.readLong()
+        parcel.readLong(),
+        parcel.readBoolean()
     )
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(categoryId)
         parcel.writeString(recipeId)
@@ -37,6 +46,7 @@ data class UserRecipe(
         parcel.writeString(recipeImage)
         parcel.writeString(creatorId)
         parcel.writeLong(timestamp)
+        parcel.writeBoolean(isUserRecipe)
     }
 
     override fun describeContents(): Int {
@@ -44,6 +54,7 @@ data class UserRecipe(
     }
 
     companion object CREATOR : Parcelable.Creator<UserRecipe> {
+        @RequiresApi(Build.VERSION_CODES.Q)
         override fun createFromParcel(parcel: Parcel): UserRecipe {
             return UserRecipe(parcel)
         }
@@ -54,5 +65,5 @@ data class UserRecipe(
     }
 }
 
-data class UserResponse(val userMeals: List<UserRecipe>)
+data class UserResponse(val userMeal: UserRecipe?)
 

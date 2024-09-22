@@ -1,4 +1,4 @@
-package com.TheCooker.SearchToolBar.ApiService
+package com.TheCooker.SearchToolBar.RecipeRepo
 
 
 data class MealDetail(

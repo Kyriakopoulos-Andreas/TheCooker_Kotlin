@@ -1,8 +1,8 @@
 package com.TheCooker.SearchToolBar.ApiService
 
 import com.TheCooker.SearchToolBar.RecipeRepo.CategoriesResponse
-import com.TheCooker.SearchToolBar.RecipeRepo.MealsCategory
 import com.TheCooker.SearchToolBar.RecipeRepo.MealsCategoryResponse
+import com.TheCooker.SearchToolBar.RecipeRepo.MealsDetailsResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -18,3 +18,4 @@ interface ApiService {
     @GET("search.php")
     suspend fun getMealDetail(@Query("s") meal: String): MealsDetailsResponse
 }
+
