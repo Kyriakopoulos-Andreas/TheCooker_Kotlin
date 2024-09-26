@@ -1,8 +1,12 @@
 package com.TheCooker.SearchToolBar.RecipeRepo
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
+import android.provider.Settings
 import android.util.Log
-import androidx.compose.runtime.State
+import com.TheCooker.CookerApp
+import com.TheCooker.CookerApp.Companion.ADMIN_DEVICE_ID
 import com.TheCooker.Login.SignIn.UserDataProvider
 import com.TheCooker.SearchToolBar.ApiService.UserRecipe
 import com.TheCooker.SearchToolBar.ApiService.UserResponse
@@ -11,14 +15,17 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
 
+
 class RecipeRepo@Inject constructor(
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage,
-    private val userData: UserDataProvider
+    private val userData: UserDataProvider,
+    @ApplicationContext private val context: Context
 
 ) {
 
@@ -133,6 +140,11 @@ class RecipeRepo@Inject constructor(
         categoryId: String,
         apiMeals: List<MealsCategory>,
     ) {
+        if (!checkIfAdmin()) {
+            Log.d("RecipeRepo", "User is not admin, skipping sync")
+            return
+        }
+
         // Λήψη των τοπικών γευμάτων από τη βάση δεδομένων για την καθορισμένη κατηγορία
         val localMeals = getApiRecipesFromFirestore(categoryId)
         Log.d("CheckForCategoryId", "categoryId: $categoryId")
@@ -143,20 +155,41 @@ class RecipeRepo@Inject constructor(
         // Φιλτράρισμα των νέων γευμάτων που δεν υπάρχουν στις τοπικές γεύσεις
         val newMeals = apiMeals.filter { it.idMeal !in localMealIds }
 
+        Log.d("NewMealsCount", "Found ${newMeals.size} new meals to sync for categoryId: $categoryId")
+
         // Αποθήκευση των νέων γευμάτων στη βάση δεδομένων
         newMeals.forEach { meal ->
+            Log.d("SavingMeal", "Saving meal with ID: ${meal.idMeal} and categoryId: ${meal.categoryId}")
             saveApiMeals(meal, categoryId)
         }
     }
 
+    @SuppressLint("HardwareIds")
+    fun checkIfAdmin(): Boolean {
+        val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val currentDeviceId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+        val adminDeviceId = sharedPreferences.getString(CookerApp.ADMIN_DEVICE_ID, null)
 
-    private fun generateId(name: String): String {
+        if (adminDeviceId == null) {
+            Log.d("DeviceCheck", "Admin device ID is not set.")
+            return false
+        }
+
+        Log.d("DeviceCheck", "Current device ID: $currentDeviceId")
+        Log.d("DeviceCheck", "Admin device ID: $adminDeviceId")
+
+        return currentDeviceId == adminDeviceId
+    }
+
+
+    fun generateId(name: String): String {
         return name.hashCode().toString()
     }
 
 
     suspend fun saveApiMeals(meal: MealsCategory, categoryId: String) {
-        val mealWithCategoryId = meal.copy(categoryId = categoryId)
+        val mealWithCategoryId = meal.copy(categoryId = categoryId) // Χρησιμοποιούμε το hash ID της κατηγορίας
+        Log.d("FirestoreSave", "Storing meal ID: ${meal.idMeal} with categoryId: $categoryId")
         firestore.collection("recipesFromApi")
             .document(meal.idMeal ?: "")
             .set(mealWithCategoryId)

@@ -145,21 +145,12 @@ class MealsViewModel @Inject constructor(
             if(_userMealState.value?.loading == true || _mealState.value?.loading == true){
                 return
             }
+            Log.d("categoryId", categoryId.toString())
 
             _userMealState.value = UserMealsState(loading = true)
             _mealState.value = ApiMealsState(loading = true)
 
             val meals = recipeRepo.getRecipes(categoryId ?: "")
-            val responseMeals = apiService.getMeals(mealCategory)
-            val mealsFromApi = responseMeals.meals
-
-            mealsFromApi.forEach { meal ->
-                Log.d("fetchMeals", "API Meal: ${meal.strMeal}, ID: ${meal.idMeal}")
-            }
-
-            if (categoryId != null) {
-                recipeRepo.syncApiMealsWithFirebase(categoryId, mealsFromApi)
-            }
 
             val apiMealsFromApiFirebase = recipeRepo.getApiRecipesFromFirestore(categoryId ?: "")
 

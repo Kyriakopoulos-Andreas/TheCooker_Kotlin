@@ -1,5 +1,6 @@
 package com.TheCooker
 
+import android.content.Context
 import com.TheCooker.ui.theme.TheCookerTheme
 
 
@@ -43,6 +44,8 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Κάνω sync σε μια προκαθορισμένη ημερομηνία
         scheduleMonthlySync(this)
         setContent {
 
