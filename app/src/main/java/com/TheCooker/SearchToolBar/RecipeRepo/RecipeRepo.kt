@@ -8,6 +8,7 @@ import android.util.Log
 import com.TheCooker.CookerApp
 import com.TheCooker.CookerApp.Companion.ADMIN_DEVICE_ID
 import com.TheCooker.Login.SignIn.UserDataProvider
+import com.TheCooker.SearchToolBar.ApiService.ApiService
 import com.TheCooker.SearchToolBar.ApiService.UserRecipe
 import com.TheCooker.SearchToolBar.ApiService.UserResponse
 import com.google.firebase.firestore.DocumentSnapshot
@@ -25,6 +26,7 @@ class RecipeRepo@Inject constructor(
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage,
     private val userData: UserDataProvider,
+    private val apiService: ApiService,
     @ApplicationContext private val context: Context
 
 ) {
@@ -80,16 +82,30 @@ class RecipeRepo@Inject constructor(
             .await()
     }
 
+
+
     suspend fun uploadImageAndGetUrl(imageUri: Uri): String? {
         return try {
             val storageRef = storage.reference
             val imageRef = storageRef.child("recipes/images/${UUID.randomUUID()}.jpg")
-            val uploadTask = imageRef.putFile(imageUri).await()
-            imageRef.downloadUrl.await().toString()
+
+            // Ανέβασμα της εικόνας
+            imageRef.putFile(imageUri).await()
+
+            // Λήψη του download URL
+            val downloadUrl = imageRef.downloadUrl.await().toString()
+
+            // Προσθήκη Log για να δεις το επιστρεφόμενο URL
+            Log.d("ImageDownloadUrl", "Uploaded Image URL: $downloadUrl")
+
+            // Επιστροφή του URL
+            downloadUrl
         } catch (e: Exception) {
+            Log.e("UploadImageError", "Error uploading image: ${e.message}", e)
             null
         }
     }
+
 
 
     suspend fun getRecipes(categoryId: String): List<UserRecipe> {
@@ -161,6 +177,11 @@ class RecipeRepo@Inject constructor(
         newMeals.forEach { meal ->
             Log.d("SavingMeal", "Saving meal with ID: ${meal.idMeal} and categoryId: ${meal.categoryId}")
             saveApiMeals(meal, categoryId)
+            val response = apiService.getMealDetail(meal.strMeal)
+            val details = response.meals
+
+            // Αποθήκευση των λεπτομερειών του γεύματος
+            syncApiMealDetailsWithFirebase(meal.idMeal, details)
         }
     }
 
@@ -223,6 +244,7 @@ class RecipeRepo@Inject constructor(
 
 
 
+
     suspend fun getCategories(): List<Category>{
         return firestore.collection("categories").get().await().toObjects(Category::class.java)
     }
@@ -248,10 +270,45 @@ class RecipeRepo@Inject constructor(
         }
     }
 
+    // MEAL DETAILS
+    suspend fun saveMealDetails(meal: MealDetail){
+        firestore.collection("mealDetails")
+            .document(meal.idMeal?: "") // To document προσδιορίζει το ΙD του εγγραφου στο firestore
+            .set(meal)
+            .await()
 
+    }
 
+    suspend fun getApiDetailsFromFirestore(mealId: String): List<MealDetail>{
+        return try {
+            Log.d("mealIdCheck", "Fetching recipes for mealId: $mealId")
 
+            val querySnapshot = firestore.collection("mealDetails")
+                .whereEqualTo("idMeal", mealId)
+                .get()
+                .await()
+            val detail =  querySnapshot.toObjects(MealDetail::class.java)
+            detail
+        }catch (e: Exception){
+            Log.e("RecipeDetails", "Error fetching recipes: ${e.message}")
+            emptyList()
+        }
+    }
 
+    suspend fun syncApiMealDetailsWithFirebase(mealId: String, mealDetails: List<MealDetail>) {
+        val localMealDetails = getApiDetailsFromFirestore(mealId)
+        val localMealDetailIds = localMealDetails.map { it.idMeal }.toSet()
 
+        // Φιλτράρισμα των νέων λεπτομερειών που δεν υπάρχουν στις τοπικές λεπτομέρειες
+        val newMealDetails = mealDetails.filter { it.idMeal !in localMealDetailIds }
+
+        Log.d("NewMealDetailsCount", "Found ${newMealDetails.size} new meal details to sync for mealId: $mealId")
+
+        // Αποθήκευση των νέων λεπτομερειών στη βάση δεδομένων
+        newMealDetails.forEach { detail ->
+            Log.d("SavingMealDetail", "Saving meal detail with ID: ${detail.idMeal} for mealId: $mealId")
+            saveMealDetails(detail)
+        }
+    }
 
 }

@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 @SuppressLint("CoroutineCreationDuringComposition")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun LoginNavigator(viewModel: LoginViewModel = hiltViewModel(), client: GoogleClient) {
+fun LoginNavigator(viewModel: LoginViewModel = hiltViewModel(), client: GoogleClient, createMealViewModel: com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel) {
     val navController2 = rememberNavController()
 
     val context = LocalContext.current
@@ -126,7 +126,7 @@ fun LoginNavigator(viewModel: LoginViewModel = hiltViewModel(), client: GoogleCl
 
 
 
-                MenuView(viewModel.userData.value ?: user, client, navController2, loginViewModel = viewModel)
+                MenuView(viewModel.userData.value ?: user, client, navController2, loginViewModel = viewModel, createMealViewModel = createMealViewModel)
 
         }
 

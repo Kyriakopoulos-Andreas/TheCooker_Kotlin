@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,7 +24,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SearchCategoryViewModel @Inject constructor(
-    private val apiService: ApiService,
     private val recipeRepo: RecipeRepo
 ): ViewModel() {
 
@@ -56,17 +56,8 @@ class SearchCategoryViewModel @Inject constructor(
                     list = localCategories
                 )
 
-                // Συγχρονισμός κατηγοριών με το API
-                val response = apiService.getCategories()
-                val categoriesFromApi = response.categories
-                categoriesFromApi.forEach { meal ->
-                    Log.d("!!!!!!!!!!", "Categorie: ${meal.idCategory}, ID: ${meal.strCategory}")
-                }
 
 
-
-
-                recipeRepo.syncApiCategoriesWithFirebase(categoriesFromApi)
 
                 // Λήψη ενημερωμένων κατηγοριών από τη βάση δεδομένων
                 val updatedCategories = recipeRepo.getCategories()
@@ -91,7 +82,7 @@ class SearchCategoryViewModel @Inject constructor(
 
 @HiltViewModel
 class MealsViewModel @Inject constructor(
-    private val apiService: ApiService,
+
     private val recipeRepo: RecipeRepo
 ) : ViewModel() {
 
@@ -113,13 +104,20 @@ class MealsViewModel @Inject constructor(
     private val _userMealState = MutableLiveData(UserMealsState())
     val userMealState: LiveData<UserMealsState> get() = _userMealState
 
-    private val _userRecipeBool = MutableLiveData(false)
-    val userRecipeBool: LiveData<Boolean> get() = _userRecipeBool
+
 
     private val _userAddedRecipes = MutableLiveData<List<UserRecipe>>(emptyList())
     private val userAddedRecipes: List<UserRecipe> get() = _userAddedRecipes.value ?: emptyList()
     private val _combinedMeals = MutableLiveData<MutableList<MealItem>>(mutableListOf()) // Δημιουργούμε το LiveData ως MutableList του τυπου MealItem για να χρησιμοποιήσουμε observers.
     val combinedMeals: LiveData<MutableList<MealItem>> get() = _combinedMeals
+
+    private val _loading = MediatorLiveData<Boolean>().apply {
+        addSource(_mealState) { value = it.loading }
+        addSource(_userMealState) { value = it.loading }
+    }
+    val loading: LiveData<Boolean> get() = _loading
+
+
 
     fun addRecipe(recipe: UserRecipe, mealsExist: MutableList<MealItem>) {
         mealsExist.add(0, recipe)
@@ -140,13 +138,13 @@ class MealsViewModel @Inject constructor(
         )
     }
 
-    suspend fun fetchMeals(mealCategory: String, categoryId: String?){
+    suspend fun fetchMeals(mealCategory: String, categoryId: String){
         try {
-            if(_userMealState.value?.loading == true || _mealState.value?.loading == true){
-                return
-            }
+            Log.d("PreFetch", "categoryId: $categoryId")
+            if (_loading.value == true) return
             Log.d("categoryId", categoryId.toString())
 
+            _loading.value = true
             _userMealState.value = UserMealsState(loading = true)
             _mealState.value = ApiMealsState(loading = true)
 
@@ -221,7 +219,7 @@ class MealsViewModel @Inject constructor(
 
 @HiltViewModel
 class MealsDetailViewModel @Inject constructor(
-    private val apiService: ApiService
+    private val recipeRepo: RecipeRepo
 ) : ViewModel() {
 
     data class MealsDetailState(
@@ -235,13 +233,16 @@ class MealsDetailViewModel @Inject constructor(
 
     fun fetchDetails(meal: String) {
         _mealsDetailState.value = MealsDetailState(loading = true)
+        Log.d("MealsDetailViewModel", "Fetching details for meal: $meal")
         viewModelScope.launch() {
             try {
-                val response = apiService.getMealDetail(meal)
+                val response = recipeRepo.getApiDetailsFromFirestore(meal)
+                Log.d("MealsDetailViewModel", "Fetched details: ${response}")
+
                 _mealsDetailState.value = MealsDetailState(
                     loading = false,
                     error = null,
-                    list = response.meals
+                    list = response
                 )
             } catch (e: Exception) {
                 _mealsDetailState.value = MealsDetailState(

@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,7 +36,9 @@ import coil.size.Size
 import com.TheCooker.R
 import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
 import com.TheCooker.SearchToolBar.RecipeRepo.MealsCategory
+import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
+import kotlinx.coroutines.launch
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
@@ -46,7 +49,8 @@ fun MealsView(apiMealsState: MealsViewModel.ApiMealsState,
               navController: NavController,
               createMeal: () -> Unit,
               userMealsState: MealsViewModel.UserMealsState,
-              mealsViewModel: MealsViewModel
+              mealsViewModel: MealsViewModel,
+              createMealViewModel: CreateMealViewModel
 ) {
 
 
@@ -64,7 +68,7 @@ fun MealsView(apiMealsState: MealsViewModel.ApiMealsState,
                 Toast.makeText(context, "There was an error!", Toast.LENGTH_SHORT).show()
             }
             else -> {
-                ViewMealsList(meals = meals, navigateToDetails, fetchDetails, createMeal)
+                ViewMealsList(meals = meals, navigateToDetails, fetchDetails, createMeal, createMealViewModel)
             }
         }
     }
@@ -75,6 +79,7 @@ fun ViewMealsList(meals: List<MealItem>,
                   navigateToDetails: (MealItem)->Unit,
                   fetchDetails: (String) -> Unit,
                   createMeal: () -> Unit,
+                  createMealViewModel: CreateMealViewModel
               ){
 
 
@@ -84,6 +89,7 @@ fun ViewMealsList(meals: List<MealItem>,
 
     ) {
         item {
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()  // Γεμίζει το πλάτος της οθόνης
@@ -113,7 +119,8 @@ fun ViewMealsList(meals: List<MealItem>,
                         .aspectRatio(1f)
                         .padding(8.dp)
                         .clickable {
-                           createMeal()}
+                           createMeal()
+                            createMealViewModel.onCreateTrue()}
                 )
             }
         items(meals){meals ->
@@ -134,13 +141,17 @@ fun ViewMeal(
     navigateToDetails: (MealItem) -> Unit,
     fetchDetails: (String) -> Unit
 ) {
+    val scope = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(8.dp)
             .clickable {
-                navigateToDetails(mealItem)
-                fetchDetails(mealItem.name ?: "")
+                scope.launch {
+                    navigateToDetails(mealItem)
+                    fetchDetails(mealItem.name ?: "")
+
+                }
             },
         horizontalAlignment = Alignment.Start
     ) {
@@ -151,8 +162,8 @@ fun ViewMeal(
                 .build()
         )
         Log.d("MealItem", "Image URL: ${mealItem.image}")
-        Log.d("MealItem", "Image URL: ${mealItem.name}")
-        Log.d("MealItem", "Image URL: ${mealItem.id}")
+        Log.d("MealItem", "Image Name: ${mealItem.name}")
+
 
         Image(
             painter = imagePainter,

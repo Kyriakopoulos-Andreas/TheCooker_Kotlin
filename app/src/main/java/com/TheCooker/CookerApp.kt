@@ -31,7 +31,7 @@ class CookerApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         HARD_CODED_ADMIN_ID = getString(R.string.Pixel6DeviceID)
-        Toast.makeText(this, "CookerApp initialized", Toast.LENGTH_LONG).show()
+
 
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         val currentDeviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
