@@ -16,6 +16,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +28,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.TheCooker.SearchToolBar.RecipeRepo.Category
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -60,7 +62,7 @@ fun SearchView(
             }
             else ->{
 
-                ShowCategories(categories = recipeState.list, navigateToMeals, fetchMeals,create)
+                ShowCategories(categories = recipeState.list, navigateToMeals, fetchMeals,create, mealsViewModel)
             }
         }
     }
@@ -73,7 +75,8 @@ fun ShowCategories(categories: List<Category>,
                    navigateToMeals: (Category) -> Unit,
 
                    fetchMeals: (String) -> Unit,
-                   create: Boolean){
+                   create: Boolean,
+                   mealsViewModel: MealsViewModel){
 
 
 
@@ -86,7 +89,7 @@ fun ShowCategories(categories: List<Category>,
 
             Category ->
             println(Category.strCategory)
-            ShowItem(category = Category, navigateToMeals, fetchMeals,create)
+            ShowItem(category = Category, navigateToMeals, fetchMeals,create, mealsViewModel)
         }
     }
 
@@ -96,14 +99,17 @@ fun ShowCategories(categories: List<Category>,
 fun ShowItem(category: Category,
              navigateToMeals: (Category) -> Unit,
              fetchMeals: (String) -> Unit,
-             create: Boolean){
+             create: Boolean,
+             mealsViewModel: MealsViewModel){
+
+    val scope = rememberCoroutineScope()
+
     Column(modifier = Modifier
         .fillMaxSize()
         .padding(8.dp)
         .clickable (enabled = create){ //ΑΠΕΝΕΡΓΟΠΟΕΙ ΤΑ ΚΟΥΜΠΙΑ ΕΝΟΣΩ ΤΟ DOWNLOAD ΕΙΝΑΙ ΣΕ ΚΑΤΑΣΤΑΣΗ LOADING!!!!!!
             fetchMeals(category.strCategory?: "")
             navigateToMeals(category)
-
         },
         horizontalAlignment = Alignment.CenterHorizontally) {
 

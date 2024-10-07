@@ -2,9 +2,12 @@ package com.TheCooker.SearchToolBar.ViewModels
 
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.TheCooker.Login.SignIn.UserDataProvider
@@ -12,7 +15,9 @@ import com.TheCooker.R
 import com.TheCooker.SearchToolBar.RecipeRepo.RecipeRepo
 import com.TheCooker.SearchToolBar.ApiService.UserRecipe
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,18 +27,26 @@ class CreateMealViewModel @Inject constructor(
 
 ): ViewModel()  {
 
-    data class UserRecipeState(
+    data class newRecipe(
         val error: String? = null,
         val isSaving: Boolean = false,
-        val saveSuccess: Boolean = false
+        val saveSuccess: Boolean = false,
+        val uploadingImage: Boolean = false,
+        var onCreateRecipe: Boolean = false,
+        val imageUploaded: Boolean = false
     )
+
+
+
+
 
     val creatorId: String?
         get() = userDataProvider.userData?.uid
 
 
-    private val _saveState = mutableStateOf(UserRecipeState())
-    val saveState: State<UserRecipeState> = _saveState
+    private val _saveState = MutableLiveData(newRecipe())
+    val saveState: LiveData<newRecipe> = _saveState
+
 
     private val _mealName = mutableStateOf("")
     val mealName: State<String> = _mealName
@@ -43,6 +56,14 @@ class CreateMealViewModel @Inject constructor(
 
     private val _steps = mutableStateListOf<String>("", "")
     val steps: List<String> = _steps
+
+    fun onCreateTrue(){
+        _saveState.value = _saveState.value?.copy(onCreateRecipe = true)
+    }
+
+    fun onCreateFalse(){
+        _saveState.value = _saveState.value?.copy(onCreateRecipe = false)
+    }
 
     //MealName
     fun onMealNameChange(newValue: String) {
@@ -91,39 +112,62 @@ class CreateMealViewModel @Inject constructor(
         }
     }
 
-    fun saveRecipe(recipe: UserRecipe, imageUri: Uri?) {
-        _saveState.value = _saveState.value.copy(isSaving = true)
+     fun saveRecipe(recipe: UserRecipe, imageUri: Uri?, onSuccess: () -> Unit) {
+         _saveState.value = _saveState.value?.copy(isSaving = true)
+
+        Log.d("ImageUriAtSaveRecipeBeforeIf", "$imageUri")
+
         viewModelScope.launch {
             try {
                 if (imageUri != null) {
-                    val downloadUrl = recipeRepo.uploadImageAndGetUrl(imageUri)
-                    if (downloadUrl != null) {
-                        recipe.recipeImage = downloadUrl // Ενημέρωση μόνο του πεδίου recipeImage
+                    _saveState.value = _saveState.value?.copy(uploadingImage = true)
+
+
+                    Log.d("SaveStateValueUploadingImage", "${_saveState.value?.uploadingImage}")
+
+                    val downloadUrl = withContext(Dispatchers.IO) {
+                        recipeRepo.uploadImageAndGetUrl(imageUri)
                     }
-                }
-                else{
+
+                    Log.d("TestDownLoadUrl1", "Image URL: $downloadUrl")
+                    recipe.recipeImage = downloadUrl
+                    Log.d("TestDownLoadUrl", "Image URL: ${recipe.recipeImage}")
+
+                    Log.d("SaveStateValueImageUploaded", "${_saveState.value?.imageUploaded}")
+                } else {
                     recipe.recipeImage = "android.resource://com.TheCooker/${R.drawable.testmeal}"
+                    _saveState.value = _saveState.value?.copy(uploadingImage = false)
+
                 }
 
-                recipeRepo.saveRecipe(recipe) // Αποθήκευση της συνταγής
-                _saveState.value = _saveState.value.copy(
+                Log.d("RecipeData", "Saving recipe: $recipe")
+
+                recipeRepo.saveRecipe(recipe)
+                Log.d("SaveStateValueBefore", "${_saveState.value}")
+
+                _saveState.value = _saveState.value?.copy(
                     isSaving = false,
                     error = null,
-                    saveSuccess = true
-                )
+                    saveSuccess = true,
+                    uploadingImage = false,
+                    imageUploaded = true
+                ) ?: newRecipe()
+
+                onSuccess()
+
+                Log.d("SaveStateValueAfter", "${_saveState.value}")
             } catch (e: Exception) {
-                _saveState.value = _saveState.value.copy(
-                    isSaving = false,
-                    error = "Error occurred ${e.message}",
-                    saveSuccess = false
+                _saveState.postValue(
+                    _saveState.value?.copy(
+                        isSaving = false,
+                        error = "Error occurred check Image ${e.message}",
+                        saveSuccess = false,
+                        uploadingImage = false,
+                        imageUploaded = false
+                    )
                 )
+                Log.e("SaveRecipeError", "Error saving recipe: ${e.message}", e)
             }
         }
     }
-
-
-
-
-
-
 }

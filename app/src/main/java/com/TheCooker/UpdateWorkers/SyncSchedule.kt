@@ -18,9 +18,10 @@ import java.util.concurrent.TimeUnit
 fun scheduleMonthlySync(context: Context) {
     // Ανάθεσε την εργασία κάθε 15 λεπτά (ελάχιστο)
 
-    val workRequest = PeriodicWorkRequestBuilder<SyncMealsWorker>(2, TimeUnit.MINUTES)
-        // Εδώ μπορείς να προσθέσεις περιορισμούς αν χρειάζεται
+    val workRequest = PeriodicWorkRequestBuilder<SyncMealsWorker>(7, TimeUnit.DAYS)
+        .setInitialDelay(calculateInitialDelay(), TimeUnit.MILLISECONDS)
         .build()
+
 
     WorkManager.getInstance(context).enqueueUniquePeriodicWork(
         "SyncMealsWork",
@@ -32,26 +33,25 @@ fun scheduleMonthlySync(context: Context) {
 @RequiresApi(Build.VERSION_CODES.O)
 private fun calculateInitialDelay(): Long {
     // Έλεγχος αν είμαστε σε κατάσταση δοκιμής
-    val isTesting = true // Μπορείς να το αλλάξεις σε false όταν δεν θες να είσαι σε κατάσταση δοκιμής
+    val isTesting = false // Αν θες να κάνεις test και να ορίσεις άλλον χρόνο άλλαξέ το σε true
 
     if (isTesting) {
         // Επιστρέφει 3 λεπτά σε χιλιοστά του δευτερολέπτου για δοκιμές
         return 180000 // 3 λεπτά = 180000 milliseconds
     }
 
-    val currentDate = LocalDate.now()
-    val targetDay = 24
+    val currentDateTime = LocalDateTime.now()
+    val targetDayOfWeek = java.time.DayOfWeek.THURSDAY // Ορίζουμε την ημέρα της εβδομάδας που θέλουμε να εκτελείται
     val targetHour = 0
     val targetMinute = 0
 
-    val targetDate = if (currentDate.dayOfMonth > targetDay) {
-        currentDate.plusMonths(1).withDayOfMonth(targetDay)
-    } else {
-        currentDate.withDayOfMonth(targetDay)
+    var targetDateTime = currentDateTime.withHour(targetHour).withMinute(targetMinute).withSecond(0).withNano(0)
+        .with(java.time.temporal.TemporalAdjusters.nextOrSame(targetDayOfWeek))
+
+    // Αν η τρέχουσα ημερομηνία και ώρα είναι μετά την προγραμματισμένη ώρα αυτής της εβδομάδας, πήγαινε στην επόμενη εβδομάδα
+    if (currentDateTime >= targetDateTime) {
+        targetDateTime = targetDateTime.plusWeeks(1)
     }
 
-    val targetTime = LocalTime.of(targetHour, targetMinute)
-    val targetDateTime = LocalDateTime.of(targetDate, targetTime)
-
-    return Duration.between(LocalDateTime.now(), targetDateTime).toMillis().coerceAtLeast(0)
+    return Duration.between(currentDateTime, targetDateTime).toMillis().coerceAtLeast(0)
 }

@@ -2,6 +2,7 @@ package com.TheCooker.Modules
 
 import android.content.Context
 import com.TheCooker.Login.SignIn.UserDataProvider
+import com.TheCooker.SearchToolBar.ApiService.ApiService
 import com.TheCooker.SearchToolBar.RecipeRepo.RecipeRepo
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -23,7 +24,9 @@ object RecipeRepoModule {
     fun provideRecipeRepo(firestore: FirebaseFirestore,
                           storage: FirebaseStorage,
                           userDataProvider: UserDataProvider,
-                          @ApplicationContext context: Context): RecipeRepo {
-        return RecipeRepo(firestore, storage, userDataProvider, context)
+                          @ApplicationContext context: Context,
+                          apiService: ApiService
+    ): RecipeRepo {
+        return RecipeRepo(firestore, storage, userDataProvider, apiService, context)
     }
 }

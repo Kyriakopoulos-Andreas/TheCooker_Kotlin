@@ -60,12 +60,13 @@ class MainActivity : ComponentActivity() {
                 val loginViewModel = hiltViewModel<LoginViewModel>()
                 val createMealViewModel = hiltViewModel<CreateMealViewModel>()
 
+
                 Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
 
-                        LoginNavigator(loginViewModel, googleClient)
+                        LoginNavigator(loginViewModel, googleClient, createMealViewModel)
                         println("Hello")
 
 

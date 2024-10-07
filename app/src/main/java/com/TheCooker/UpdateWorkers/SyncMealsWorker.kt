@@ -42,9 +42,10 @@ class SyncMealsWorker @AssistedInject constructor(
         val categoryIds = listOf("Beef", "Chicken", "Dessert", "Lamb", "Miscellaneous", "Pasta", "Pork", "Seafood", "Side", "Starter", "Vegan", "Vegetarian", "Breakfast", "Goat")
 
         return try {
-            for(category in categoryIds){
-                Log.d("FetchingCategories", "Fetching category  $category")
-            }
+
+            val response = apiService.getCategories()
+            recipeRepo.syncApiCategoriesWithFirebase(response.categories)
+
 
 
 

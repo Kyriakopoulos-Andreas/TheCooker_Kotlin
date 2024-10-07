@@ -27,6 +27,7 @@ import com.TheCooker.Login.Authentication.GoogleAuth.GoogleClient
 import com.TheCooker.Login.LoginViewModel
 import com.TheCooker.NavGraphs.TopNavGraph
 import com.TheCooker.Login.SignIn.UserData
+import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
 import com.example.cooker.ListView.DrawerContent
 import kotlinx.coroutines.launch
 
@@ -38,7 +39,8 @@ fun MenuView(
     userData: UserData?,
     googleClient: GoogleClient,
     navControllerLog: NavHostController,
-    loginViewModel: LoginViewModel
+    loginViewModel: LoginViewModel,
+    createMealViewModel: CreateMealViewModel
 ){
 
     val viewModel: DrawerViewModel = viewModel()
@@ -123,7 +125,7 @@ fun MenuView(
 
 
     ) { paddingValues ->
-        TopNavGraph(navController = navController, paddingValues = paddingValues, userData, googleClient, navControllerLog, loginViewModel, topBarRoute)
+        TopNavGraph(navController = navController, paddingValues = paddingValues, userData, googleClient, navControllerLog, loginViewModel, topBarRoute, createMealViewModel = createMealViewModel)
         if (dialogOpen.value) {
             LogOutAlertDialog(dialogOpen, googleClient = googleClient, navController = navControllerLog, loginViewModel)
         }

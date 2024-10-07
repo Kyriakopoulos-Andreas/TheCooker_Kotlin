@@ -1,6 +1,8 @@
 package com.TheCooker.SearchToolBar.Views
 
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -22,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -47,21 +50,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.TheCooker.Checks.isInternetAvailable
 import com.TheCooker.R
 import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
 import com.TheCooker.SearchToolBar.ApiService.UserRecipe
 import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.example.cooker.ListView.CustomDivider
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -75,7 +82,7 @@ fun CreateMeal(
     mealsViewModel: MealsViewModel = hiltViewModel(),
     combineMeals: MutableList<MealItem>
                ) {
-
+    val context = LocalContext.current
     val creatorId  = remember { mutableStateOf(viewmodel.creatorId)}
 
     var imageUri by remember { mutableStateOf<Uri?>(null) }
@@ -87,9 +94,16 @@ fun CreateMeal(
 
     var selectedIndex by remember { mutableStateOf(-1) }
     val scope = rememberCoroutineScope()
-    val modalSheetState = rememberModalBottomSheetState(
+
+    val modalSheetStateStep = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden
     )
+
+    val modalSheetStateIngredient = rememberModalBottomSheetState(
+        initialValue = ModalBottomSheetValue.Hidden
+    )
+
+
 
     val roundedCornerRadius = 12.dp
     val modifier = Modifier.fillMaxWidth()
@@ -231,7 +245,7 @@ fun CreateMeal(
                 IconButton(
                     onClick = {
                         selectedIndex = index
-                        scope.launch { modalSheetState.show() }
+                        scope.launch { modalSheetStateIngredient.show() }
                     }
                 ) {
                     Icon(
@@ -312,7 +326,7 @@ fun CreateMeal(
                     IconButton(
                         onClick = {
                             selectedIndex = index
-                            scope.launch { modalSheetState.show() }
+                            scope.launch { modalSheetStateStep.show() }
                         }
                     ) {
                         Icon(
@@ -354,21 +368,57 @@ fun CreateMeal(
                 .padding(top = 8.dp), horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
                 ) {
+                val coroutineScope = rememberCoroutineScope()
                 Button(
                     onClick = {
-                        val newRecipe = UserRecipe(
-                            creatorId = creatorId.value,
-                            recipeIngredients = ingredients,
-                            recipeName = mealName,
-                            steps = steps,
-                            categoryId = categoryId,
-                            recipeImage = null,
-                            recipeId = UUID.randomUUID().toString(),
-                        )
-                        createMealViewModel.saveRecipe(newRecipe, imageUri)
-                        mealsViewModel.addRecipe(newRecipe, combineMeals)
-                        navController.previousBackStackEntry?.savedStateHandle?.set("newRecipe", newRecipe)
-                        saveNavigateBack()
+
+
+
+
+                        coroutineScope.launch {
+
+
+                            if (!isInternetAvailable(context)) {
+                                // Εμφάνιση μηνύματος στον χρήστη αν δεν υπάρχει σύνδεση
+                                Toast.makeText(context, "No internet connection. Please try again later.", Toast.LENGTH_SHORT).show()
+                                return@launch // Έξοδος από την coroutine αν δεν υπάρχει σύνδεση
+                            }
+
+                            val newRecipe = UserRecipe(
+                                creatorId = creatorId.value,
+                                recipeIngredients = ingredients,
+                                recipeName = mealName,
+                                steps = steps,
+                                categoryId = categoryId,
+                                recipeImage = null,
+                                recipeId = UUID.randomUUID().toString(),
+                            )
+                            viewmodel.onCreateFalse()
+                            Log.d("TestImageNewRecipe", "Image URI: $imageUri")
+                            createMealViewModel.saveRecipe(newRecipe, imageUri) {
+                                // Αυτή είναι η λογική που θα εκτελεστεί μόλις ολοκληρωθεί η αποθήκευση
+                                val userRecipeState = createMealViewModel.saveState.value
+
+                                // Έλεγχος καταστάσεων πριν την πλοήγηση πίσω
+                                if (userRecipeState?.isSaving == false &&
+                                    userRecipeState?.imageUploaded == true &&
+                                    userRecipeState?.onCreateRecipe == false
+                                ) {
+                                    saveNavigateBack() // Επιστροφή στην προηγούμενη οθόνη
+                                } else {
+                                    // Μπορείς να κάνεις log ή να δείξεις κάποιο μήνυμα σφάλματος
+                                    Log.d("ButtonOnClick", "Conditions not met for navigation back: $userRecipeState")
+                                }
+                            }
+                            mealsViewModel.addRecipe(newRecipe, combineMeals)
+                            navController.previousBackStackEntry?.savedStateHandle?.set(
+                                "newRecipe",
+                                newRecipe
+                            ) /*TODO Implemendtion of save Recipe/ */
+
+
+                            Log.d("ButtonOnClick", "Clicked and saved recipe: $newRecipe")
+                        }
                               },
                     modifier = Modifier.width(150.dp),
                     colors = ButtonColors(
@@ -413,7 +463,7 @@ fun CreateMeal(
 
     // Modal Bottom Sheet Layout
     ModalBottomSheetLayout(
-        sheetState = modalSheetState,
+        sheetState = modalSheetStateIngredient,
         sheetShape = RoundedCornerShape(topStart = roundedCornerRadius, topEnd = roundedCornerRadius),
         sheetContent = {
             IngredientBottomSheetContent(
@@ -422,13 +472,13 @@ fun CreateMeal(
                     if (selectedIndex >= 0) {
                         createMealViewModel.addIngredientAfter(selectedIndex)
                     }
-                    scope.launch { modalSheetState.hide() }
+                    scope.launch { modalSheetStateIngredient.hide() }
                 },
                 onDeleteClick = {
                     if (selectedIndex >= 0) {
                         createMealViewModel.removeIngredient(selectedIndex)
                     }
-                    scope.launch { modalSheetState.hide() }
+                    scope.launch { modalSheetStateIngredient.hide() }
                 }
             )
         }
@@ -437,7 +487,7 @@ fun CreateMeal(
     }
     // Modal Bottom Sheet Layout
     ModalBottomSheetLayout(
-        sheetState = modalSheetState,
+        sheetState = modalSheetStateStep,
         sheetShape = RoundedCornerShape(topStart = roundedCornerRadius, topEnd = roundedCornerRadius),
         sheetContent = {
             StepBottomSheetContent(
@@ -446,13 +496,13 @@ fun CreateMeal(
                     if (selectedIndex >= 0) {
                         createMealViewModel.addStepAfter(selectedIndex)
                     }
-                    scope.launch { modalSheetState.hide() }
+                    scope.launch { modalSheetStateStep.hide() }
                 },
                 onDeleteClick = {
                     if (selectedIndex >= 0) {
                         createMealViewModel.removeStep(selectedIndex)
                     }
-                    scope.launch { modalSheetState.hide() }
+                    scope.launch { modalSheetStateStep.hide() }
                 }
             )
         }
