@@ -25,16 +25,22 @@ import com.TheCooker.Login.LoginViewModel
 import com.TheCooker.Login.SignIn.UserData
 import com.TheCooker.Menu.MenuView
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
 
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun LoginNavigator(viewModel: LoginViewModel = hiltViewModel(), client: GoogleClient, createMealViewModel: com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel) {
+fun LoginNavigator(viewModel: LoginViewModel = hiltViewModel(),
+                   client: GoogleClient,
+                   createMealViewModel: com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel = hiltViewModel(),
+                   mealsDetailViewModel: com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel = hiltViewModel(),
+                   mealsViewModel: com.TheCooker.SearchToolBar.ViewModels.MealsViewModel = hiltViewModel()) {
     val navController2 = rememberNavController()
 
     val context = LocalContext.current
+
 
 
 
@@ -124,9 +130,7 @@ fun LoginNavigator(viewModel: LoginViewModel = hiltViewModel(), client: GoogleCl
         composable(route = "MenuView") {
             val user = navController2.previousBackStackEntry?.savedStateHandle?.get<UserData>("User")
 
-
-
-                MenuView(viewModel.userData.value ?: user, client, navController2, loginViewModel = viewModel, createMealViewModel = createMealViewModel)
+                MenuView(viewModel.userData.value ?: user, client, navController2, loginViewModel = viewModel, createMealViewModel = createMealViewModel, mealsDetailViewModel = mealsDetailViewModel, mealsViewModel = mealsViewModel )
 
         }
 

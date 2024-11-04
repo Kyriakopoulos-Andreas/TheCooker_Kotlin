@@ -33,6 +33,7 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Size
+import com.TheCooker.Menu.topBars
 import com.TheCooker.R
 import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
 import com.TheCooker.SearchToolBar.RecipeRepo.MealsCategory
@@ -50,7 +51,8 @@ fun MealsView(apiMealsState: MealsViewModel.ApiMealsState,
               createMeal: () -> Unit,
               userMealsState: MealsViewModel.UserMealsState,
               mealsViewModel: MealsViewModel,
-              createMealViewModel: CreateMealViewModel
+              createMealViewModel: CreateMealViewModel,
+              topBar: topBars
 ) {
 
 
@@ -68,7 +70,7 @@ fun MealsView(apiMealsState: MealsViewModel.ApiMealsState,
                 Toast.makeText(context, "There was an error!", Toast.LENGTH_SHORT).show()
             }
             else -> {
-                ViewMealsList(meals = meals, navigateToDetails, fetchDetails, createMeal, createMealViewModel)
+                ViewMealsList(meals = meals, navigateToDetails, fetchDetails, createMeal, createMealViewModel, topBar)
             }
         }
     }
@@ -79,7 +81,8 @@ fun ViewMealsList(meals: List<MealItem>,
                   navigateToDetails: (MealItem)->Unit,
                   fetchDetails: (String) -> Unit,
                   createMeal: () -> Unit,
-                  createMealViewModel: CreateMealViewModel
+                  createMealViewModel: CreateMealViewModel,
+                  topBar: topBars
               ){
 
 
@@ -125,7 +128,7 @@ fun ViewMealsList(meals: List<MealItem>,
             }
         items(meals){meals ->
 
-            ViewMeal(meals, navigateToDetails,fetchDetails)
+            ViewMeal(meals, navigateToDetails,fetchDetails, topBars = topBar)
 
         }
     }
@@ -139,7 +142,8 @@ fun ViewMealsList(meals: List<MealItem>,
 fun ViewMeal(
     mealItem: MealItem,
     navigateToDetails: (MealItem) -> Unit,
-    fetchDetails: (String) -> Unit
+    fetchDetails: (String) -> Unit,
+    topBars: topBars
 ) {
     val scope = rememberCoroutineScope()
     Column(
@@ -150,6 +154,9 @@ fun ViewMeal(
                 scope.launch {
                     navigateToDetails(mealItem)
                     fetchDetails(mealItem.name ?: "")
+                    topBars.mealTopBarRoute = true
+                    topBars.menuTopBarRoute = false
+
 
                 }
             },

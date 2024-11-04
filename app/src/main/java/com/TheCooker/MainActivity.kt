@@ -14,12 +14,14 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.TheCooker.Login.Authentication.GoogleAuth.GoogleClient
 
 import com.TheCooker.NavGraphs.LoginNavigator
 import com.TheCooker.Login.LoginViewModel
+import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
 import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
@@ -54,7 +56,8 @@ class MainActivity : ComponentActivity() {
 
             // Ορίζουμε το ViewModelStore για τη διαχείριση των ViewModels
             TheCookerTheme {
-                val searchCategoryViewModel = hiltViewModel<SearchCategoryViewModel>()
+
+                    val searchCategoryViewModel = hiltViewModel<SearchCategoryViewModel>()
                 val mealsDetailViewModel = hiltViewModel<MealsDetailViewModel>()
                 val mealsViewModel = hiltViewModel<MealsViewModel>()
                 val loginViewModel = hiltViewModel<LoginViewModel>()
@@ -66,7 +69,7 @@ class MainActivity : ComponentActivity() {
                         color = MaterialTheme.colorScheme.background
                     ) {
 
-                        LoginNavigator(loginViewModel, googleClient, createMealViewModel)
+                        LoginNavigator(loginViewModel, googleClient, createMealViewModel, mealsDetailViewModel)
                         println("Hello")
 
 
