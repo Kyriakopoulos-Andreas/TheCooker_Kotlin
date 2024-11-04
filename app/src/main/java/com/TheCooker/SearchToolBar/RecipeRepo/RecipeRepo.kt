@@ -33,10 +33,10 @@ class RecipeRepo@Inject constructor(
 
     // RECIPES
 
-    suspend fun getDetails(meal: String): UserResponse {
+    suspend fun getDetails(id: String): UserResponse {
         return try {
             val response = firestore.collection("recipes")
-                .whereEqualTo("name", meal)
+                .whereEqualTo("name", id)
                 .get()
                 .await()
 
@@ -103,6 +103,24 @@ class RecipeRepo@Inject constructor(
         } catch (e: Exception) {
             Log.e("UploadImageError", "Error uploading image: ${e.message}", e)
             null
+        }
+    }
+
+    suspend fun getUserRecipeDetails(recipeId: String): List<UserRecipe>{
+        return try{
+            val querySnapshot = firestore.collection("recipes")
+                .whereEqualTo("recipeId", recipeId)
+                .get()
+                .addOnFailureListener { e -> // Διαχειριζομαι τα σφαλαματα του firestore
+                    Log.e("RecipeRepo", "Error fetching recipes: ${e.message}")
+                }
+                .await()
+
+            val recipes = querySnapshot.toObjects(UserRecipe::class.java)
+            recipes
+        }catch (e:Exception){
+            Log.d("RecipeRepo", "Error fetching recipes: ${e.message}")
+            throw e.cause ?: e
         }
     }
 

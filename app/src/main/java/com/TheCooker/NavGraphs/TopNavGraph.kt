@@ -10,16 +10,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,16 +35,19 @@ import com.TheCooker.Menu.MenuView
 import com.example.cooker.ChatView.ChatView
 import com.example.cooker.HomeView.HomeView
 import com.TheCooker.Login.SignIn.UserData
+import com.TheCooker.Menu.topBars
 
 import com.TheCooker.Profile.ProfileView
 import com.TheCooker.SearchToolBar.RecipeRepo.MealDetail
 import com.TheCooker.SearchToolBar.ApiService.UserRecipe
+import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
 import com.TheCooker.SearchToolBar.RecipeRepo.MealsCategory
 import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
 
 import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
+import com.TheCooker.SearchToolBar.ViewModels.listOfMeals
 import com.TheCooker.SearchToolBar.Views.CreateMeal
 import com.TheCooker.SearchToolBar.Views.MealDetailView
 import com.TheCooker.SearchToolBar.Views.MealsView
@@ -66,8 +66,9 @@ fun TopNavGraph(
     client: GoogleClient,
     navLogin: NavHostController,
     loginViewModel: LoginViewModel = hiltViewModel(),
-    topBarRoute: MutableState<Boolean>,
-    createMealViewModel: CreateMealViewModel
+    topBars: topBars,
+    createMealViewModel: CreateMealViewModel = hiltViewModel(),
+    detailViewModel: MealsDetailViewModel = hiltViewModel(),
 ) {
     val recipeViewModel: SearchCategoryViewModel = hiltViewModel()
     val recipeState by recipeViewModel.categoriesState.collectAsState()
@@ -78,9 +79,13 @@ fun TopNavGraph(
 
     val userRecipeState by createMealViewModel.saveState.observeAsState()
 
-    val combinedMeals by mealsViewModel.combinedMeals.observeAsState(mutableListOf())
+    // Αρχικοποιoυμε το singleton με το mealsViewModel
+    listOfMeals.initialize(mealsViewModel)
 
-    val detailViewModel: MealsDetailViewModel = hiltViewModel()
+
+    val combinedMeals by listOfMeals.combinedMeals.observeAsState(mutableListOf())
+
+
 
     val detailState by detailViewModel.mealsDetailState.observeAsState(initial = MealsDetailViewModel.MealsDetailState())
 
@@ -99,21 +104,22 @@ fun TopNavGraph(
             startDestination = TopBarMenu.HomeView.route
         ) {
             composable(route = "MenuView") {
-                MenuView(user, googleClient = client, navLogin, loginViewModel, createMealViewModel)
+                MenuView(user, googleClient = client, navLogin, loginViewModel, createMealViewModel, detailViewModel, mealsViewModel)
             }
             composable(DrawerScreens.drawerScreensList[0].route) {
-                Calendar(topBarRoute = topBarRoute)
+                Calendar(topBar = topBars)
             }
             composable(DrawerScreens.drawerScreensList[1].route) {
-                Options(topBarRoute = topBarRoute)
+                Options(topBar = topBars)
             }
             composable(DrawerScreens.drawerScreensList[2].route) {
-                Information(topBarRoute = topBarRoute)
+                Information(topBar = topBars)
             }
             composable(DrawerScreens.drawerScreensList[3].route) {
-                Help(topBarRoute = topBarRoute)
+                Help(topBar = topBars)
             }
             composable(route = "CreateMeal") {
+
 
                 val categoryId =
                     navController.previousBackStackEntry?.savedStateHandle?.get<String>("categoryId")
@@ -225,7 +231,8 @@ fun TopNavGraph(
                     navController = navController,
                     userMealsState = userMealState,
                     mealsViewModel = mealsViewModel,
-                    createMealViewModel = createMealViewModel
+                    createMealViewModel = createMealViewModel,
+                    topBar = topBars
 
                     )
 

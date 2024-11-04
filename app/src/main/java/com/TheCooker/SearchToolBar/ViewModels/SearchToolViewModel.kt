@@ -1,14 +1,11 @@
 package com.TheCooker.SearchToolBar.ViewModels
 
 import android.util.Log
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.TheCooker.SearchToolBar.ApiService.ApiService
 import com.TheCooker.SearchToolBar.RecipeRepo.Category
 import com.TheCooker.SearchToolBar.RecipeRepo.MealDetail
 import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
@@ -117,6 +114,17 @@ class MealsViewModel @Inject constructor(
     }
     val loading: LiveData<Boolean> get() = _loading
 
+    suspend fun deleteRecipe(recipe: String){
+        try {
+            recipeRepo.deleteRecipe(recipe)
+        }catch (e: Exception){
+            Log.d("RecipeViewModel", "Error deleting recipe: ${e.message}")
+        }
+        //TODO Ισως χρειαστεί μετα το delete να ξανα κανεις fetch τις συνταγες
+
+    }
+
+
 
 
     fun addRecipe(recipe: UserRecipe, mealsExist: MutableList<MealItem>) {
@@ -136,6 +144,20 @@ class MealsViewModel @Inject constructor(
                 error = null
             )
         )
+    }
+     fun removeRecipeFromList(recipeId: String, mealsExist: MutableList<MealItem>) {
+        Log.d("UpdatedList1", mealsExist.toString())
+        val updatedList = mealsExist.filter { it.id!= recipeId }.toMutableList()
+        _userMealState.postValue(
+            UserMealsState(
+                loading = false,
+                list = updatedList,
+                error = null
+            )
+        )
+        Log.d("UpdatedList", updatedList.toString())
+
+
     }
 
     suspend fun fetchMeals(mealCategory: String, categoryId: String){
@@ -217,32 +239,57 @@ class MealsViewModel @Inject constructor(
 
 
 
+@Suppress("IMPLICIT_CAST_TO_ANY")
 @HiltViewModel
 class MealsDetailViewModel @Inject constructor(
     private val recipeRepo: RecipeRepo
 ) : ViewModel() {
 
+    sealed class recipeDetails{
+        data class ApiMealDetail(val mealDetail: List<MealDetail>): recipeDetails()
+        data class UserMealDetail(val mealDetail: List<UserRecipe>): recipeDetails()
+    }
+
     data class MealsDetailState(
         val loading: Boolean = false,
         val error: String? = null,
-        val list: List<MealDetail> = emptyList()
+        val list: List<recipeDetails
+                > = emptyList()
     )
+
+   suspend fun updateRecipe(recipe: UserRecipe){
+       try {
+           recipeRepo.updateRecipe(recipe)
+       }catch (e: Exception){
+           Log.d("RecipeViewModel", "Error updating recipe: ${e.message}")
+       }
+
+
+    }
 
     private val _mealsDetailState = MutableLiveData(MealsDetailState())
     val mealsDetailState: LiveData<MealsDetailState> = _mealsDetailState
 
-    fun fetchDetails(meal: String) {
+    fun fetchDetails(mealId: String) {
         _mealsDetailState.value = MealsDetailState(loading = true)
-        Log.d("MealsDetailViewModel", "Fetching details for meal: $meal")
+        Log.d("MealsDetailViewModel", "Fetching details for meal: $mealId")
         viewModelScope.launch() {
             try {
-                val response = recipeRepo.getApiDetailsFromFirestore(meal)
-                Log.d("MealsDetailViewModel", "Fetched details: ${response}")
+                val response: recipeDetails = if (mealId.all { it.isDigit() }) {
+                    // Fetch details from API collection.
+                    val apiDetail = recipeRepo.getApiDetailsFromFirestore(mealId)
+                    recipeDetails.ApiMealDetail(apiDetail)
 
+                } else {
+                    // Fetch details from user collection
+                    val userDetail = recipeRepo.getUserRecipeDetails(mealId)
+
+                   recipeDetails.UserMealDetail(userDetail)
+                }
                 _mealsDetailState.value = MealsDetailState(
                     loading = false,
                     error = null,
-                    list = response
+                    list = listOf(response)
                 )
             } catch (e: Exception) {
                 _mealsDetailState.value = MealsDetailState(
