@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name = "Theme.App.Starting1" parent="Theme.SplashScreen">
+        <item name = "windowSplashScreenBackground">@color/darkGrey</item>
+        <item name = "windowSplashScreenAnimatedIcon">@drawable/avd_cooker1</item>
+        <item name = "windowSplashScreenAnimationDuration">1</item>
+        <item name = "postSplashScreenTheme">@style/Theme.TheCooker</item>
+    </style>
+</resources>
