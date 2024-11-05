@@ -45,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        viewBinding = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -70,6 +71,11 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.1")
     implementation("androidx.hilt:hilt-common:1.2.0")
     implementation("androidx.hilt:hilt-work:1.2.0")
+    implementation("com.google.android.material:material:1.10.0")
+    implementation("androidx.annotation:annotation:1.6.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.0")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     kapt("androidx.hilt:hilt-compiler:1.0.0-alpha01")
     kapt("com.google.dagger:hilt-compiler:2.52") // Ενημέρωσε την έκδοση
         //implementation("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
@@ -78,6 +84,8 @@ dependencies {
 
     implementation ("com.squareup.inject:assisted-inject-annotations-dagger2:0.5.2")
     kapt ("com.squareup.inject:assisted-inject-processor-dagger2:0.5.2")
+
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
 
 

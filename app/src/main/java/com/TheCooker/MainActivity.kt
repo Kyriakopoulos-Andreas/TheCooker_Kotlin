@@ -1,11 +1,14 @@
 package com.TheCooker
 
 import android.content.Context
+import android.content.Intent
 import com.TheCooker.ui.theme.TheCookerTheme
 
 
 import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.view.animation.AnimationUtils
 import androidx.activity.ComponentActivity
 
 import androidx.activity.compose.setContent
@@ -16,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.TheCooker.Login.Authentication.GoogleAuth.GoogleClient
 
@@ -28,6 +32,7 @@ import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 
 import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
 import com.TheCooker.UpdateWorkers.scheduleMonthlySync
+import com.TheCooker.ViewModels.SplashScreenViewModel
 import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.HiltAndroidApp
@@ -38,7 +43,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
 
-
+private val viewModel: SplashScreenViewModel by viewModels()
 
     @Inject
     lateinit var googleClient: GoogleClient
@@ -46,6 +51,11 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installSplashScreen().setKeepOnScreenCondition { false }
+
+
+
+
 
         // Κάνω sync σε μια προκαθορισμένη ημερομηνία
         scheduleMonthlySync(this)

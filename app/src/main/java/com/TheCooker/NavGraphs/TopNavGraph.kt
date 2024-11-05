@@ -80,10 +80,10 @@ fun TopNavGraph(
     val userRecipeState by createMealViewModel.saveState.observeAsState()
 
     // Αρχικοποιoυμε το singleton με το mealsViewModel
-    listOfMeals.initialize(mealsViewModel)
 
 
-    val combinedMeals by listOfMeals.combinedMeals.observeAsState(mutableListOf())
+
+    val combinedMeals by mealsViewModel.combinedMeals.observeAsState(mutableListOf())
 
 
 

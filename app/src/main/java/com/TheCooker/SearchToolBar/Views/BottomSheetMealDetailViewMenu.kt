@@ -172,7 +172,7 @@ fun DeleteRecipeAlertDialog(
 
 
 ) {
-    val combinedMeals by listOfMeals.combinedMeals.observeAsState(mutableListOf())
+
 
     if (dialogOpen.value) {
         val scope = rememberCoroutineScope()
@@ -187,7 +187,7 @@ fun DeleteRecipeAlertDialog(
 
                     scope.launch {
 
-                        mealsViewModel.removeRecipeFromList(recipeId, combinedMeals)
+                        mealsViewModel.removeRecipeFromList(recipeId, mealsViewModel.combinedMeals.value!!)
 
 
                         mealsViewModel.deleteRecipe(recipeId)
