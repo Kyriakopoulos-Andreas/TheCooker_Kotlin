@@ -84,7 +84,7 @@ fun MenuView(
         mutableStateOf(false)
     }
 
-    // Find us out on which "View" we currently are
+
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -116,12 +116,12 @@ fun MenuView(
     val userMealDetailExists = remember { mutableStateOf(false) }
     val apiMealDetailExists = remember { mutableStateOf(false) }
 
-    // Χρησιμοποιήστε το LaunchedEffect για να περιμένετε μέχρι να είναι διαθέσιμα τα δεδομένα
+
     LaunchedEffect(meal) {
         userMealDetailExists.value = meal?.list?.any { it is MealsDetailViewModel.recipeDetails.UserMealDetail } == true
         apiMealDetailExists.value = meal?.list?.any { it is MealsDetailViewModel.recipeDetails.ApiMealDetail } == true
 
-        // Τώρα μπορείτε να κάνετε ό,τι χρειάζεται με τα flags
+
         Log.d("DetailExistsUser", userMealDetailExists.value.toString())
         Log.d("DetailExistsApi", apiMealDetailExists.value.toString())
     }
@@ -133,6 +133,7 @@ fun MenuView(
 
 
     BottomSheetMealDetailMenu(
+        mealDetail = mealsDetailViewModel,
         topBar = topBar,
         dialogOpen = dialogOpenDeleteRecipe,
         navController = navController,
@@ -163,7 +164,8 @@ fun MenuView(
                                                  scope,
                                                  previousRoute,
                                                  false,
-                                                 openBottomSheetMealDetailMenu = showModalSheet
+                                                 openBottomSheetMealDetailMenu = showModalSheet,
+                                                 mealDetail = mealsDetailViewModel
                                              )
                                          } else if (topBar.mealTopBarRoute) {
                                              Log.d("111", userMealDetailExists.value.toString())
@@ -183,7 +185,8 @@ fun MenuView(
                                                      scope,
                                                      previousRoute,
                                                      true,
-                                                     openBottomSheetMealDetailMenu = showModalSheet
+                                                     openBottomSheetMealDetailMenu = showModalSheet,
+                                                     mealDetail = mealsDetailViewModel
                                                  )
                                              }else if (apiMealDetailExists.value) {
                                                  title.value = ""
@@ -195,7 +198,8 @@ fun MenuView(
                                                      scope,
                                                      previousRoute,
                                                      false,
-                                                     openBottomSheetMealDetailMenu = showModalSheet
+                                                     openBottomSheetMealDetailMenu = showModalSheet,
+                                                     mealDetail = mealsDetailViewModel
                                                  )
                                              }
                                          }
@@ -234,6 +238,7 @@ fun MenuView(
                                          topBar,
                                          createMealViewModel = createMealViewModel,
                                          detailViewModel = mealsDetailViewModel,
+
 
                                      )
                                      if (dialogOpenLogOut.value) {

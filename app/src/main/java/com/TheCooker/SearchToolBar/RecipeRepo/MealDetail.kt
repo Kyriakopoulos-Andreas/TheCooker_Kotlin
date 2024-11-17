@@ -70,6 +70,10 @@ data class MealDetail(
             Pair(strIngredient19, strMeasure19), Pair(strIngredient20, strMeasure20)
         ).filterNot { it.first.isNullOrEmpty() }
     }
+
+
+
+
 }
 
 data class MealsDetailsResponse(val meals: List<MealDetail>)

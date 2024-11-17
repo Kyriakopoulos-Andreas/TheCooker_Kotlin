@@ -2,6 +2,7 @@ package com.TheCooker.SearchToolBar.Views
 
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,14 +39,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
+import com.TheCooker.Checks.isInternetAvailable
 import com.TheCooker.Menu.topBars
 import com.TheCooker.R
 import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
 import com.TheCooker.SearchToolBar.RecipeRepo.RecipeRepo
+import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
-import com.TheCooker.SearchToolBar.ViewModels.listOfMeals
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterialApi::class)
@@ -56,6 +59,7 @@ fun BottomSheetMealDetailMenu(content: @Composable (ModalBottomSheetState, () ->
                               navController: NavHostController,
                               dialogOpen: MutableState<Boolean>,
                               topBar: topBars,
+                              mealDetail: MealsDetailViewModel
 ){
     val scope = rememberCoroutineScope()
     val modalSheetState = rememberModalBottomSheetState(
@@ -66,7 +70,7 @@ fun BottomSheetMealDetailMenu(content: @Composable (ModalBottomSheetState, () ->
         sheetState = modalSheetState,
         sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
         sheetContent = {
-            BottomSheetMealDetailMenuContent(mealsViewModel = viewModel, recipeId = mealId, scope, navController, dialogOpen, modalSheetState, topBar)
+            BottomSheetMealDetailMenuContent(mealsViewModel = viewModel, recipeId = mealId, scope, navController, dialogOpen, modalSheetState, topBar, mealDetail)
 
         }
     ) {
@@ -85,7 +89,9 @@ fun BottomSheetMealDetailMenu(content: @Composable (ModalBottomSheetState, () ->
 @Composable
 fun BottomSheetMealDetailMenuContent(mealsViewModel: MealsViewModel, recipeId: String, scope: CoroutineScope,
                                      navController: NavHostController, dialogOpen: MutableState<Boolean>,
-                                     modalSheetState: ModalBottomSheetState, topBar: topBars){
+                                     modalSheetState: ModalBottomSheetState, topBar: topBars,
+                                     mealDetail: MealsDetailViewModel){
+    val context = androidx.compose.ui.platform.LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -115,13 +121,29 @@ fun BottomSheetMealDetailMenuContent(mealsViewModel: MealsViewModel, recipeId: S
                     color = Color(0xFFFFC107),
                     modifier = Modifier.clickable {
                         //todo update recipe
-                        navController.navigate("CreateMeal")
-
-                        topBar.updateBar = true
-
                         scope.launch {
+                            mealDetail.fetchDetails(recipeId)
                             modalSheetState.hide()
+                        }
 
+
+
+                        if(!mealDetail.mealsDetailState.value?.loading!! && isInternetAvailable(context)) {
+                            navController.navigate("CreateMeal?recipeId=$recipeId") //Περνάω ώς όρισμα το recipeId κατα το navigate στο createMeal. Αφου το αποθηκεύσω στο  backStackEntry(lambda).arguments? το τραβαω απο τον NavHost(TopNavGraph)(Δες) και το περναω
+
+                            topBar.updateBar = true
+
+
+                        }else{
+                            if(mealDetail.mealsDetailState.value?.error != null || !isInternetAvailable(context)) {
+                                scope.launch {
+                                        Toast.makeText(
+                                            context,
+                                            "No Internet Connection",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                            }
                         }
 
                     }

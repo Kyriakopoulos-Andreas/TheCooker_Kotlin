@@ -1,5 +1,6 @@
 package com.TheCooker.Menu
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -38,10 +39,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.TheCooker.SearchToolBar.ApiService.UserRecipe
 import com.TheCooker.SearchToolBar.RecipeRepo.MealDetail
+import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.Views.BottomSheetMealDetailMenu
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+@SuppressLint("RestrictedApi")
 @Composable
 fun ExtraTopBar(
     title: String,
@@ -51,7 +54,8 @@ fun ExtraTopBar(
     scope: CoroutineScope,
     previousRoute: MutableState<String?>,
     isUserRecipe: Boolean,
-    openBottomSheetMealDetailMenu: () -> Unit // Προσθέστε αυτή τη συνάρτηση
+    openBottomSheetMealDetailMenu: () -> Unit,
+    mealDetail: MealsDetailViewModel// Προσθέστε αυτή τη συνάρτηση
 
 ){
     Log.d("ExtraTopBar", "mealTopBarRoute: ${topBar.mealTopBarRoute}, updateBar: ${topBar.updateBar}")
@@ -98,27 +102,37 @@ fun ExtraTopBar(
                         topBar.menuTopBarRoute = true
                         topBar.drawerMenuRoute = false
 
+
+
                         if(topBar.updateBar){
                             topBar.updateBar = false
                             topBar.mealTopBarRoute = true
                             topBar.menuTopBarRoute = false
+
                             Log.d("ExtraTopBar2", "mealTopBarRoute: ${topBar.mealTopBarRoute}, updateBar: ${topBar.updateBar}")
+
                         }
 
-                        if (!topBar.mealTopBarRoute ) {
+                        if (!topBar.mealTopBarRoute && !topBar.updateBar && !topBar.drawerMenuRoute) {
+                            topBar.menuTopBarRoute = true
+                            Log.d("PreviousRoute", "jOIN")
+
                             scaffoldState.drawerState.open()
+
                             previousRoute.value?.let { route ->
+                                Log.d("PreviousRoute", "Previous route: $route")
                                 navController.navigate(route) {
                                     popUpTo(navController.graph.startDestinationId)
-
                                     launchSingleTop = true
 
                                 }
                             }
                         }
                         else {
+                            Log.d("PreviousRoute", "Previous route: ${navController.currentBackStack.value}")
 
                             navController.popBackStack()
+
                         }
                     }
                 }) {
