@@ -19,6 +19,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.fragment.app.FragmentManager.BackStackEntry
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -47,7 +48,6 @@ import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
-import com.TheCooker.SearchToolBar.ViewModels.listOfMeals
 import com.TheCooker.SearchToolBar.Views.CreateMeal
 import com.TheCooker.SearchToolBar.Views.MealDetailView
 import com.TheCooker.SearchToolBar.Views.MealsView
@@ -69,6 +69,7 @@ fun TopNavGraph(
     topBars: topBars,
     createMealViewModel: CreateMealViewModel = hiltViewModel(),
     detailViewModel: MealsDetailViewModel = hiltViewModel(),
+
 ) {
     val recipeViewModel: SearchCategoryViewModel = hiltViewModel()
     val recipeState by recipeViewModel.categoriesState.collectAsState()
@@ -118,7 +119,9 @@ fun TopNavGraph(
             composable(DrawerScreens.drawerScreensList[3].route) {
                 Help(topBar = topBars)
             }
-            composable(route = "CreateMeal") {
+            composable(route = "CreateMeal?recipeId={recipeId}") { backStackEntry ->
+                val recipeId = backStackEntry.arguments?.getString("recipeId")
+                Log.d("RecipeIdToGraph", recipeId.toString())
 
 
                 val categoryId =
@@ -126,10 +129,13 @@ fun TopNavGraph(
                 Log.d("MealsBeforeCreate", combinedMeals.toString())
 
                 CreateMeal(
+                    mealDetailViewModel = detailViewModel ,
+                    recipeId = recipeId,
                     categoryId = categoryId ?: "",
                     saveNavigateBack = navController::popBackStack,
                     navController = navController,
-                    combineMeals = combinedMeals
+                    combineMeals = combinedMeals,
+                    topBars = topBars
                 )
 
 
@@ -193,9 +199,6 @@ fun TopNavGraph(
 
                             navController.navigate("MealsView")
                             shouldNavigate = false
-                        } else {
-                            // Αν δεν υπάρχουν δεδομένα από τον χρήστη και το API, πλοηγηθείτε παρόλα αυτά
-
                         }
                     }
                 }
@@ -208,6 +211,8 @@ fun TopNavGraph(
                 // Ανάκτηση της λίστας των γευμάτων από το savedStateHandle του προηγούμενου BackStackEntry
                 val meals = navController.previousBackStackEntry?.savedStateHandle?.get<List<MealsCategory>>("meals") ?: emptyList()
                 var categoryId = navController.previousBackStackEntry?.savedStateHandle?.get<String>("categoryId") ?: ""
+
+
 
                 var shouldNavigate by remember { mutableStateOf(false) }
 
@@ -246,10 +251,13 @@ fun TopNavGraph(
             }
 
             composable(route = "MealDetailView") {
-                val detail = navController.previousBackStackEntry?.savedStateHandle?.get<List<MealDetail>>("detail") ?: emptyList()
+                val navBackStackEntry = navController.currentBackStackEntry
+                val detail = navBackStackEntry?.savedStateHandle?.get<Any>("detail") as? UserRecipe?
+
+                Log.d("DetailOnNav", detail.toString())
                 MealDetailView(
                     detailViewModel = detailViewModel,
-                    details = detail
+                    updateDetails = detail
                 )
             }
 

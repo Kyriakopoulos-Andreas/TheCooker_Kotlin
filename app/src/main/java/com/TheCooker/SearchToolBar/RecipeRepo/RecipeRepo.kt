@@ -244,14 +244,16 @@ class RecipeRepo@Inject constructor(
     }
 
     suspend fun updateRecipe(recipe: UserRecipe){
+        val dataToUpdateBaseOnMap = recipe.mapForUpdateExcludingCreatorId()
         firestore.collection("recipes")
             .document(recipe.recipeId?: "")
-            .set(recipe, SetOptions.merge())
+            .set(dataToUpdateBaseOnMap, SetOptions.merge())
             .await()
     }
 
     //CATEGORIES
     suspend fun saveCategory(category: Category) {
+
         firestore.collection("categories")
             .document(category.idCategory?: "")
             .set(category)

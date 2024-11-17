@@ -22,6 +22,36 @@ data class UserRecipe(
     override val image: String? get() = recipeImage
     override val isUserMeal: Boolean get() = isUserRecipe
 
+    fun mapForUpdateExcludingCreatorId(): Map<String, Any?> {
+        return mapOf(
+            "recipeId" to recipeId,
+            "recipeName" to recipeName,
+            "recipeIngredients" to recipeIngredients,
+            "recipeImage" to recipeImage,
+            "timestamp" to timestamp,
+        "steps" to steps)
+    }
+
+    fun withUpdatedAttributes(
+        recipeId: String? = this.recipeId,
+        recipeName: String? = this.recipeName,
+        recipeIngredients: List<String>? = this.recipeIngredients,
+        recipeImage: String? = this.recipeImage,
+        steps: List<String>? = this.steps
+    ): UserRecipe {
+        return this.copy(
+            recipeId = recipeId,
+            recipeName = recipeName,
+            recipeIngredients = recipeIngredients,
+            recipeImage = recipeImage,
+            steps = steps
+        )
+    }
+
+
+
+
+
 
     @RequiresApi(Build.VERSION_CODES.Q)
     constructor(parcel: Parcel) : this(

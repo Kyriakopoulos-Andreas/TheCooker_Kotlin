@@ -39,8 +39,10 @@ import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,10 +63,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.TheCooker.Checks.isInternetAvailable
+import com.TheCooker.Menu.topBars
 import com.TheCooker.R
 import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
 import com.TheCooker.SearchToolBar.ApiService.UserRecipe
 import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
+import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.example.cooker.ListView.CustomDivider
 import kotlinx.coroutines.delay
@@ -74,12 +78,15 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun CreateMeal(
+    recipeId: String?,
+    mealDetailViewModel: MealsDetailViewModel = hiltViewModel(),
     viewmodel: CreateMealViewModel = hiltViewModel(),
     categoryId: String?,
     saveNavigateBack: () -> Unit,
     navController: NavController,
     mealsViewModel: MealsViewModel = hiltViewModel(),
-    combineMeals: MutableList<MealItem>
+    combineMeals: MutableList<MealItem>,
+    topBars: topBars
                ) {
     val context = LocalContext.current
     val creatorId  = remember { mutableStateOf(viewmodel.creatorId)}
@@ -95,6 +102,12 @@ fun CreateMeal(
     val ingredientError by createMealViewModel.ingredientsError.collectAsState()
     val stepError by createMealViewModel.stepsError.collectAsState()
 
+    val updatedStepOfCompletion by createMealViewModel.stateOfCompletion.collectAsState()
+    val updatedMealNameError by createMealViewModel.mealNameError.collectAsState()
+    val updatedIngredientError by createMealViewModel.ingredientsError.collectAsState()
+    val updatedStepError by createMealViewModel.stepsError.collectAsState()
+
+
 
     var selectedIndex by remember { mutableStateOf(-1) }
     val scope = rememberCoroutineScope()
@@ -108,7 +121,9 @@ fun CreateMeal(
     )
 
 
-
+    val detailState = mealDetailViewModel.mealsDetailState.observeAsState()
+    Log.d("mealForUpdate", detailState.value.toString())
+    Log.d("RecipeId", recipeId.toString())
     val roundedCornerRadius = 12.dp
     val modifier = Modifier.fillMaxWidth()
 
@@ -119,6 +134,46 @@ fun CreateMeal(
             imageUri = it
         }
     }
+    var imageUrl by remember { mutableStateOf<String?>(null) }
+    val imageTitleUpdate by mealDetailViewModel.updatedMealName
+    val ingredientsUpdate by remember { mutableStateOf(mealDetailViewModel.updatedIngredients) }
+    val stepsUpdate by remember { mutableStateOf(mealDetailViewModel.updatedSteps) }
+
+
+
+    LaunchedEffect(detailState.value, recipeId) {
+        Log.d("mealForUpdate", detailState.value.toString())
+        if (detailState?.value?.list?.isNotEmpty() == true) {
+            val detail = detailState.value?.list?.get(0)
+            if (detail is MealsDetailViewModel.recipeDetails.UserMealDetail) {
+                imageUrl = detail.mealDetail.firstOrNull()?.recipeImage
+                detail.mealDetail.firstOrNull()?.recipeName?.let {
+                    mealDetailViewModel.updatedMealName(
+                        it
+                    )
+                }
+                detail.mealDetail.firstOrNull()?.recipeIngredients?.let {
+                    mealDetailViewModel.updatedIngredients(
+                        it
+                    )
+                }
+                detail.mealDetail.firstOrNull()?.steps?.let {
+                    mealDetailViewModel.updatedSteps(
+                        it
+                    )
+                }
+
+                Log.d("First", "UserMealDetail found: $imageUrl")
+            }
+        }
+        if(recipeId == null){
+            imageUrl = "android.resource://com.TheCooker/${R.drawable.addmeal}"
+        }
+    }
+
+
+    val finalImageUrl = imageUrl ?: "android.resource://com.TheCooker/${R.drawable.addmeal}"
+
 
 
 
@@ -138,7 +193,10 @@ fun CreateMeal(
                         .padding(8.dp)
                 ) {
                     AsyncImage(
-                        model = imageUri ?: "android.resource://com.TheCooker/${R.drawable.addmeal}",
+                        model = finalImageUrl
+
+                                ,
+
                         contentDescription = "Add Meal Image",
                         modifier = Modifier
                             .fillMaxSize()
@@ -177,6 +235,7 @@ fun CreateMeal(
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+                val textFieldValue = if (recipeId != null) imageTitleUpdate else mealName
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -187,8 +246,13 @@ fun CreateMeal(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                        value = mealName,
-                        onValueChange = { createMealViewModel.setMealName(it) },
+                        value = textFieldValue,
+                        onValueChange = {newValue ->
+                            if(recipeId != null)
+                                mealDetailViewModel.updatedMealName(newValue)
+                            else
+                                createMealViewModel.setMealName(newValue)
+                        },
                         label = { Text("Meal Title") },
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             focusedBorderColor = Color(0xFFFFC107),
@@ -203,17 +267,33 @@ fun CreateMeal(
                     )
 
                 }
-                mealNameError?.let {
-                    if(it != "✔"){
-                        Text(
-                            text = it,
-                            color = Color.Red,
-                            modifier = Modifier
-                                .padding(bottom = 4.dp)
-                                .align(Alignment.CenterHorizontally)
-                        )
+                if(recipeId != null) {
+                    updatedMealNameError?.let {
+                        if (it != "✔") {
+                            Text(
+                                text = it,
+                                color = Color.Red,
+                                modifier = Modifier
+                                    .padding(bottom = 4.dp)
+                                    .align(Alignment.CenterHorizontally)
+                            )
+                        }
                     }
                 }
+                else{
+                    mealNameError?.let {
+                        if(it != "✔"){
+                            Text(
+                                text = it,
+                                color = Color.Red,
+                                modifier = Modifier
+                                    .padding(bottom = 4.dp)
+                                    .align(Alignment.CenterHorizontally)
+                            )
+                        }
+                    }
+                }
+
             }
             CustomDivider()
             Row(
@@ -230,8 +310,9 @@ fun CreateMeal(
                 )
             }
         }
+        val ingredientsValue = if (recipeId != null) ingredientsUpdate else ingredients
 
-        itemsIndexed(ingredients) { index, ingredient ->
+        itemsIndexed(ingredientsValue) { index, ingredient ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -243,7 +324,12 @@ fun CreateMeal(
                     modifier = Modifier.weight(1f),
                     value = ingredient,
                     onValueChange = { newIngredient ->
-                        createMealViewModel.updateIngredient(index, newIngredient)
+                        if (recipeId != null)
+                            mealDetailViewModel.updateIngredient(index, newIngredient)
+                        else{
+                            createMealViewModel.updateIngredient(index, newIngredient)
+                        }
+
                     },
                     label = { Text("Ingredient ${index + 1}") },
                     colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -301,6 +387,10 @@ fun CreateMeal(
                 Text(
                     "Add Ingredient",
                     modifier = Modifier.clickable {
+
+                        if (recipeId != null)
+                            mealDetailViewModel.addIngredientAtEnd()
+                        else
                         createMealViewModel.addIngredientAtEnd()
                     },
                     fontSize = 20.sp,
@@ -313,15 +403,29 @@ fun CreateMeal(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically) {
 
+                    if (recipeId != null) {
+                        updatedIngredientError.let {
+                            if (it != "✔") {
+                                if (it != null) {
+                                    Text(
+                                        text = it,
+                                        color = Color.Red,
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
+                                }
+                            }
+                        }
 
-                    ingredientError.let {
-                        if (it != "✔") {
-                            if (it != null) {
-                                Text(
-                                    text = it,
-                                    color = Color.Red,
-                                    modifier = Modifier.padding(start = 8.dp)
-                                )
+                    } else {
+                        ingredientError.let {
+                            if (it != "✔") {
+                                if (it != null) {
+                                    Text(
+                                        text = it,
+                                        color = Color.Red,
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -339,7 +443,7 @@ fun CreateMeal(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Execution",
+                    text = "Steps",
                     color = Color(0xFFFFC107),
                     style = MaterialTheme.typography.headlineMedium,
                     fontFamily = FontFamily.Monospace,
@@ -348,7 +452,9 @@ fun CreateMeal(
 
             }
         }
-            itemsIndexed(steps) { index, step ->
+        val stepsValue = if(recipeId != null){ stepsUpdate} else{ steps}
+
+            itemsIndexed(stepsValue) { index, step ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -360,7 +466,10 @@ fun CreateMeal(
                         modifier = Modifier.weight(1f),
                         value = step,
                         onValueChange = { step ->
-                            createMealViewModel.updateSteps(index, step)
+                            if (recipeId != null){
+                                mealDetailViewModel.updateStep(index, step)}
+                            else{
+                            createMealViewModel.updateSteps(index, step)}
                         },
                         label = { Text("Step ${index + 1}") },
                         colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -410,6 +519,9 @@ fun CreateMeal(
                     Text(
                         "Add Step",
                         modifier = Modifier.clickable {
+                            if (recipeId != null)
+                                mealDetailViewModel.addStepAtTheEnd()
+                            else
                             createMealViewModel.addStepAtTheEnd()
                         },
                         fontSize = 20.sp,
@@ -421,17 +533,34 @@ fun CreateMeal(
                 Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically) {
-                    stepError.let {
-                        if(it != "✔"){
-                            if (it != null) {
-                                Text(
-                                    text = it,
-                                    color = Color.Red,
-                                    modifier = Modifier.padding(start = 8.dp)
-                                )
+                    if (recipeId != null) {
+                        updatedStepError.let {
+                            if(it != "✔"){
+                                if (it != null) {
+                                    Text(
+                                        text = it,
+                                        color = Color.Red,
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
+                                }
                             }
                         }
+
+                    }else{
+                        stepError.let {
+                            if(it != "✔"){
+                                if (it != null) {
+                                    Text(
+                                        text = it,
+                                        color = Color.Red,
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
+                                }
+                            }
+                        }
+
                     }
+
 
                 }
 
@@ -449,65 +578,121 @@ fun CreateMeal(
                 val coroutineScope = rememberCoroutineScope()
                 Button(
                     onClick = {
-
-                            coroutineScope.launch {
-                                createMealViewModel.validateSave()
+                        coroutineScope.launch {
+                            if (recipeId != null) {
+                                mealDetailViewModel.validateUpdate()
                                 delay(100)
-                                if (stepOfCompletion == true) {
-
-
-
                                 if (!isInternetAvailable(context)) {
-                                    // Εμφάνιση μηνύματος στον χρήστη αν δεν υπάρχει σύνδεση
                                     Toast.makeText(
                                         context,
                                         "No internet connection. Please try again later.",
                                         Toast.LENGTH_SHORT
                                     ).show()
-                                    return@launch // Έξοδος από την coroutine αν δεν υπάρχει σύνδεση
+                                    return@launch
                                 }
+                                val categoryIdFromBackStack = navController.previousBackStackEntry?.savedStateHandle?.get<String>("categoryId")
+                                Log.d("categoryIdOnUpdate ${categoryIdFromBackStack}!!!", "${categoryIdFromBackStack}")
 
-
-
-                                val newRecipe = UserRecipe(
-                                    creatorId = creatorId.value,
-                                    recipeIngredients = ingredients,
-                                    recipeName = mealName,
-                                    steps = steps,
-                                    categoryId = categoryId,
+                                val updatedRecipe = UserRecipe(
+                                    recipeIngredients = ingredientsUpdate,
+                                    recipeName = imageTitleUpdate,
+                                    steps = stepsUpdate,
                                     recipeImage = null,
-                                    recipeId = UUID.randomUUID().toString(),
+                                    recipeId = recipeId,
+                                    categoryId = categoryId,
+                                    creatorId = creatorId.value
                                 )
-                                viewmodel.onCreateFalse()
-                                Log.d("TestImageNewRecipe", "Image URI: $imageUri")
-                                    val recipeToAddOnList= createMealViewModel.saveRecipe(newRecipe, imageUri) {
-                                    // Αυτή είναι η λογική που θα εκτελεστεί μόλις ολοκληρωθεί η αποθήκευση
-                                    val userRecipeState = createMealViewModel.saveState.value
 
-                                    // Έλεγχος καταστάσεων πριν την πλοήγηση πίσω
-                                    if (userRecipeState?.isSaving == false &&
-                                        userRecipeState?.imageUploaded == true &&
-                                        userRecipeState?.onCreateRecipe == false
+                                mealDetailViewModel.onUpdateFalse()
+
+                                mealDetailViewModel.updateRecipe(updatedRecipe, imageUri) {
+                                    val updateRecipeState = mealDetailViewModel.updateState.value
+                                    if (updateRecipeState?.isSaving == false &&
+                                        updateRecipeState.imageUploaded == true &&
+                                        updateRecipeState.onUpdateRecipe == false
                                     ) {
-                                        saveNavigateBack() // Επιστροφή στην προηγούμενη οθόνη
+                                       mealsViewModel.updateRecipeOnLiveList(updatedRecipe, combineMeals)
+
+
+                                        // Ενημέρωση του savedStateHandle με την ενημερωμένη συνταγή
+                                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                                                "detail",
+                                        updatedRecipe
+                                        )
+
+
+                                        saveNavigateBack()
+                                        topBars.mealTopBarRoute = true
+                                        topBars.updateBar = false
                                     } else {
-                                        // Μπορείς να κάνεις log ή να δείξεις κάποιο μήνυμα σφάλματος
                                         Log.d(
                                             "ButtonOnClick",
-                                            "Conditions not met for navigation back: $userRecipeState"
+                                            "Conditions not met for navigation back: $updateRecipeState"
                                         )
                                     }
                                 }
-                                    mealsViewModel.addRecipe(recipeToAddOnList, combineMeals)
-                                navController.previousBackStackEntry?.savedStateHandle?.set(
-                                    "newRecipe",
-                                    newRecipe
-                                ) /*TODO Implemendtion of save Recipe/ */
+                            }else{
+
+                                    createMealViewModel.validateSave()
+                                    delay(100)
+                                    if (stepOfCompletion == true) {
 
 
-                                Log.d("ButtonOnClick", "Clicked and saved recipe: $newRecipe")
+                                        if (!isInternetAvailable(context)) {
+                                            // Εμφάνιση μηνύματος στον χρήστη αν δεν υπάρχει σύνδεση
+                                            Toast.makeText(
+                                                context,
+                                                "No internet connection. Please try again later.",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            return@launch // Έξοδος από την coroutine αν δεν υπάρχει σύνδεση
+                                        }
+
+
+                                        val newRecipe = UserRecipe(
+                                            creatorId = creatorId.value,
+                                            recipeIngredients = ingredients,
+                                            recipeName = mealName,
+                                            steps = steps,
+                                            categoryId = categoryId,
+                                            recipeImage = null,
+                                            recipeId = UUID.randomUUID().toString(),
+                                        )
+                                        viewmodel.onCreateFalse()
+                                        Log.d("TestImageNewRecipe", "Image URI: $imageUri")
+                                        val recipeToAddOnList =
+                                            createMealViewModel.saveRecipe(newRecipe, imageUri) {
+                                                // Αυτή είναι η λογική που θα εκτελεστεί μόλις ολοκληρωθεί η αποθήκευση
+                                                val userRecipeState =
+                                                    createMealViewModel.saveState.value
+
+                                                // Έλεγχος καταστάσεων πριν την πλοήγηση πίσω
+                                                if (userRecipeState?.isSaving == false &&
+                                                    userRecipeState?.imageUploaded == true &&
+                                                    userRecipeState?.onCreateRecipe == false
+                                                ) {
+                                                    saveNavigateBack() // Επιστροφή στην προηγούμενη οθόνη
+                                                } else {
+                                                    // Μπορείς να κάνεις log ή να δείξεις κάποιο μήνυμα σφάλματος
+                                                    Log.d(
+                                                        "ButtonOnClick",
+                                                        "Conditions not met for navigation back: $userRecipeState"
+                                                    )
+                                                }
+                                            }
+                                        mealsViewModel.addRecipe(recipeToAddOnList, combineMeals)
+                                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                                            "newRecipe",
+                                            newRecipe
+                                        )
+
+                                        Log.d(
+                                            "ButtonOnClick",
+                                            "Clicked and saved recipe: $newRecipe"
+                                        )
+                                    }
+                                }
                             }
-                        }
                               },
                     modifier = Modifier.width(150.dp),
                     colors = ButtonColors(
@@ -525,24 +710,29 @@ fun CreateMeal(
 
                 }
                 Spacer(modifier = Modifier.padding(start = 8.dp))
-                Button(
-                    onClick = { /*TODO Implemendtion of share Recipe/ */ },
-                    modifier = Modifier
-                        .width(150.dp)
-                        .padding(start = 8.dp),
-                    colors = ButtonColors(
-                        containerColor = Color(0xFF28d14f),
-                        contentColor = Color.White,
-                        disabledContainerColor = Color(0xFFFFC107),
-                        disabledContentColor = Color.White
-                    ),
-                    shape = ShapeDefaults.ExtraSmall
-                ) {
-                    Text(text = "Share",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp)
+                if(recipeId == null) {
+                    Button(
+                        onClick = { /*TODO Implemendtion of share Recipe/ */ },
+                        modifier = Modifier
+                            .width(150.dp)
+                            .padding(start = 8.dp),
+                        colors = ButtonColors(
+                            containerColor = Color(0xFF28d14f),
+                            contentColor = Color.White,
+                            disabledContainerColor = Color(0xFFFFC107),
+                            disabledContentColor = Color.White
+                        ),
+                        shape = ShapeDefaults.ExtraSmall
+                    ) {
+                        Text(
+                            text = "Share",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
 
+                    }
                 }
+
             }
         }
     }
@@ -559,12 +749,18 @@ fun CreateMeal(
                 modifier = modifier,
                 onAddClick = {
                     if (selectedIndex >= 0) {
+                        if (recipeId != null)
+                            mealDetailViewModel.addIngredientAfter(selectedIndex)
+                        else
                         createMealViewModel.addIngredientAfter(selectedIndex)
                     }
                     scope.launch { modalSheetStateIngredient.hide() }
                 },
                 onDeleteClick = {
                     if (selectedIndex >= 0) {
+                        if (recipeId != null)
+                            mealDetailViewModel.removeIngredient(selectedIndex)
+                        else
                         createMealViewModel.removeIngredient(selectedIndex)
                     }
                     scope.launch { modalSheetStateIngredient.hide() }
@@ -583,13 +779,19 @@ fun CreateMeal(
                 modifier = modifier,
                 onAddClick = {
                     if (selectedIndex >= 0) {
+                        if (recipeId != null)
+                            mealDetailViewModel.addStepAfter(selectedIndex)
+                        else
                         createMealViewModel.addStepAfter(selectedIndex)
                     }
                     scope.launch { modalSheetStateStep.hide() }
                 },
                 onDeleteClick = {
                     if (selectedIndex >= 0) {
-                        createMealViewModel.removeStep(selectedIndex)
+                        if (recipeId != null){
+                            mealDetailViewModel.removeStep(selectedIndex)}
+                        else{
+                        createMealViewModel.removeStep(selectedIndex)}
                     }
                     scope.launch { modalSheetStateStep.hide() }
                 }

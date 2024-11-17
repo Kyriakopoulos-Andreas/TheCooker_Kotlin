@@ -18,7 +18,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,9 +42,13 @@ import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 @Composable
 fun MealDetailView(
     detailViewModel: MealsDetailViewModel,
-    details: List<MealDetail>
+    updateDetails: UserRecipe?
 ) {
     val detailState = detailViewModel.mealsDetailState.observeAsState()
+
+
+
+
 
     Column(
         modifier = Modifier.wrapContentSize(),
@@ -66,7 +74,7 @@ fun MealDetailView(
                         is MealsDetailViewModel.recipeDetails.UserMealDetail -> {
                             detail.mealDetail.forEach { userDetail ->
                                 Log.d("UserRecipeTest", "User detail: $userDetail")
-                                ViewUserDetails(userDetail)
+                                ViewUserDetails(userDetail,  updateDetails, detailViewModel)
                             }
                         }
                     }
@@ -80,6 +88,11 @@ fun MealDetailView(
 @Composable
 fun ViewApiDetails(detail: MealDetail) {
 
+
+
+
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -87,7 +100,7 @@ fun ViewApiDetails(detail: MealDetail) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = detail.strMeal,
+            text =  detail.strMeal,
             modifier = Modifier.padding(bottom = 12.dp, top = 12.dp),
             color = Color(0xFFFFC107),
             style = androidx.compose.material.MaterialTheme.typography.h6,
@@ -161,7 +174,19 @@ fun ViewApiDetails(detail: MealDetail) {
 
 
 @Composable
-fun ViewUserDetails(detail:UserRecipe){
+fun ViewUserDetails(detail1:UserRecipe, updateDetails: UserRecipe?, detailViewModel: MealsDetailViewModel){
+
+
+
+
+    var detail by remember { mutableStateOf<UserRecipe>(detail1) }
+    if (updateDetails != null) {
+        detail = detailViewModel.copyDetails(detail1, updateDetails)
+
+    }
+
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -181,7 +206,7 @@ fun ViewUserDetails(detail:UserRecipe){
         }
         Image(
             painter = rememberAsyncImagePainter(model = detail.recipeImage),
-            contentDescription = "${detail.recipeImage} Thumbnail",
+            contentDescription = "Image Thumbnail",
             contentScale = ContentScale.FillBounds,
             modifier = Modifier
                 .padding(horizontal = 16.dp)

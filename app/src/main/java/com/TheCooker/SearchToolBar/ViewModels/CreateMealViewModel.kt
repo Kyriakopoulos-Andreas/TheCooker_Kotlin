@@ -51,6 +51,8 @@ class CreateMealViewModel @Inject constructor(
     val stateOfCompletion: MutableStateFlow<Boolean?> get() = _stateOfCompletion
 
 
+
+
     val creatorId: String?
         get() = userDataProvider.userData?.uid
 
@@ -155,7 +157,6 @@ class CreateMealViewModel @Inject constructor(
         }
 
 
-
     }
 
     private fun validateSteps() {
@@ -181,8 +182,6 @@ class CreateMealViewModel @Inject constructor(
         validateIngredients()
         validateSteps()
         _stateOfCompletion.value = _mealNameError.value == "✔" && _ingredientsError.value == "✔" && _stepsError.value == "✔"
-
-
 
 
     }
