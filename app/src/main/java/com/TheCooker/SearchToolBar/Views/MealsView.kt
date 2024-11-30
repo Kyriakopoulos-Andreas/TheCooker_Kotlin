@@ -43,17 +43,21 @@ import kotlinx.coroutines.launch
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun MealsView(apiMealsState: MealsViewModel.ApiMealsState,
-              meals: List<MealsCategory>,
-              navigateToDetails: (MealItem) -> Unit,
-              fetchDetails: (String) -> Unit,
-              navController: NavController,
-              createMeal: () -> Unit,
-              userMealsState: MealsViewModel.UserMealsState,
-              mealsViewModel: MealsViewModel,
-              createMealViewModel: CreateMealViewModel,
-              topBar: topBars
+fun MealsView(
+    apiMealsState: MealsViewModel.ApiMealsState,
+    meals: List<MealsCategory>,
+    navigateToDetails: (MealItem) -> Unit,
+    fetchDetails: (String) -> Unit,
+    navController: NavController,
+    createMeal: () -> Unit,
+    userMealsState: MealsViewModel.UserMealsState,
+    mealsViewModel: MealsViewModel,
+    createMealViewModel: CreateMealViewModel,
+    topBar: topBars
 ) {
+    Log.d("MealsViewTest22", "Meals: $meals")
+
+
 
 
 
@@ -113,7 +117,6 @@ fun ViewMealsList(meals: List<MealItem>,
 
             item {
                 val imageUrl = "android.resource://com.TheCooker/" + R.drawable.add_meal2
-                val context = LocalContext.current
                 Image(
                     painter = rememberAsyncImagePainter(model = imageUrl),
                     contentDescription = null,
@@ -145,6 +148,7 @@ fun ViewMeal(
     fetchDetails: (String) -> Unit,
     topBars: topBars
 ) {
+    Log.d("MealItemBack", mealItem.name.toString())
     val scope = rememberCoroutineScope()
     Column(
         modifier = Modifier

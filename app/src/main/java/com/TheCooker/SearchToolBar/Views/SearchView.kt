@@ -25,6 +25,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import com.TheCooker.NavGraphs.TopNavGraphSharedViewModel
 import com.TheCooker.SearchToolBar.RecipeRepo.Category
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
@@ -36,7 +37,8 @@ fun SearchView(
     recipeState: SearchCategoryViewModel.RecipeState,
     navigateToMeals: (Category) -> Unit,
     fetchMeals: (String) -> Unit,
-    mealsViewModel: MealsViewModel
+    mealsViewModel: MealsViewModel,
+    topNavGraphSharedViewModel : TopNavGraphSharedViewModel
                ){
 
 
@@ -62,7 +64,7 @@ fun SearchView(
             }
             else ->{
 
-                ShowCategories(categories = recipeState.list, navigateToMeals, fetchMeals,create, mealsViewModel)
+                ShowCategories(categories = recipeState.list, navigateToMeals, fetchMeals,create, mealsViewModel, topNavGraphSharedViewModel)
             }
         }
     }
@@ -73,10 +75,10 @@ fun SearchView(
 @Composable
 fun ShowCategories(categories: List<Category>,
                    navigateToMeals: (Category) -> Unit,
-
                    fetchMeals: (String) -> Unit,
                    create: Boolean,
-                   mealsViewModel: MealsViewModel){
+                   mealsViewModel: MealsViewModel,
+                   topNavGraphSharedViewModel: TopNavGraphSharedViewModel){
 
 
 
@@ -89,7 +91,7 @@ fun ShowCategories(categories: List<Category>,
 
             Category ->
             println(Category.strCategory)
-            ShowItem(category = Category, navigateToMeals, fetchMeals,create, mealsViewModel)
+            ShowItem(category = Category, navigateToMeals, fetchMeals,create, mealsViewModel, topNavGraphSharedViewModel = topNavGraphSharedViewModel)
         }
     }
 
@@ -100,9 +102,10 @@ fun ShowItem(category: Category,
              navigateToMeals: (Category) -> Unit,
              fetchMeals: (String) -> Unit,
              create: Boolean,
-             mealsViewModel: MealsViewModel){
+             mealsViewModel: MealsViewModel,
+             topNavGraphSharedViewModel: TopNavGraphSharedViewModel){
 
-    val scope = rememberCoroutineScope()
+
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -110,6 +113,7 @@ fun ShowItem(category: Category,
         .clickable (enabled = create){ //ΑΠΕΝΕΡΓΟΠΟΕΙ ΤΑ ΚΟΥΜΠΙΑ ΕΝΟΣΩ ΤΟ DOWNLOAD ΕΙΝΑΙ ΣΕ ΚΑΤΑΣΤΑΣΗ LOADING!!!!!!
             fetchMeals(category.strCategory?: "")
             navigateToMeals(category)
+            topNavGraphSharedViewModel.setCategoryId(category.idCategory ?: "")
         },
         horizontalAlignment = Alignment.CenterHorizontally) {
 

@@ -4,7 +4,7 @@ import android.os.Parcel
 import android.os.Parcelable
 
 data class MealsCategory(
-    val strMeal: String = "",
+    var strMeal: String = "",
     val strMealThumb: String = "",
     val idMeal: String = "",
     val categoryId: String? = null,

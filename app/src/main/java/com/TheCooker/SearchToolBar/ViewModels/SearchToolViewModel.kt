@@ -2,6 +2,7 @@ package com.TheCooker.SearchToolBar.ViewModels
 
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -115,6 +116,20 @@ class MealsViewModel @Inject constructor(
     private val _combinedMeals = MutableLiveData<MutableList<MealItem>>(mutableListOf()) // Δημιουργούμε το LiveData ως MutableList του τυπου MealItem για να χρησιμοποιήσουμε observers.
     val combinedMeals: LiveData<MutableList<MealItem>> get() = _combinedMeals
 
+    private val _backFromUpdate = MutableStateFlow<Boolean>(value = false)
+    val backFromUpdate: StateFlow<Boolean> get()  = _backFromUpdate
+
+    private val _backFromDeleteFlagForFetch = MutableStateFlow<Boolean>(value = false)
+    val backFromDeleteFlagForFetch: StateFlow<Boolean> get()  = _backFromDeleteFlagForFetch
+
+    fun setBackFromUpdate(value: Boolean) {
+        _backFromUpdate.value = value
+    }
+
+    fun setBackFromDeleteFlagForFetch(value: Boolean) {
+        _backFromDeleteFlagForFetch.value = value
+    }
+
     private val _loading = MediatorLiveData<Boolean>().apply {
         addSource(_mealState) { value = it.loading }
         addSource(_userMealState) { value = it.loading }
@@ -133,8 +148,8 @@ class MealsViewModel @Inject constructor(
 
 
     fun updateRecipeOnLiveList(recipe: UserRecipe, mealsExist: MutableList<MealItem>){
-        recipe.recipeId?.let { removeRecipeFromList(it, mealsExist) }
-        addRecipe(recipe, mealsExist)
+            recipe.recipeId?.let { removeRecipeFromList(it, mealsExist) }
+            addRecipe(recipe, mealsExist)
 
     }
 
@@ -144,7 +159,7 @@ class MealsViewModel @Inject constructor(
         _mealState.postValue(
             ApiMealsState(
                 loading = false,
-                list = mealsExist,
+                list = mealsExist ,
                 error = null
             )
         )
@@ -161,13 +176,22 @@ class MealsViewModel @Inject constructor(
      fun removeRecipeFromList(recipeId: String, mealsExist: MutableList<MealItem>) {
         Log.d("UpdatedList1", mealsExist.toString())
         val updatedList = mealsExist.filter { it.id!= recipeId }.toMutableList()
-        _userMealState.postValue(
-            UserMealsState(
-                loading = false,
-                list = updatedList,
-                error = null
-            )
-        )
+         _mealState.postValue(
+             ApiMealsState(
+                 loading = false,
+                 list = updatedList,
+                 error = null
+             )
+         )
+
+         _userMealState.postValue(
+             UserMealsState(
+                 loading = false,
+                 list = _combinedMeals.value ?: mutableListOf(),
+                 error = null
+             )
+         )
+
         Log.d("UpdatedList", updatedList.toString())
 
 
@@ -455,8 +479,13 @@ class MealsDetailViewModel @Inject constructor(
 
         val cleanedRecipe = recipe.copy(
             recipeIngredients = cleanedIngredients,
-            steps = cleanedSteps
+            steps = cleanedSteps,
+            creatorId = recipe.creatorId,
+            categoryId = recipe.categoryId,
+
+
         )
+
 
         viewModelScope.launch {
             try {
