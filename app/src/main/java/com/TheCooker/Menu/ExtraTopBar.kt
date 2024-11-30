@@ -28,7 +28,12 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,11 +45,12 @@ import androidx.navigation.NavHostController
 import com.TheCooker.SearchToolBar.ApiService.UserRecipe
 import com.TheCooker.SearchToolBar.RecipeRepo.MealDetail
 import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
+import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import com.TheCooker.SearchToolBar.Views.BottomSheetMealDetailMenu
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-@SuppressLint("RestrictedApi")
+@SuppressLint("RestrictedApi", "CoroutineCreationDuringComposition")
 @Composable
 fun ExtraTopBar(
     title: String,
@@ -55,10 +61,15 @@ fun ExtraTopBar(
     previousRoute: MutableState<String?>,
     isUserRecipe: Boolean,
     openBottomSheetMealDetailMenu: () -> Unit,
-    mealDetail: MealsDetailViewModel// Προσθέστε αυτή τη συνάρτηση
+    mealDetail: MealsDetailViewModel,
+    mealsViewModel: MealsViewModel
 
 ){
     Log.d("ExtraTopBar", "mealTopBarRoute: ${topBar.mealTopBarRoute}, updateBar: ${topBar.updateBar}")
+
+
+    val backFromUpdate by mealsViewModel.backFromUpdate.collectAsState()
+    Log.d("TestBackFromUpdate", backFromUpdate.toString())
 
     BackHandler {
         if (topBar.menuTopBarRoute) {
@@ -130,8 +141,15 @@ fun ExtraTopBar(
                         }
                         else {
                             Log.d("PreviousRoute", "Previous route: ${navController.currentBackStack.value}")
+                            if(backFromUpdate){
 
-                            navController.popBackStack()
+
+                                navController.navigate("SearchView")
+                            }else{
+                                navController.popBackStack()
+                            }
+
+
 
                         }
                     }

@@ -1,5 +1,6 @@
 package com.TheCooker.SearchToolBar.Views
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -58,11 +59,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.TheCooker.Checks.isInternetAvailable
+import com.TheCooker.Login.SignIn.UserData
 import com.TheCooker.Menu.topBars
 import com.TheCooker.R
 import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
@@ -75,24 +76,25 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+@SuppressLint("SuspiciousIndentation")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun CreateMeal(
     recipeId: String?,
-    mealDetailViewModel: MealsDetailViewModel = hiltViewModel(),
-    viewmodel: CreateMealViewModel = hiltViewModel(),
+    mealDetailViewModel: MealsDetailViewModel,
+    createMealViewModel: CreateMealViewModel,
     categoryId: String?,
     saveNavigateBack: () -> Unit,
     navController: NavController,
-    mealsViewModel: MealsViewModel = hiltViewModel(),
+    mealsViewModel: MealsViewModel,
     combineMeals: MutableList<MealItem>,
     topBars: topBars
                ) {
     val context = LocalContext.current
-    val creatorId  = remember { mutableStateOf(viewmodel.creatorId)}
+    val creatorId  = remember { mutableStateOf(createMealViewModel.creatorId)}
 
     var imageUri by remember { mutableStateOf<Uri?>(null) }
-    val createMealViewModel: CreateMealViewModel = viewModel()
+
 
     val ingredients by remember { mutableStateOf(createMealViewModel.ingredients) }
     val steps by remember {mutableStateOf(createMealViewModel.steps)}
@@ -106,6 +108,9 @@ fun CreateMeal(
     val updatedMealNameError by createMealViewModel.mealNameError.collectAsState()
     val updatedIngredientError by createMealViewModel.ingredientsError.collectAsState()
     val updatedStepError by createMealViewModel.stepsError.collectAsState()
+
+
+    Log.d("CombineMealsAtStart", combineMeals.toString())
 
 
 
@@ -590,8 +595,8 @@ fun CreateMeal(
                                     ).show()
                                     return@launch
                                 }
-                                val categoryIdFromBackStack = navController.previousBackStackEntry?.savedStateHandle?.get<String>("categoryId")
-                                Log.d("categoryIdOnUpdate ${categoryIdFromBackStack}!!!", "${categoryIdFromBackStack}")
+
+                                Log.d("categoryIdOnUpdate ${categoryId.toString()}!!!", "${categoryId.toString()}")
 
                                 val updatedRecipe = UserRecipe(
                                     recipeIngredients = ingredientsUpdate,
@@ -611,17 +616,23 @@ fun CreateMeal(
                                         updateRecipeState.imageUploaded == true &&
                                         updateRecipeState.onUpdateRecipe == false
                                     ) {
+                                        Log.d("checkCombineMeals", combineMeals.toString())
                                        mealsViewModel.updateRecipeOnLiveList(updatedRecipe, combineMeals)
 
 
                                         // Ενημέρωση του savedStateHandle με την ενημερωμένη συνταγή
                                         navController.previousBackStackEntry?.savedStateHandle?.set(
-                                                "detail",
+                                                "updatedMeal",
+
                                         updatedRecipe
                                         )
 
 
+
+
                                         saveNavigateBack()
+                                        //TODO UPDATE CHECK
+                                        mealsViewModel.setBackFromUpdate(true)
                                         topBars.mealTopBarRoute = true
                                         topBars.updateBar = false
                                     } else {
@@ -658,7 +669,7 @@ fun CreateMeal(
                                             recipeImage = null,
                                             recipeId = UUID.randomUUID().toString(),
                                         )
-                                        viewmodel.onCreateFalse()
+                                        createMealViewModel.onCreateFalse()
                                         Log.d("TestImageNewRecipe", "Image URI: $imageUri")
                                         val recipeToAddOnList =
                                             createMealViewModel.saveRecipe(newRecipe, imageUri) {
@@ -681,6 +692,7 @@ fun CreateMeal(
                                                 }
                                             }
                                         mealsViewModel.addRecipe(recipeToAddOnList, combineMeals)
+                                        Log.d("CombineMealsOnCreate", combineMeals.toString())
                                         navController.previousBackStackEntry?.savedStateHandle?.set(
                                             "newRecipe",
                                             newRecipe

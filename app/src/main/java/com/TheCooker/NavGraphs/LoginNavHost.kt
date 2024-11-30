@@ -24,6 +24,10 @@ import com.TheCooker.Login.LoginView
 import com.TheCooker.Login.LoginViewModel
 import com.TheCooker.Login.SignIn.UserData
 import com.TheCooker.Menu.MenuView
+import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
+import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
+import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
+import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 
@@ -34,9 +38,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginNavigator(viewModel: LoginViewModel = hiltViewModel(),
                    client: GoogleClient,
-                   createMealViewModel: com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel = hiltViewModel(),
-                   mealsDetailViewModel: com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel = hiltViewModel(),
-                   mealsViewModel: com.TheCooker.SearchToolBar.ViewModels.MealsViewModel = hiltViewModel()) {
+                   createMealViewModel: CreateMealViewModel,
+                   mealsDetailViewModel: MealsDetailViewModel,
+                   mealsViewModel: MealsViewModel,
+                   searchCategoryViewModel: SearchCategoryViewModel
+) {
     val navController2 = rememberNavController()
 
     val context = LocalContext.current
@@ -130,7 +136,7 @@ fun LoginNavigator(viewModel: LoginViewModel = hiltViewModel(),
         composable(route = "MenuView") {
             val user = navController2.previousBackStackEntry?.savedStateHandle?.get<UserData>("User")
 
-                MenuView(viewModel.userData.value ?: user, client, navController2, loginViewModel = viewModel, createMealViewModel = createMealViewModel, mealsDetailViewModel = mealsDetailViewModel, mealsViewModel = mealsViewModel )
+                MenuView(viewModel.userData.value ?: user, client, navController2, loginViewModel = viewModel, createMealViewModel = createMealViewModel, mealsDetailViewModel = mealsDetailViewModel, mealsViewModel = mealsViewModel, searchCategoryViewModel = searchCategoryViewModel )
 
         }
 

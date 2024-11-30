@@ -24,10 +24,10 @@ import com.TheCooker.Login.Authentication.GoogleAuth.GoogleClient
 import com.TheCooker.Login.LoginViewModel
 import com.TheCooker.NavGraphs.TopNavGraph
 import com.TheCooker.Login.SignIn.UserData
-import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
 import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
+import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
 import com.TheCooker.SearchToolBar.Views.BottomSheetMealDetailMenu
 import com.example.cooker.ListView.DrawerContent
 import kotlinx.coroutines.launch
@@ -44,9 +44,10 @@ fun MenuView(
     loginViewModel: LoginViewModel,
     createMealViewModel: CreateMealViewModel,
     mealsDetailViewModel: MealsDetailViewModel,
-    mealsViewModel: MealsViewModel
+    mealsViewModel: MealsViewModel,
+    searchCategoryViewModel: SearchCategoryViewModel,
 
-) {
+    ) {
 
 
 
@@ -137,10 +138,10 @@ fun MenuView(
         topBar = topBar,
         dialogOpen = dialogOpenDeleteRecipe,
         navController = navController,
-        viewModel = mealsViewModel ,
+        mealsViewModel = mealsViewModel ,
         mealId = mealsDetailViewModel.mealsDetailState.value?.list?.filterIsInstance<MealsDetailViewModel.recipeDetails.UserMealDetail>() // Φιλτράρω μόνο τα UserMealDetail
             ?.flatMap { it.mealDetail } // Παίρνω την λίστα με τα mealDetail
-            ?.firstOrNull()?.recipeId ?: "",  // Επιστρέφει άδειο stri
+            ?.firstOrNull()?.recipeId ?: "",
         content = { modalSheetState, showModalSheet ->  // Οι δύο lambda που πέρνει ως όρισμα η  BottomSheetMealDetailMenu. Η μια κρατάει την κατάσταση (Hidden, show) του sheet(modalSheetState)
                                  androidx.compose.material.Scaffold(
                                      // Ενώ η άλλη αλλάζει την κατάσταση του
@@ -165,7 +166,8 @@ fun MenuView(
                                                  previousRoute,
                                                  false,
                                                  openBottomSheetMealDetailMenu = showModalSheet,
-                                                 mealDetail = mealsDetailViewModel
+                                                 mealDetail = mealsDetailViewModel,
+                                                 mealsViewModel = mealsViewModel
                                              )
                                          } else if (topBar.mealTopBarRoute) {
                                              Log.d("111", userMealDetailExists.value.toString())
@@ -186,7 +188,8 @@ fun MenuView(
                                                      previousRoute,
                                                      true,
                                                      openBottomSheetMealDetailMenu = showModalSheet,
-                                                     mealDetail = mealsDetailViewModel
+                                                     mealDetail = mealsDetailViewModel,
+                                                     mealsViewModel = mealsViewModel
                                                  )
                                              }else if (apiMealDetailExists.value) {
                                                  title.value = ""
@@ -199,7 +202,8 @@ fun MenuView(
                                                      previousRoute,
                                                      false,
                                                      openBottomSheetMealDetailMenu = showModalSheet,
-                                                     mealDetail = mealsDetailViewModel
+                                                     mealDetail = mealsDetailViewModel,
+                                                     mealsViewModel = mealsViewModel
                                                  )
                                              }
                                          }
@@ -238,6 +242,8 @@ fun MenuView(
                                          topBar,
                                          createMealViewModel = createMealViewModel,
                                          detailViewModel = mealsDetailViewModel,
+                                         mealsViewModel = mealsViewModel,
+                                         searchCategoryViewModel = searchCategoryViewModel
 
 
                                      )

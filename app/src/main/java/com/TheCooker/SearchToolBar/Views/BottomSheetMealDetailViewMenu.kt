@@ -1,7 +1,6 @@
 package com.TheCooker.SearchToolBar.Views
 
 import android.os.Build
-import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -27,8 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,8 +39,6 @@ import androidx.navigation.NavHostController
 import com.TheCooker.Checks.isInternetAvailable
 import com.TheCooker.Menu.topBars
 import com.TheCooker.R
-import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
-import com.TheCooker.SearchToolBar.RecipeRepo.RecipeRepo
 import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
 import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -54,7 +49,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun BottomSheetMealDetailMenu(content: @Composable (ModalBottomSheetState, () -> Unit) -> Unit,
-                              viewModel: MealsViewModel,
+                              mealsViewModel: MealsViewModel,
                               mealId: String,
                               navController: NavHostController,
                               dialogOpen: MutableState<Boolean>,
@@ -70,7 +65,7 @@ fun BottomSheetMealDetailMenu(content: @Composable (ModalBottomSheetState, () ->
         sheetState = modalSheetState,
         sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
         sheetContent = {
-            BottomSheetMealDetailMenuContent(mealsViewModel = viewModel, recipeId = mealId, scope, navController, dialogOpen, modalSheetState, topBar, mealDetail)
+            BottomSheetMealDetailMenuContent(mealsViewModel = mealsViewModel, recipeId = mealId, scope, navController, dialogOpen, modalSheetState, topBar, mealDetail)
 
         }
     ) {
@@ -216,7 +211,8 @@ fun DeleteRecipeAlertDialog(
 
                         topBar.mealTopBarRoute = false
                         topBar.menuTopBarRoute = true
-                        navController.popBackStack()
+                        mealsViewModel.setBackFromDeleteFlagForFetch(true)
+                        navController.navigate("SearchView")
 
 
                     }

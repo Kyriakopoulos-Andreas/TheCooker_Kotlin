@@ -79,7 +79,7 @@ private val viewModel: SplashScreenViewModel by viewModels()
                         color = MaterialTheme.colorScheme.background
                     ) {
 
-                        LoginNavigator(loginViewModel, googleClient, createMealViewModel, mealsDetailViewModel)
+                        LoginNavigator(loginViewModel, googleClient, createMealViewModel, mealsDetailViewModel, mealsViewModel, searchCategoryViewModel)
                         println("Hello")
 
 
