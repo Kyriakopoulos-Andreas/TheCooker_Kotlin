@@ -1,14 +1,10 @@
 package com.TheCooker
 
-import android.content.Context
-import android.content.Intent
-import com.TheCooker.ui.theme.TheCookerTheme
+import com.TheCooker.Presentation.Views.Modules.theme.TheCookerTheme
 
 
 import android.os.Build
 import android.os.Bundle
-import android.view.View
-import android.view.animation.AnimationUtils
 import androidx.activity.ComponentActivity
 
 import androidx.activity.compose.setContent
@@ -17,25 +13,19 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.TheCooker.Login.Authentication.GoogleAuth.GoogleClient
-
-import com.TheCooker.NavGraphs.LoginNavigator
-import com.TheCooker.Login.LoginViewModel
-import com.TheCooker.SearchToolBar.RecipeRepo.MealItem
-import com.TheCooker.SearchToolBar.ViewModels.CreateMealViewModel
-import com.TheCooker.SearchToolBar.ViewModels.MealsDetailViewModel
-import com.TheCooker.SearchToolBar.ViewModels.MealsViewModel
-
-import com.TheCooker.SearchToolBar.ViewModels.SearchCategoryViewModel
-import com.TheCooker.UpdateWorkers.scheduleMonthlySync
-import com.TheCooker.ViewModels.SplashScreenViewModel
-import com.google.android.gms.auth.api.identity.Identity
+import com.TheCooker.Domain.Layer.UseCase.GoogleClient
+import com.TheCooker.Common.Layer.NavGraphs.LoginNavigator
+import com.TheCooker.Presentation.Views.Modules.LoginModule.ViewModels.LoginViewModel
+import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CreateMealViewModel
+import com.TheCooker.Common.Layer.Workers.UpdateWorkers.scheduleMonthlySync
+import com.TheCooker.Domain.Layer.ViewModels.SplashScreenViewModel
+import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsDetailViewModel
+import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsViewModel
+import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CategoryViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.HiltAndroidApp
 
 import javax.inject.Inject
 
@@ -67,7 +57,7 @@ private val viewModel: SplashScreenViewModel by viewModels()
             // Ορίζουμε το ViewModelStore για τη διαχείριση των ViewModels
             TheCookerTheme {
 
-                    val searchCategoryViewModel = hiltViewModel<SearchCategoryViewModel>()
+                    val categoryViewModel = hiltViewModel<CategoryViewModel>()
                 val mealsDetailViewModel = hiltViewModel<MealsDetailViewModel>()
                 val mealsViewModel = hiltViewModel<MealsViewModel>()
                 val loginViewModel = hiltViewModel<LoginViewModel>()
@@ -79,7 +69,7 @@ private val viewModel: SplashScreenViewModel by viewModels()
                         color = MaterialTheme.colorScheme.background
                     ) {
 
-                        LoginNavigator(loginViewModel, googleClient, createMealViewModel, mealsDetailViewModel, mealsViewModel, searchCategoryViewModel)
+                        LoginNavigator(loginViewModel, googleClient, createMealViewModel, mealsDetailViewModel, mealsViewModel, categoryViewModel)
                         println("Hello")
 
 

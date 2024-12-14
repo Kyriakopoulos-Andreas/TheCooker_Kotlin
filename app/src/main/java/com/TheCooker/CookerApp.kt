@@ -7,7 +7,7 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.work.Configuration
-import com.TheCooker.UpdateWorkers.SyncMealsWorkerFactory
+import com.TheCooker.Common.Layer.Workers.UpdateWorkers.SyncMealsWorkerFactory
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -49,7 +49,7 @@ class CookerApp : Application(), Configuration.Provider {
         val adminDeviceId = sharedPreferences.getString(ADMIN_DEVICE_ID, null)
         Log.d("DeviceCheck", "Admin device ID: $adminDeviceId")
 
-        // Ελέγξτε αν το τρέχον Device ID είναι το admin
+        // Ελενξε αν το τρέχον Device ID είναι το admin
         if (currentDeviceId == adminDeviceId) {
             Log.d("DeviceCheck", "The current device is the admin device.")
         } else {
