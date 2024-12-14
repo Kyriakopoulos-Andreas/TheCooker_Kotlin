@@ -57,7 +57,7 @@ private val viewModel: SplashScreenViewModel by viewModels()
             // Ορίζουμε το ViewModelStore για τη διαχείριση των ViewModels
             TheCookerTheme {
 
-                    val categoryViewModel = hiltViewModel<CategoryViewModel>()
+                val categoryViewModel = hiltViewModel<CategoryViewModel>()
                 val mealsDetailViewModel = hiltViewModel<MealsDetailViewModel>()
                 val mealsViewModel = hiltViewModel<MealsViewModel>()
                 val loginViewModel = hiltViewModel<LoginViewModel>()

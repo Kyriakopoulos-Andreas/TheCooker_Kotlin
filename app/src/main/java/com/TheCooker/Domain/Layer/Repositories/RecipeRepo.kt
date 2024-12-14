@@ -169,6 +169,17 @@ class RecipeRepo@Inject constructor(
             emptyList()
         }
     }
+    suspend fun syncApiCategoriesWithFirebase(apiCategories: List<CategoryModel>){
+        val localCategories = getCategories()
+        val localCategoryNames = localCategories.map{it.strCategory}.toSet()
+        val newCategories = apiCategories.filter { it.strCategory !in localCategoryNames }
+
+        newCategories.forEach{category ->
+            val newId = generateId(category.strCategory?: "")
+            saveCategory(category.copy(idCategory = newId))
+        }
+    }
+
 
 
 
@@ -180,7 +191,7 @@ class RecipeRepo@Inject constructor(
             Log.d("RecipeRepo", "User is not admin, skipping sync")
             return
         }
-
+        try{
         // Λήψη των τοπικών γευμάτων από τη βάση δεδομένων για την καθορισμένη κατηγορία
         val localMeals = getApiRecipesFromFirestore(categoryId)
         Log.d("CheckForCategoryId", "categoryId: $categoryId")
@@ -198,10 +209,46 @@ class RecipeRepo@Inject constructor(
             Log.d("SavingMeal", "Saving meal with ID: ${meal.idMeal} and categoryId: ${meal.categoryId}")
             saveApiMeals(meal, categoryId)
             val response = apiService.getMealDetail(meal.strMeal)
+            Log.d("MealDetailResponse", "Response: $response")
             val details = response.meals
 
             // Αποθήκευση των λεπτομερειών του γεύματος
-            syncApiMealDetailsWithFirebase(meal.idMeal, details)
+            if (details.isEmpty()) {
+                Log.d("MealDetailsCheck", "No details found for mealId: ${meal.idMeal}, skipping sync.")
+            } else {
+                // Αποθήκευση των λεπτομερειών του γεύματος
+                syncApiMealDetailsWithFirebase(meal.idMeal, details)
+            }
+        }
+        }catch(e: Exception){
+            Log.d("FailWithSyncingApiMealsWithFirebase", e.message.toString())
+        }
+    }
+
+
+    suspend fun syncApiMealDetailsWithFirebase(mealId: String, apiMealDetailModels: List<ApiMealDetailModel>) {
+        try {
+            val localMealDetails = getApiDetailsFromFirestore(mealId)
+            val localMealDetailIds = localMealDetails.map { it.idMeal }.toSet()
+
+            // Φιλτράρισμα των νέων λεπτομερειών που δεν υπάρχουν στις τοπικές λεπτομέρειες
+            val newMealDetails = apiMealDetailModels.filter { it.idMeal !in localMealDetailIds }
+
+            Log.d(
+                "NewMealDetailsCount",
+                "Found ${newMealDetails.size} new meal details to sync for mealId: $mealId"
+            )
+
+            // Αποθήκευση των νέων λεπτομερειών στη βάση δεδομένων
+            newMealDetails.forEach { detail ->
+                Log.d(
+                    "SavingMealDetail",
+                    "Saving meal detail with ID: ${detail.idMeal} for mealId: $mealId"
+                )
+                saveMealDetails(detail)
+            }
+        }catch (e: Exception){
+            Log.d("FailWithSyncingApiMealDetailsWithFirebase", e.message.toString())
         }
     }
 
@@ -281,16 +328,6 @@ class RecipeRepo@Inject constructor(
     }
 
 
-    suspend fun syncApiCategoriesWithFirebase(apiCategories: List<CategoryModel>){
-        val localCategories = getCategories()
-        val localCategoryNames = localCategories.map{it.strCategory}.toSet()
-        val newCategories = apiCategories.filter { it.strCategory !in localCategoryNames }
-
-        newCategories.forEach{category ->
-            val newId = generateId(category.strCategory?: "")
-            saveCategory(category.copy(idCategory = newId))
-        }
-    }
 
     // MEAL DETAILS
     suspend fun saveMealDetails(meal: ApiMealDetailModel){
@@ -314,22 +351,6 @@ class RecipeRepo@Inject constructor(
         }catch (e: Exception){
             Log.e("RecipeDetails", "Error fetching recipes: ${e.message}")
             emptyList()
-        }
-    }
-
-    suspend fun syncApiMealDetailsWithFirebase(mealId: String, apiMealDetailModels: List<ApiMealDetailModel>) {
-        val localMealDetails = getApiDetailsFromFirestore(mealId)
-        val localMealDetailIds = localMealDetails.map { it.idMeal }.toSet()
-
-        // Φιλτράρισμα των νέων λεπτομερειών που δεν υπάρχουν στις τοπικές λεπτομέρειες
-        val newMealDetails = apiMealDetailModels.filter { it.idMeal !in localMealDetailIds }
-
-        Log.d("NewMealDetailsCount", "Found ${newMealDetails.size} new meal details to sync for mealId: $mealId")
-
-        // Αποθήκευση των νέων λεπτομερειών στη βάση δεδομένων
-        newMealDetails.forEach { detail ->
-            Log.d("SavingMealDetail", "Saving meal detail with ID: ${detail.idMeal} for mealId: $mealId")
-            saveMealDetails(detail)
         }
     }
 
