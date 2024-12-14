@@ -1,5 +1,6 @@
 package com.TheCooker.DI.Module
 
+
 import com.TheCooker.dataLayer.Api.ApiService
 import dagger.Module
 import dagger.Provides
@@ -27,4 +28,4 @@ object NetworkModule {
     fun provideApiService(retrofit: Retrofit): ApiService {
         return retrofit.create(ApiService::class.java)
     }// Δημιουργούμε την υπηρεσία API χρησιμοποιώντας το Retrofit instance
-    }
+}

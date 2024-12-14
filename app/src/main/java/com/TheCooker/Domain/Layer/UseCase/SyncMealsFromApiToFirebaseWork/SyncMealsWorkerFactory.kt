@@ -1,12 +1,11 @@
-package com.TheCooker.Common.Layer.Workers.UpdateWorkers
+package com.TheCooker.Domain.Layer.UseCase.SyncMealsFromApiToFirebaseWork
 
 import android.content.Context
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
-import com.TheCooker.dataLayer.Api.ApiService
 import com.TheCooker.Domain.Layer.Repositories.RecipeRepo
-import com.TheCooker.SyncMealsWorker
+import com.TheCooker.dataLayer.Api.ApiService
 import javax.inject.Inject
 
 class SyncMealsWorkerFactory @Inject constructor(
@@ -20,8 +19,8 @@ class SyncMealsWorkerFactory @Inject constructor(
         workerParameters: WorkerParameters
     ): ListenableWorker? {
         return when (workerClassName) { // Αν το worker name είναι SyncMealsWorker δημιούργησε instance του worker αλλιώς επέστρεψε null
-            SyncMealsWorker::class.java.name -> {
-                SyncMealsWorker(appContext, workerParameters, apiService, recipeRepo)
+            SyncMealsFromApiToFirebase::class.java.name -> {
+                SyncMealsFromApiToFirebase(appContext, workerParameters, apiService, recipeRepo)
             }
             else -> null
         }

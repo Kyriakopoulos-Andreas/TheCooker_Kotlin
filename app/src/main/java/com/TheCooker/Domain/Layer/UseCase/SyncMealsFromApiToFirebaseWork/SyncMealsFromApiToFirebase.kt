@@ -1,17 +1,17 @@
-package com.TheCooker
+package com.TheCooker.Domain.Layer.UseCase.SyncMealsFromApiToFirebaseWork
 
 import android.content.Context
 import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.TheCooker.dataLayer.Api.ApiService
 import com.TheCooker.Domain.Layer.Repositories.RecipeRepo
+import com.TheCooker.dataLayer.Api.ApiService
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
 @HiltWorker
-class SyncMealsWorker @AssistedInject constructor(
+class SyncMealsFromApiToFirebase @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
     private val apiService: ApiService,
@@ -42,6 +42,7 @@ class SyncMealsWorker @AssistedInject constructor(
             for (categoryName in categoryIds) {
                 Log.d("SyncMealsWorker", "Fetching meals for category: $categoryName")
                 val response = apiService.getMeals(categoryName)
+                Log.d("SyncMealsWorker", "Response: $response")
 
                 // Έλεγχος αν η απάντηση είναι null ή αν το meals είναι null
                 val apiMeals = response.meals ?: emptyList()
