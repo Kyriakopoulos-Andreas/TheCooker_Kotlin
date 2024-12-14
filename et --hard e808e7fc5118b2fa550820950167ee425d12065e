@@ -1,0 +1,53 @@
+[33m7557955[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/detached2[m[33m)[m HEAD@{0}: commit: After Fail Test
+[33me808e7f[m[33m ([m[1;31morigin/master[m[33m)[m HEAD@{1}: reset: moving to e808e7f
+[33m0d34c4d[m[33m ([m[1;31morigin/detached[m[33m)[m HEAD@{2}: commit (amend): After Fail Test
+[33me808e7f[m[33m ([m[1;31morigin/master[m[33m)[m HEAD@{3}: checkout: moving from e233cd7dc428a1ad90f98b0f8981114b925ac4a2 to e808e7fc5118b2fa550820950167ee425d12065e
+[33me233cd7[m HEAD@{4}: checkout: moving from b9b6eb041311209abe8329a3cec7605c8bd36879 to e233cd7dc428a1ad90f98b0f8981114b925ac4a2
+[33mb9b6eb0[m HEAD@{5}: checkout: moving from e808e7fc5118b2fa550820950167ee425d12065e to b9b6eb041311209abe8329a3cec7605c8bd36879
+[33me808e7f[m[33m ([m[1;31morigin/master[m[33m)[m HEAD@{6}: checkout: moving from b9b6eb041311209abe8329a3cec7605c8bd36879 to e808e7f
+[33mb9b6eb0[m HEAD@{7}: checkout: moving from master to b9b6eb041311209abe8329a3cec7605c8bd36879
+[33m2634655[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{8}: commit: Save local changes before switching commits
+[33me808e7f[m[33m ([m[1;31morigin/master[m[33m)[m HEAD@{9}: commit: Correction of Project Structure
+[33mb9b6eb0[m HEAD@{10}: commit: Implementation of updating recipe done.
+[33me233cd7[m HEAD@{11}: commit: Implementation of updating recipe done.
+[33m7246f69[m HEAD@{12}: commit: Update Recipe on progress
+[33ma34edb8[m HEAD@{13}: commit: Splash Screen implementation
+[33m5ee6845[m HEAD@{14}: commit: Fix Storage bug. Finish Save userRecipe.
+[33m3c2a8e4[m HEAD@{15}: commit: Fix Storage bug. Finish Save userRecipe.
+[33m2ee1ad9[m HEAD@{16}: commit: Fix Storage bug. Finish Save userRecipe.
+[33mcbb88a2[m HEAD@{17}: commit: Create Admin Key (MyDeviceId) on userRefs to control syncing Meals from API to Firebase. The Worker will operate only on my device, not on user devices. Optimize the app and manage user battery usage.
+[33m94f5077[m HEAD@{18}: commit: Create schedule with Worker for syncing meals to update Firestore. Cheking every month for updates
+[33mdb13404[m HEAD@{19}: commit: Index at Firebase-short User meals by creation date. User meals view changes
+[33m5311f34[m HEAD@{20}: commit: UserRecipe View
+[33m1764db9[m HEAD@{21}: commit: creatMealSaveOnFirebase
+[33mdbbdcb4[m HEAD@{22}: commit: GoogleClient Module implement with Hilt
+[33mda0b92c[m HEAD@{23}: commit: Dager Implementation at APi Service
+[33me36a1b7[m HEAD@{24}: commit: DrawerMenu
+[33m507704a[m HEAD@{25}: commit: DrawerMenu
+[33mbca8e9b[m HEAD@{26}: commit: Login-Connect
+[33mca439da[m HEAD@{27}: commit: ProfilView
+[33mef78581[m HEAD@{28}: commit: Login-Email/Password
+[33mec57f33[m HEAD@{29}: commit: Some optimization Login
+[33m45911a3[m HEAD@{30}: commit: Create Password Debug
+[33md107c29[m HEAD@{31}: commit: Create Password
+[33mcaa3e97[m HEAD@{32}: commit: Profile Progress
+[33m64f45eb[m HEAD@{33}: commit: strings.sample.xml Create
+[33m65edf77[m HEAD@{34}: reset: moving to 65edf774c2759fb6454e98f3c20f5695972b54a2
+[33m63886ed[m HEAD@{35}: reset: moving to 63886ed3fb353dab1b40b8df1c39ff83a0fdf3b3
+[33ma135b97[m HEAD@{36}: rebase (finish): returning to refs/heads/master
+[33ma135b97[m HEAD@{37}: rebase (start): checkout a135b9767afc669ebffb43dd0ddae5c77710a0fc
+[33m5245687[m HEAD@{38}: reset: moving to 524568731aad564705bedefc540692583f501242
+[33mf85bde0[m HEAD@{39}: commit: Test2
+[33m5245687[m HEAD@{40}: rebase: checkout master
+[33m5245687[m HEAD@{41}: rebase: checkout master
+[33m5245687[m HEAD@{42}: rebase: checkout master
+[33m5245687[m HEAD@{43}: rebase: checkout master
+[33m5245687[m HEAD@{44}: commit: Test2
+[33ma135b97[m HEAD@{45}: rebase: checkout master
+[33ma135b97[m HEAD@{46}: rebase: checkout master
+[33ma135b97[m HEAD@{47}: commit: Test
+[33m63886ed[m HEAD@{48}: rebase (finish): returning to refs/heads/master
+[33m63886ed[m HEAD@{49}: rebase (start): checkout 63886ed3fb353dab1b40b8df1c39ff83a0fdf3b3
+[33m8aa2aad[m HEAD@{50}: commit: Add strings.xml.sample with placeholder valus
+[33m63886ed[m HEAD@{51}: commit: Test
+[33m65edf77[m HEAD@{52}: commit (initial): Until Google Loggin
