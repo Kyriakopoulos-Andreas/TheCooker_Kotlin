@@ -10,9 +10,9 @@ import com.TheCooker.Domain.Layer.Models.RecipeModels.ApiMealDetailModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.CategoryModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealModel
 import com.TheCooker.DI.Module.UserDataProvider
-import com.TheCooker.dataLayer.Api.ApiService
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealDetailModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserResponse
+import com.TheCooker.dataLayer.Api.ApiService
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query

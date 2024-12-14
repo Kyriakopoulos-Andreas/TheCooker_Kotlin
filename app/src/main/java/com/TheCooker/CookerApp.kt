@@ -5,9 +5,8 @@ import android.app.Application
 import android.content.Context
 import android.provider.Settings
 import android.util.Log
-import android.widget.Toast
 import androidx.work.Configuration
-import com.TheCooker.Common.Layer.Workers.UpdateWorkers.SyncMealsWorkerFactory
+import com.TheCooker.Domain.Layer.UseCase.SyncMealsFromApiToFirebaseWork.SyncMealsWorkerFactory
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 

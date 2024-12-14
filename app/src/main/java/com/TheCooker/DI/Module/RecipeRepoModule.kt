@@ -1,8 +1,8 @@
 package com.TheCooker.DI.Module
 
 import android.content.Context
-import com.TheCooker.dataLayer.Api.ApiService
 import com.TheCooker.Domain.Layer.Repositories.RecipeRepo
+import com.TheCooker.dataLayer.Api.ApiService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import dagger.Module

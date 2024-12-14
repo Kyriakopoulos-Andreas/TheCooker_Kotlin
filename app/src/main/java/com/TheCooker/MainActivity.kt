@@ -20,8 +20,8 @@ import com.TheCooker.Domain.Layer.UseCase.GoogleClient
 import com.TheCooker.Common.Layer.NavGraphs.LoginNavigator
 import com.TheCooker.Presentation.Views.Modules.LoginModule.ViewModels.LoginViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CreateMealViewModel
-import com.TheCooker.Common.Layer.Workers.UpdateWorkers.scheduleMonthlySync
-import com.TheCooker.Domain.Layer.ViewModels.SplashScreenViewModel
+import com.TheCooker.Domain.Layer.UseCase.SyncMealsFromApiToFirebaseWork.scheduleMonthlySync
+import com.TheCooker.Presentation.Views.Modules.ProfileModule.SplashScreen.ViewModels.SplashScreenViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsDetailViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CategoryViewModel
