@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 fun scheduleMonthlySync(context: Context) {
     // Ανάθεσε την εργασία κάθε 15 λεπτά (ελάχιστο)
 
-    val workRequest = PeriodicWorkRequestBuilder<SyncMealsWorker>(7, TimeUnit.DAYS)
+    val workRequest = PeriodicWorkRequestBuilder<SyncMealsWorker>(7, TimeUnit.MINUTES)
         .setInitialDelay(calculateInitialDelay(), TimeUnit.MILLISECONDS)
         .build()
 
@@ -30,11 +30,11 @@ fun scheduleMonthlySync(context: Context) {
 @RequiresApi(Build.VERSION_CODES.O)
 private fun calculateInitialDelay(): Long {
     // Έλεγχος αν είμαστε σε κατάσταση δοκιμής
-    val isTesting = false // Αν θες να κάνεις test και να ορίσεις άλλον χρόνο άλλαξέ το σε true
+    val isTesting = true // Αν θες να κάνεις test και να ορίσεις άλλον χρόνο άλλαξέ το σε true
 
     if (isTesting) {
         // Επιστρέφει 3 λεπτά σε χιλιοστά του δευτερολέπτου για δοκιμές
-        return 180000 // 3 λεπτά = 180000 milliseconds
+        return 60000 // 3 λεπτά = 180000 milliseconds
     }
 
     val currentDateTime = LocalDateTime.now()

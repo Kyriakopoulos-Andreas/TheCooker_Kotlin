@@ -28,32 +28,25 @@ class SyncMealsWorker @AssistedInject constructor(
         }
         Log.d("SyncMealsWorker", "User is admin, proceeding with sync")
 
-
         val categoryIds = listOf("Beef", "Chicken", "Dessert", "Lamb", "Miscellaneous", "Pasta", "Pork", "Seafood", "Side", "Starter", "Vegan", "Vegetarian", "Breakfast", "Goat")
 
         return try {
-
             val response = apiService.getCategories()
             recipeRepo.syncApiCategoriesWithFirebase(response.categories)
-
-
-
 
             for (categoryName in categoryIds) {
                 Log.d("SyncMealsWorker", "Fetching meals for category: $categoryName")
                 val response = apiService.getMeals(categoryName)
 
-                // Έλεγχος αν η απάντηση είναι null ή αν το meals είναι null
-                val apiMeals = response.meals ?: emptyList()
+                val apiMeals = response.meals
+                Log.d("ApiMeals", apiMeals.size.toString())
                 Log.d("SyncMealsWorker", "Fetched ${apiMeals.size} meals for category: $categoryName")
 
-                // Δημιουργία του hash ID για την κατηγορία
                 val categoryId = recipeRepo.generateId(categoryName)
 
-                // Αποθήκευση κάθε γεύματος στη βάση δεδομένων με το κατάλληλο categoryId
                 for (meal in apiMeals) {
-                    val mealWithCategoryId = meal.copy(categoryId = categoryId) // Χρησιμοποιούμε το hash ID της κατηγορίας
-                    recipeRepo.syncApiMealsWithFirebase(mealWithCategoryId.categoryId ?: "", listOf(mealWithCategoryId)) // Στέλνουμε το γεύμα
+                    val mealWithCategoryId = meal.copy(categoryId = categoryId)
+                    recipeRepo.syncApiMealsWithFirebase(mealWithCategoryId.categoryId ?: "", listOf(mealWithCategoryId))
                 }
                 Log.d("SyncMealsWorker", "Synced meals for category: $categoryName")
             }
@@ -65,7 +58,6 @@ class SyncMealsWorker @AssistedInject constructor(
             Result.failure()
         }
     }
-
 
 
 }

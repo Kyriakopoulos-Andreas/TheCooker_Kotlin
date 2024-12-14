@@ -68,7 +68,7 @@ fun MealDetailView(
 
                     when (detail) {
                         is MealsDetailViewModel.recipeDetails.ApiMealDetail -> {
-                            detail.apiMealDetailModel.forEach { apiDetail ->
+                           detail.mealDetail.forEach { apiDetail ->
                                 ViewApiDetails(apiDetail)
                             }
                         }
