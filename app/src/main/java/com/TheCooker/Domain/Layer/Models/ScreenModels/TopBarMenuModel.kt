@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -48,12 +49,12 @@ sealed class TopBarMenuModel(
         hasNEWS = false
     )
 
-    object ChatView : TopBarMenuModel(
-        route = "ChatView",
-        selectedIcon = Icons.Filled.Email,
-        unselectedIcon = Icons.Filled.Email,
+    object NotificationView : TopBarMenuModel(
+        route = "NotificationView",
+        selectedIcon = Icons.Filled.Notifications,
+        unselectedIcon = Icons.Filled.Notifications,
         hasNEWS = false,
-        badgeCount = 52,
+        badgeCount = 3,
 
     )
 
@@ -64,20 +65,23 @@ sealed class TopBarMenuModel(
             ProfileView,
             HomeView,
             SearchView,
-            ChatView
+            NotificationView
         )
     }
 }
 
 sealed class SearchScreens(
     val route: String
+    , val badgeCount: Int? = null
 ){
     object CategoryView: SearchScreens(
-        route = "MealsView"
+        route = "MealsView",
+        badgeCount = 3
     )
 
     object MealDetailView: SearchScreens(
-        route = "MealDetailView"
+        route = "MealDetailView",
+        badgeCount = 3
     )
 
     companion object{

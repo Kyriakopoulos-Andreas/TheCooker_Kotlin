@@ -60,7 +60,6 @@ fun SearchView(
 
             }
             else ->{
-
                 ShowCategories(categories = recipeState.list, navigateToMeals, fetchMeals,create, mealsViewModel, topNavGraphSharedViewModel)
             }
         }
@@ -86,7 +85,6 @@ fun ShowCategories(categories: List<CategoryModel>,
 
 
         items(categories){
-
             Category ->
             println(Category.strCategory)
             ShowItem(categoryModel = Category, navigateToMeals, fetchMeals,create, mealsViewModel, topNavGraphSharedViewModel = topNavGraphSharedViewModel)

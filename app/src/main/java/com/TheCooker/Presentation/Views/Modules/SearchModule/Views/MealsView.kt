@@ -154,10 +154,8 @@ fun ViewMeal(
             .clickable {
                 scope.launch {
                     navigateToDetails(mealItem)
-
                     TopBarsModel.mealTopBarRoute = true
                     TopBarsModel.menuTopBarRoute = false
-
 
                 }
             },

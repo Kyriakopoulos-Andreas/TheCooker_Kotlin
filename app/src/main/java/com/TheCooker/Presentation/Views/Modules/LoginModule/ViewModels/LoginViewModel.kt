@@ -45,6 +45,9 @@ class LoginViewModel @Inject constructor(
     private val _userData = MutableLiveData<UserDataModel>()
     val userData: LiveData<UserDataModel> get() = _userData
 
+    fun setUserData(userData: UserDataModel) {
+        _userData.value = userData
+    }
 
 
 

@@ -3,6 +3,7 @@ package com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels
 
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,15 +41,14 @@ class CreateMealViewModel @Inject constructor(
     //Validation
     private val _mealNameError = MutableStateFlow<String?>(null)
     val mealNameError: MutableStateFlow<String?> get() = _mealNameError
-
     private val _ingredientsError = MutableStateFlow<String?>(null)
     val ingredientsError: MutableStateFlow<String?> get() = _ingredientsError
-
     private val _stepsError = MutableStateFlow<String?>(null)
     val stepsError: MutableStateFlow<String?> get() = _stepsError
-
     private val _stateOfCompletion = MutableStateFlow<Boolean?>(false)
     val stateOfCompletion: MutableStateFlow<Boolean?> get() = _stateOfCompletion
+    private val _saveButtonDisabled = mutableStateOf(true)
+    val saveButtonDisabled: MutableState<Boolean> get() = _saveButtonDisabled
 
 
 
@@ -82,9 +82,13 @@ class CreateMealViewModel @Inject constructor(
         _ingredients.add(0, "")
         _ingredients.add(1, "")
         _mealName.value = ""
-
-
+         _saveButtonDisabled.value = true
     }
+
+    fun setSaveButtonDisabled() {
+        _saveButtonDisabled.value = false
+    }
+
 
     fun onCreateTrue() {
         _saveState.value = _saveState.value?.copy(onCreateRecipe = true)

@@ -196,18 +196,13 @@ fun TopNavGraph(
                     },
                     fetchMeals = { categoryName ->
                         val categoryId =
-                            navController.currentBackStackEntry?.savedStateHandle?.get<String>("categoryId")
-                                ?: ""
-
-
+                            navController.currentBackStackEntry?.savedStateHandle?.get<String>("categoryId") ?: ""
                         scope.launch {
                             if (categoryId.isNotEmpty()) {
                                 scope.launch {
-
                                     mealsViewModel.fetchMeals(categoryName, categoryId = categoryId)
                                 }
                             }
-
                         }
                     },
                     mealsViewModel = mealsViewModel
@@ -245,7 +240,7 @@ fun TopNavGraph(
                             .filter { it.isNotEmpty() }
                             .collectLatest { updatedList ->
                                 //collectLatest: : Συλλέγει τις τελευταίες τιμές που εκπέμπονται από το Flow και εκτελεί το μπλοκ κώδικα με την ενημερωμένη λίστα (updatedList).
-                                ////Αν το Flow εκπέμψει μια νέα τιμή πριν ολοκληρωθεί η επεξεργασία της τρέχουσας τιμής, η προηγούμενη επεξεργασία ακυρώνεται και ξεκινά η νέα.
+                                //Αν το Flow εκπέμψει μια νέα τιμή πριν ολοκληρωθεί η επεξεργασία της τρέχουσας τιμής, η προηγούμενη επεξεργασία ακυρώνεται και ξεκινά η νέα.
                                 Log.d("BackFromDeleteFlag3", backFromDeleteFlagForFetch.toString())
                                 navController.currentBackStackEntry?.savedStateHandle?.set(
                                     "mealsAfterUpdate",
@@ -259,10 +254,6 @@ fun TopNavGraph(
 
 
 
-
-
-
-
                 LaunchedEffect(key1 = backFromUpdate) {
                     if(backFromUpdate){
                         snapshotFlow { mealState.list }
@@ -271,10 +262,9 @@ fun TopNavGraph(
                                 navController.currentBackStackEntry?.savedStateHandle?.set("mealsAfterUpdate", listAfterDelete)
                                 navController.navigate("MealsView")
                                 mealsViewModel.setBackFromUpdate(false)
-
-                            }  }
+                            }
+                    }
                 }
-
             }
 
 
@@ -350,7 +340,7 @@ fun TopNavGraph(
             composable(route = TopBarMenuModel.ProfileView.route) {
                 ProfileView(userData = user)
             }
-            composable(route = TopBarMenuModel.ChatView.route) {
+            composable(route = TopBarMenuModel.NotificationView.route) {
                 NotificationView()
             }
         }
