@@ -76,10 +76,7 @@ class GoogleClient@Inject constructor(
                 profilerPictureUrl = user?.photoUrl?.toString()
             )
             userDataProvider.userData = userData
-
             LoginResults.Success(userData)
-
-
         } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e

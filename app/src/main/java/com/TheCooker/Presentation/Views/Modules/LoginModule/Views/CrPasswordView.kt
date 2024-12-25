@@ -56,18 +56,16 @@ fun CrPasswordView(
 ){
     var CreatepasswordVisible by remember { mutableStateOf(false) }
     var ConfirmCreatepasswordVisible by remember { mutableStateOf(false) }
-
     val emailError by viewModel.emailError.collectAsState()
     val passwordRegError by viewModel.passwordRegError.collectAsState()
     val confirmError by viewModel.confirmError.collectAsState()
     val firstNameError by viewModel.firstNameError.collectAsState()
     val lastNameError by viewModel.latsNameError.collectAsState()
-
     val firstNameBool by viewModel.firstNameBool.collectAsState()
     val lastNameBool by viewModel.firstNameBool.collectAsState()
     val passwordRegBool by viewModel.passwordRegBool.collectAsState()
     val confirmPasswordRegBool by viewModel.confirmPasswordRegBool.collectAsState()
-    val emailBool by viewModel.emailBool.collectAsState()
+
 
 
 

@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 @RequiresApi(Build.VERSION_CODES.O)
 fun scheduleMonthlySync(context: Context) {
 
-    val workRequest = PeriodicWorkRequestBuilder<SyncMealsFromApiToFirebase>(3, TimeUnit.MINUTES)
+    val workRequest = PeriodicWorkRequestBuilder<SyncMealsFromApiToFirebase>(7, TimeUnit.DAYS)
         .setInitialDelay(calculateInitialDelay(), TimeUnit.MILLISECONDS)
         .build()
 
@@ -28,7 +28,7 @@ fun scheduleMonthlySync(context: Context) {
 @RequiresApi(Build.VERSION_CODES.O)
 private fun calculateInitialDelay(): Long {
     // Έλεγχος αν είμαστε σε κατάσταση δοκιμής
-    val isTesting = true // Αν θες να κάνεις test και να ορίσεις άλλον χρόνο άλλαξέ το σε true
+    val isTesting = false // Αν θες να κάνεις test και να ορίσεις άλλον χρόνο άλλαξέ το σε true
 
     if (isTesting) {
         // Επιστρέφει 3 λεπτά σε χιλιοστά του δευτερολέπτου για δοκιμές

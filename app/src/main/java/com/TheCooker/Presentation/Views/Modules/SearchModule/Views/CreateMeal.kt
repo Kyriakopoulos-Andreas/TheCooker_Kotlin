@@ -47,6 +47,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,12 +89,15 @@ fun CreateMeal(
     combineMeals: MutableList<MealItem>,
     TopBarsModel: TopBarsModel
                ) {
+
+    LaunchedEffect(Unit) {
+        createMealViewModel.resetStates()
+    }
+
+
     val context = LocalContext.current
     val creatorId  = remember { mutableStateOf(createMealViewModel.creatorId)}
-
     var imageUri by remember { mutableStateOf<Uri?>(null) }
-
-
     val ingredients by remember { mutableStateOf(createMealViewModel.ingredients) }
     val steps by remember {mutableStateOf(createMealViewModel.steps)}
     val mealName by createMealViewModel.mealName
@@ -101,14 +105,16 @@ fun CreateMeal(
     val mealNameError by createMealViewModel.mealNameError.collectAsState()
     val ingredientError by createMealViewModel.ingredientsError.collectAsState()
     val stepError by createMealViewModel.stepsError.collectAsState()
-
-    val updatedStepOfCompletion by createMealViewModel.stateOfCompletion.collectAsState()
     val updatedMealNameError by createMealViewModel.mealNameError.collectAsState()
     val updatedIngredientError by createMealViewModel.ingredientsError.collectAsState()
     val updatedStepError by createMealViewModel.stepsError.collectAsState()
+    val saveButtonDisabler by remember { mutableStateOf(createMealViewModel.saveButtonDisabled) }
+    val coroutineScope = rememberCoroutineScope()
+    var hasLaunched by rememberSaveable { mutableStateOf(false) }
 
 
-    Log.d("CombineMealsAtStart", combineMeals.toString())
+
+
 
 
 
@@ -135,51 +141,54 @@ fun CreateMeal(
     ) { uri: Uri? ->
         uri?.let {
             imageUri = it
+
         }
     }
     var imageUrl by remember { mutableStateOf<String?>(null) }
-    val imageTitleUpdate by mealDetailViewModel.updatedMealName
+    val imageTitleUpdate by remember{mealDetailViewModel.updatedMealName}
     val ingredientsUpdate by remember { mutableStateOf(mealDetailViewModel.updatedIngredients) }
     val stepsUpdate by remember { mutableStateOf(mealDetailViewModel.updatedSteps) }
+    var textFieldValue by remember{ mutableStateOf<String>("") }
 
-    LaunchedEffect(Unit) {
-        createMealViewModel.resetStates()
 
-    }
 
     LaunchedEffect(detailState.value, recipeId) {
-        Log.d("mealForUpdate", detailState.value.toString())
-        if (detailState?.value?.list?.isNotEmpty() == true) {
-            val detail = detailState.value?.list?.get(0)
-            if (detail is MealsDetailViewModel.recipeDetails.UserMealDetail) {
-                imageUrl = detail.mealDetail.firstOrNull()?.recipeImage
-                Log.d("ImageUrlTest", "UserMealDetail found: $imageUrl")
-                detail.mealDetail.firstOrNull()?.recipeName?.let {
-                    mealDetailViewModel.updatedMealName(
-                        it
-                    )
-                }
-                detail.mealDetail.firstOrNull()?.recipeIngredients?.let {
-                    mealDetailViewModel.updatedIngredients(
-                        it
-                    )
-                }
-                detail.mealDetail.firstOrNull()?.steps?.let {
-                    mealDetailViewModel.updatedSteps(
-                        it
-                    )
-                }
+        if(!hasLaunched) {
+            Log.d("mealForUpdate", detailState.value.toString())
+            if (detailState?.value?.list?.isNotEmpty() == true) {
+                val detail = detailState.value?.list?.get(0)
+                if (detail is MealsDetailViewModel.recipeDetails.UserMealDetail) {
+                    imageUrl = detail.mealDetail.firstOrNull()?.recipeImage
+                    hasLaunched = true
+                    Log.d("ImageUrlTest", "UserMealDetail found: $imageUrl")
+                    detail.mealDetail.firstOrNull()?.recipeName?.let {
+                        mealDetailViewModel.updatedMealName(
+                            it
+                        )
+                    }
+                    detail.mealDetail.firstOrNull()?.recipeIngredients?.let {
+                        mealDetailViewModel.updatedIngredients(
+                            it
+                        )
+                    }
+                    detail.mealDetail.firstOrNull()?.steps?.let {
+                        mealDetailViewModel.updatedSteps(
+                            it
+                        )
+                    }
 
-                Log.d("First", "UserMealDetail found: $imageUrl")
+                    Log.d("First", "UserMealDetail found: $imageUrl")
+                }
+            }
+            if (recipeId == null) {
+                imageUrl = "android.resource://com.TheCooker/${R.drawable.addmeal}"
             }
         }
-        if(recipeId == null){
-            imageUrl = "android.resource://com.TheCooker/${R.drawable.addmeal}"
-        }
+
     }
 
 
-    val finalImageUrl = imageUrl ?: "android.resource://com.TheCooker/${R.drawable.addmeal}"
+    val finalImageUrl = imageUri ?: imageUrl
 
 
 
@@ -200,10 +209,7 @@ fun CreateMeal(
                         .padding(8.dp)
                 ) {
                     AsyncImage(
-                        model = finalImageUrl
-
-                                ,
-
+                        model = finalImageUrl,
                         contentDescription = "Add Meal Image",
                         modifier = Modifier
                             .fillMaxSize()
@@ -246,7 +252,7 @@ fun CreateMeal(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val textFieldValue = if (recipeId != null) imageTitleUpdate else mealName
+                textFieldValue = if (recipeId != null) imageTitleUpdate else mealName
 
                 Row(
                     modifier = Modifier
@@ -414,7 +420,9 @@ fun CreateMeal(
                 )
             }
 
-                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 4.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically) {
 
@@ -546,7 +554,9 @@ fun CreateMeal(
 
                 }
 
-                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 4.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically) {
                     if (recipeId != null) {
@@ -590,11 +600,9 @@ fun CreateMeal(
                 .padding(top = 8.dp), horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
                 ) {
-
-                val coroutineScope = rememberCoroutineScope()
-
                 Button(
                     onClick = {
+                      createMealViewModel.setSaveButtonDisabled()
                         coroutineScope.launch {
                             if (recipeId != null) {
                                 mealDetailViewModel.validateUpdate()
@@ -723,6 +731,7 @@ fun CreateMeal(
                             }
                               },
                     modifier = Modifier.width(150.dp),
+                    enabled = saveButtonDisabler.value,
                     colors = ButtonColors(
                         containerColor = Color(0xFFFFC107),
                         contentColor = Color.White,

@@ -1,5 +1,6 @@
 package com.TheCooker.Presentation.Views.Modules.TopBarViews
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.ExperimentalMaterialApi
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material3.Badge
@@ -38,7 +38,7 @@ import com.TheCooker.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterialApi::class)
+
 @Composable
 fun TopMenu(
     navBackStackEntry: NavBackStackEntry?,
@@ -50,6 +50,15 @@ fun TopMenu(
     var selectedItem by rememberSaveable {
         mutableStateOf(2)
     }
+
+    Log.d("TestSelectedIcon", selectedItem.toString())
+
+
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+        if (currentRoute?.contains("MealsView") == true) {  //Keep selected icon when navigate deeper to search view
+            selectedItem = 3
+        }
+
 
     LaunchedEffect(navBackStackEntry) {
         val currentRoute = navBackStackEntry?.destination?.route
@@ -87,11 +96,7 @@ fun TopMenu(
                             } else {
                                 selectedItem = index
                                 navController.navigate(screen.route) {
-                                    // Καθαρισμός του back stack
-                                    popUpTo(TopBarMenuModel.HomeView.route) {
-                                        inclusive = true // Μην διαγράψετε την αρχική οθόνη
-                                    }
-                                    launchSingleTop = true
+
                                 }
                             }
                         },

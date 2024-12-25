@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 @SuppressLint("CoroutineCreationDuringComposition")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun LoginNavigator(viewModel: LoginViewModel = hiltViewModel(),
+fun LoginNavigator(viewModel: LoginViewModel,
                    client: GoogleClient,
                    createMealViewModel: CreateMealViewModel,
                    mealsDetailViewModel: MealsDetailViewModel,
@@ -58,85 +58,82 @@ fun LoginNavigator(viewModel: LoginViewModel = hiltViewModel(),
     // Χρησιμοποιούμε rememberCoroutineScope για την εκτέλεση εργασιών σε Coroutine
     val coroutineScope = rememberCoroutineScope()
 
-    NavHost(navController = navController2, startDestination = "LoginView") {
-        composable(route = "LoginView") {
+        NavHost(navController = navController2, startDestination = "LoginView") {
+            composable(route = "LoginView") {
 
-            val state by viewModel.state.collectAsStateWithLifecycle()
+                val state by viewModel.state.collectAsStateWithLifecycle()
 
-            // Δημιουργία launcher για ActivityResult
-            val launcher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.StartIntentSenderForResult()
-            ) { result ->
-                if (result.resultCode == Activity.RESULT_OK) {
-                   coroutineScope.launch {
-                       val signInResult = client.signInWithIntent(
-                           intent = result.data ?: return@launch
-                       )
-                       viewModel.onSignInResult(signInResult)
-                   }
+                // Δημιουργία launcher για ActivityResult
+                val launcher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.StartIntentSenderForResult()
+                ) { result ->
+                    if (result.resultCode == Activity.RESULT_OK) {
+                       coroutineScope.launch {
+                           val signInResult = client.signInWithIntent(
+                               intent = result.data ?: return@launch
+                           )
+                           viewModel.onSignInResult(signInResult)
+                       }
+                    }
                 }
-            }
 
-            LaunchedEffect(key1 = state.isSignInSuccessful) {
+                LaunchedEffect(key1 = state.isSignInSuccessful) {
 
-                if(state.isSignInSuccessful){
-                    Toast.makeText(
-                        context,
-                        "Welcome Chef",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    if(state.isSignInSuccessful){
+                        Toast.makeText(
+                            context,
+                            "Welcome Chef",
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        client.getSignedInUser()?.let { it1 -> viewModel.setUserData(it1) } // I choose to keep the user data in the viewModel and not to the backStack
+                        //navController2.currentBackStackEntry?.savedStateHandle?.set("User", client.getSignedInUser())
+                        navController2.navigate("MenuView"){
+                            popUpTo("LoginView") { inclusive = true }
+                        }
+                        viewModel.resetState() // Επαναφερει το state isSignInSuccessful σε false ετσι ωστε να μπορει να γινει Log out
 
 
-                    navController2.currentBackStackEntry?.savedStateHandle?.set("User", client.getSignedInUser())
-                    navController2.navigate("MenuView"){
 
 
                     }
-                    viewModel.resetState() // Επαναφερει το state isSignInSuccessful σε false ετσι ωστε να μπορει να γινει Log out
-
-
 
 
                 }
 
 
-            }
+                LoginView(
+                    viewModel = viewModel,
+                    state = state,
+                    onGoogleClick = {
+                        coroutineScope.launch {
+                            val signInIntentSender = client.signIn()
 
-
-            LoginView(
-                viewModel = viewModel,
-                state = state,
-                onGoogleClick = {
-                    coroutineScope.launch {
-                        val signInIntentSender = client.signIn()
-
-                        signInIntentSender?.let {
-                            val intentSenderRequest = IntentSenderRequest.Builder(it).build()
-                            launcher.launch(intentSenderRequest)
-                        } ?: run {
-                            Toast.makeText(
-                                context,
-                                "Sign in failed",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            signInIntentSender?.let {
+                                val intentSenderRequest = IntentSenderRequest.Builder(it).build()
+                                launcher.launch(intentSenderRequest)
+                            } ?: run {
+                                Toast.makeText(
+                                    context,
+                                    "Sign in failed",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    },
+                    onLoginButtonClick = {
+                        navController2.navigate("MenuView"){
+                            popUpTo("LoginView") { inclusive = true }
                         }
                     }
-                },
-                onLoginButtonClick = {
-                    navController2.navigate("MenuView"){
+                )
+            }
+            composable(route = "MenuView") {
+                val user = viewModel.userData.value   // Get the user from googleSignIn using the viewModel and not the backStack
+                //val user = navController2.previousBackStackEntry?.savedStateHandle?.get<UserDataModel>("User")
+                    MainTopBarViewSupport(viewModel.userData.value ?: user, client, navController2, loginViewModel = viewModel, createMealViewModel = createMealViewModel, mealsDetailViewModel = mealsDetailViewModel, mealsViewModel = mealsViewModel, categoryViewModel = categoryViewModel )
 
-                    }
-
-                }
-
-            )
-        }
-        composable(route = "MenuView") {
-            val user = navController2.previousBackStackEntry?.savedStateHandle?.get<UserDataModel>("User")
-
-                MainTopBarViewSupport(viewModel.userData.value ?: user, client, navController2, loginViewModel = viewModel, createMealViewModel = createMealViewModel, mealsDetailViewModel = mealsDetailViewModel, mealsViewModel = mealsViewModel, categoryViewModel = categoryViewModel )
-
-        }
+            }
 
 }
 }
