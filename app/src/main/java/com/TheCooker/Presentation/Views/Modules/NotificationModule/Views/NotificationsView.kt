@@ -15,7 +15,7 @@ fun NotificationView(){
     Column(modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center) {
-        Text(text = "ChatScreen",
+        Text(text = "NotificationView",
             modifier = Modifier.clickable {  })
 
 

@@ -1,10 +1,11 @@
-package com.TheCooker.Domain.Layer.UseCase
+package com.TheCooker.Domain.Layer.UseCase.GoogleIntents
 
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.util.Log
 import android.widget.Toast
-import com.TheCooker.Domain.Layer.Repositories.UserRepo
+import com.TheCooker.dataLayer.Repositories.UserRepo
 import com.TheCooker.Common.Layer.Resources.LoginResults
 import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.DI.Module.UserDataProvider
@@ -53,35 +54,60 @@ class GoogleClient@Inject constructor(
             val user = auth.signInWithCredential(googleCredentials).await().user
             val userExists = userRepo.checkIfUserExistsInFirestore(user?.email ?: "")
 
-            println("User exists: $userExists")
-            println("Email: ${user?.email}")
-            println("Name: ${user?.displayName}")
+            var userData: UserDataModel? = null
 
             // Login με google. Την πρωτη φορα που θα γραφτει γραφεται και στο firestore
             if (!userExists) {
-                val userData = UserDataModel(
+                userData = UserDataModel(
                     userName = user?.displayName ?: "",
                     email = user?.email ?: "",
                     uid = user?.uid ?: "",
                     googleUserId = user?.uid,
-                    profilerPictureUrl = user?.photoUrl?.toString()
+                    profilePictureUrl = user?.photoUrl?.toString()
                 )
+                userDataProvider.userData = userData
                 userRepo.saveUserToFirestore(userData)
-            }
+            }else {
+                val userFromFirestore = userRepo.getUserDetails(user?.email ?: "")
 
-            val userData = UserDataModel(
-                uid = user?.uid ?: "",
-                googleUserId = user?.uid,
-                userName = user?.displayName,
-                profilerPictureUrl = user?.photoUrl?.toString()
-            )
-            userDataProvider.userData = userData
-            LoginResults.Success(userData)
+                when (userFromFirestore) {
+                    is LoginResults.Success -> {
+                        if (user != null) {
+                            userData = UserDataModel(
+                                uid = user.uid ?: "",
+                                googleUserId = user.uid,
+                                userName = user.displayName,
+                                profilePictureUrl = (if (userFromFirestore.data.profilePictureUrl.isNullOrEmpty()) {
+                                    auth.currentUser?.photoUrl
+                                } else {
+                                    userFromFirestore.data.profilePictureUrl
+                                }).toString(),
+                                email = user.email,
+                                country = userFromFirestore.data.country,
+                                city =  userFromFirestore.data.city,
+                                specialties = userFromFirestore.data.specialties,
+                                chefLevel = userFromFirestore.data.chefLevel,
+                                goldenChefHats = userFromFirestore.data.goldenChefHats,
+                                backGroundPictureUrl = userFromFirestore.data.backGroundPictureUrl
+                            )
+                        }
+
+                        userDataProvider.userData = userData
+                    }
+                    is LoginResults.Error -> {
+                        Log.e("User Fetch Data From Firestore",  "Unknown error")
+                    }
+                }
+
+              }
+            userData?.let {
+                LoginResults.Success(it)
+            } ?: LoginResults.Error(Exception("User data is null"))
+
         } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e
             LoginResults.Error(e)
-
 
         }
     }
@@ -96,13 +122,13 @@ class GoogleClient@Inject constructor(
         }
     }
 
-    fun getSignedInUser(): UserDataModel? = auth.currentUser?.run {
-        UserDataModel(
-            googleUserId = uid,
-            userName = displayName,
-            profilerPictureUrl = photoUrl?.toString(),
-        )
-    }
+//    fun getSignedInUser(): UserDataModel? = auth.currentUser?.run {
+//        UserDataModel(
+//            googleUserId = uid,
+//            userName = displayName,
+//            profilerPictureUrl = photoUrl?.toString(),
+//        )
+//    }
 
     private fun buildSignInRequest(): BeginSignInRequest {
         return BeginSignInRequest.builder()

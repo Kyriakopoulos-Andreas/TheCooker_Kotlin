@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.TheCooker.Domain.Layer.Models.ScreenModels.DrawerScreensModel
+import com.TheCooker.Presentation.Views.Modules.Dividers.FatYellowDivider
 import com.TheCooker.R
 
 @Composable
@@ -55,7 +55,7 @@ fun DrawerContent(
                     .align(Alignment.Center)
                     .padding(top = 8.dp))
         }
-        CustomDivider()
+        FatYellowDivider()
         Spacer(modifier = Modifier.height(84.dp))
 
 
@@ -120,15 +120,3 @@ fun DrawerItem(
 
 }
 
-@Composable
-fun CustomDivider() {
-    val DividerAlpha = 0.5f // Αλλάξε την τιμή ανάλογα με τις προτιμήσεις σου
-    Divider(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(4.dp)
-            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = DividerAlpha)),
-        color = Color(0xFFFFC107), // Χρησιμοποιούμε background αντί για το color εδώ
-        thickness = 4.dp
-    )
-}

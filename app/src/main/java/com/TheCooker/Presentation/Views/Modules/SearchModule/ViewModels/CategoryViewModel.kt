@@ -3,7 +3,7 @@ package com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.TheCooker.Domain.Layer.Models.RecipeModels.CategoryModel
-import com.TheCooker.Domain.Layer.Repositories.RecipeRepo
+import com.TheCooker.dataLayer.Repositories.RecipeRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

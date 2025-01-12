@@ -10,9 +10,10 @@ import androidx.lifecycle.viewModelScope
 
 import com.TheCooker.Domain.Layer.Models.LoginModels.SignInState
 
-import com.TheCooker.Domain.Layer.Repositories.UserRepo
+import com.TheCooker.dataLayer.Repositories.UserRepo
 import com.TheCooker.Common.Layer.Resources.CreatePasswordResource
 import com.TheCooker.Common.Layer.Resources.LoginResults
+import com.TheCooker.DI.Module.UserDataProvider
 import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +28,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-  private val _userRepo: UserRepo
+  private val _userRepo: UserRepo,
+    private val _userDataProvider: UserDataProvider
 ) : ViewModel() {
 
 
@@ -326,7 +328,6 @@ class LoginViewModel @Inject constructor(
                 println("Current userooooooooooo: $currentUser")
                 if (currentUser != null) {
                     val userDetails = _userRepo.getUserDetails(currentUser.email ?: "")
-                    println("User detailskkkkkkkk: $userDetails")
                     if (userDetails is LoginResults.Success<*>) {
                         _userData.value = userDetails.data as UserDataModel?
                         println("!!!!!!eeee!!!!!!!!!!!!!!!!!! ${_userData.value}")
@@ -346,6 +347,7 @@ class LoginViewModel @Inject constructor(
                         signInError = null
                     )
                 }
+
                 is LoginResults.Error -> {
                     // Ενημερώνουμε την κατάσταση με το μήνυμα σφάλματος
                     it.copy(
@@ -353,7 +355,11 @@ class LoginViewModel @Inject constructor(
                         signInError = result.exception?.message
                     )
                 }
+
+                is LoginResults.Error -> TODO()
+                is LoginResults.Success -> TODO()
             }
+
         }
     }
 
@@ -365,36 +371,8 @@ class LoginViewModel @Inject constructor(
         _authLoginResult.value = LoginResults.Success(false)
     }
 
-
-    }
-
+}
 
 
 
-/*   suspend fun checkEmailExists(): Boolean {
-       val trimmedEmail = _Email.value.trim() // Αφαίρεση κενών από την αρχή και το τέλος
-       return try {
-           val result = FirebaseAuth.getInstance().fetchSignInMethodsForEmail(trimmedEmail).await()
-
-           // Εξαγωγή της λίστας signInMethods
-           val signInMethods = result.signInMethods
-           if (signInMethods != null) {
-               // Εκτύπωση της λίστας στην κονσόλα
-               println("Sign-in methods for email $trimmedEmail: $signInMethods")
-
-               // Για Android Logcat
-               Log.d("YourViewModel", "Sign-in methods for email $trimmedEmail: $signInMethods")
-           } else {
-               println("No sign-in methods found for email $trimmedEmail.")
-               Log.d("YourViewModel", "No sign-in methods found for email $trimmedEmail.")
-           }
-
-           // Ελέγχει αν το signInMethods δεν είναι null και αν η λίστα δεν είναι κενή
-           signInMethods?.isNotEmpty() == true
-
-       } catch (e: Exception) {
-           Log.e("YourViewModel", "Error checking email existence", e)
-           false
-       }
-   } */
 

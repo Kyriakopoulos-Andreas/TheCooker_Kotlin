@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
-import com.TheCooker.Domain.Layer.UseCase.GoogleClient
+import com.TheCooker.Domain.Layer.UseCase.GoogleIntents.GoogleClient
 import com.TheCooker.Presentation.Views.Modules.LoginModule.ViewModels.LoginViewModel
 import kotlinx.coroutines.launch
 

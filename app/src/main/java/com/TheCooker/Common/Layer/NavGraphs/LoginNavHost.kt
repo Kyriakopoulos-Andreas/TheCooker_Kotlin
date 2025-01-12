@@ -13,15 +13,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.TheCooker.Domain.Layer.UseCase.GoogleClient
+import com.TheCooker.Domain.Layer.UseCase.GoogleIntents.GoogleClient
 import com.TheCooker.Presentation.Views.Modules.LoginModule.Views.LoginView
 import com.TheCooker.Presentation.Views.Modules.LoginModule.ViewModels.LoginViewModel
-import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Presentation.Views.Modules.TopBarViews.MainTopBarViewSupport
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CreateMealViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsDetailViewModel
@@ -31,7 +29,7 @@ import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.Category
 
 import kotlinx.coroutines.launch
 
-@SuppressLint("CoroutineCreationDuringComposition")
+@SuppressLint("CoroutineCreationDuringComposition", "SuspiciousIndentation")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun LoginNavigator(viewModel: LoginViewModel,
@@ -86,8 +84,9 @@ fun LoginNavigator(viewModel: LoginViewModel,
                             Toast.LENGTH_LONG
                         ).show()
 
-                        client.getSignedInUser()?.let { it1 -> viewModel.setUserData(it1) } // I choose to keep the user data in the viewModel and not to the backStack
-                        //navController2.currentBackStackEntry?.savedStateHandle?.set("User", client.getSignedInUser())
+                          //TODO
+//                        client.getSignedInUser()?.let { it1 -> viewModel.setUserData(it1) } // I choose to keep the user data in the viewModel and not to the backStack
+
                         navController2.navigate("MenuView"){
                             popUpTo("LoginView") { inclusive = true }
                         }

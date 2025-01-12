@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.TheCooker.Domain.Layer.Models.ScreenModels.TopBarMenuModel
+import com.TheCooker.Domain.Layer.Models.ScreenModels.TopBarMenuModel.Companion.getSelectedIcon
+import com.TheCooker.Domain.Layer.Models.ScreenModels.TopBarMenuModel.Companion.getUnselectedIcon
 import com.TheCooker.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -60,10 +62,7 @@ fun TopMenu(
         }
 
 
-    LaunchedEffect(navBackStackEntry) {
-        val currentRoute = navBackStackEntry?.destination?.route
-        selectedItem = TopBarMenuModel.itemsList.indexOfFirst { it.route == currentRoute }
-    }
+
 
     NavigationBar(
         tonalElevation = 4.dp,
@@ -111,7 +110,7 @@ fun TopMenu(
                                 }
                             }) {
                                 Icon(
-                                    imageVector = if (index == selectedItem) screen.selectedIcon else screen.unselectedIcon,
+                                    imageVector = if (index == selectedItem) screen.getSelectedIcon() else screen.getUnselectedIcon(),
                                     contentDescription = null
                                 )
                             }

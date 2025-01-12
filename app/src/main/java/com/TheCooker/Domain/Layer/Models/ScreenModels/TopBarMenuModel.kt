@@ -7,12 +7,15 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import com.TheCooker.R
 
 sealed class TopBarMenuModel(
     val route: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
+    val selectedIcon: Int,
+    val unselectedIcon: Int,
     val hasNEWS: Boolean,
     val badgeCount: Int? = null,
 
@@ -20,39 +23,39 @@ sealed class TopBarMenuModel(
 
     object ListView : TopBarMenuModel(
         route = "ListView",
-        selectedIcon = Icons.Filled.List,
-        unselectedIcon = Icons.Filled.List,
+        selectedIcon = R.drawable.drawmenu,
+        unselectedIcon = R.drawable.drawmenu,
         hasNEWS = false
 
     )
 
 
-    object ProfileView : TopBarMenuModel(
-        route = "ProfileView",
-        selectedIcon = Icons.Filled.Face,
-        unselectedIcon = Icons.Filled.Face,
+    object FriendRequestView : TopBarMenuModel(
+        route = "FriendRequestView",
+        selectedIcon = R.drawable.baseline_people_24,
+        unselectedIcon = R.drawable.baseline_people_24,
         hasNEWS = false
     )
 
     object HomeView : TopBarMenuModel(
         route = "HomeView",
-        selectedIcon = Icons.Filled.Home,
-        unselectedIcon = Icons.Filled.Home,
+        selectedIcon = R.drawable.home1,
+        unselectedIcon = R.drawable.home1,
         hasNEWS = false,
 
     )
 
     object SearchView : TopBarMenuModel(
         route = "SearchView",
-        selectedIcon = Icons.Filled.Search,
-        unselectedIcon = Icons.Filled.Search,
+        selectedIcon = R.drawable.search,
+        unselectedIcon = R.drawable.search,
         hasNEWS = false
     )
 
     object NotificationView : TopBarMenuModel(
         route = "NotificationView",
-        selectedIcon = Icons.Filled.Notifications,
-        unselectedIcon = Icons.Filled.Notifications,
+        selectedIcon = R.drawable.notifications,
+        unselectedIcon = R.drawable.notifications,
         hasNEWS = false,
         badgeCount = 3,
 
@@ -62,11 +65,20 @@ sealed class TopBarMenuModel(
 
         val itemsList = listOf(
             ListView,
-            ProfileView,
+            FriendRequestView,
             HomeView,
             SearchView,
             NotificationView
         )
+        @Composable
+        fun TopBarMenuModel.getSelectedIcon(): ImageVector {
+            return ImageVector.vectorResource(id = this.selectedIcon)
+        }
+
+        @Composable
+        fun TopBarMenuModel.getUnselectedIcon(): ImageVector {
+            return ImageVector.vectorResource(id = this.unselectedIcon)
+        }
     }
 }
 

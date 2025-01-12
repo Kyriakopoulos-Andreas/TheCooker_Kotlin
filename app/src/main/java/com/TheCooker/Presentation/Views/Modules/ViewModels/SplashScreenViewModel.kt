@@ -1,4 +1,4 @@
-package com.TheCooker.Presentation.Views.Modules.ProfileModule.SplashScreen.ViewModels
+package com.TheCooker.Presentation.Views.Modules.ViewModels
 
 
 import androidx.lifecycle.ViewModel

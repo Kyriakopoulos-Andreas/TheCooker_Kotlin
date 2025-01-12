@@ -7,7 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealDetailModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealModel
-import com.TheCooker.Domain.Layer.Repositories.RecipeRepo
+import com.TheCooker.dataLayer.Repositories.RecipeRepo
 import com.TheCooker.dataLayer.dto.MealItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -13,7 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.TheCooker.DI.Module.UserDataProvider
 import com.TheCooker.R
-import com.TheCooker.Domain.Layer.Repositories.RecipeRepo
+import com.TheCooker.dataLayer.Repositories.RecipeRepo
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealDetailModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

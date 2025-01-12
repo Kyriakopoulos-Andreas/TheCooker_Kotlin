@@ -14,7 +14,14 @@ sealed class DrawerScreensModel(
 
 ) {
 
-    object calendar : DrawerScreensModel(
+    data object Profile : DrawerScreensModel(
+        route = "Profile",
+        hasNews = false,
+        title = "Profile",
+        icon = R.drawable.baseline_face_retouching_natural_24
+    )
+
+    data object Calendar : DrawerScreensModel(
         route = "Calendar",
         hasNews = false,
         title = "Calendar",
@@ -23,7 +30,7 @@ sealed class DrawerScreensModel(
 
     )
 
-    object settings : DrawerScreensModel(
+    data object Settings : DrawerScreensModel(
         route = "Options",
         hasNews = false,
         title = "Options",
@@ -32,7 +39,7 @@ sealed class DrawerScreensModel(
     )
 
 
-    object Information : DrawerScreensModel(
+    data object Information : DrawerScreensModel(
         route = "Information",
         hasNews = false,
         title = "Information",
@@ -40,14 +47,14 @@ sealed class DrawerScreensModel(
 
     )
 
-    object Help : DrawerScreensModel(
+    data object Help : DrawerScreensModel(
         route = "Help",
         title = "Help",
         icon = R.drawable.baseline_help_24
 
     )
 
-    object logout : DrawerScreensModel(
+    data object Logout : DrawerScreensModel(
         route = "LogOut",
         title = "Log out",
         icon = R.drawable.baseline_logout_24
@@ -56,11 +63,12 @@ sealed class DrawerScreensModel(
 
     companion object{
         val drawerScreensList = listOf(
-            calendar,
-            settings,
+            Profile,
+            Calendar,
+            Settings,
             Information,
             Help,
-            logout
+            Logout
         )
     }
 }

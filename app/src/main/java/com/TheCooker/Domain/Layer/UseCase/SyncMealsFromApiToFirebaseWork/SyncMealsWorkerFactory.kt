@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
-import com.TheCooker.Domain.Layer.Repositories.RecipeRepo
+import com.TheCooker.dataLayer.Repositories.RecipeRepo
 import com.TheCooker.dataLayer.Api.ApiService
 import javax.inject.Inject
 

@@ -10,5 +10,8 @@
     <color name="yellow">#FFFFC107</color>
     <color name="yellow2">#EFD73C</color>
     <color name="darkGrey">#292929</color>
+    <color name="ProfileCameraAssetBackground">#4C585B</color>
+    <color name= "profileView_menu_item_selected">#11FFC107</color>"
+
 
 </resources>

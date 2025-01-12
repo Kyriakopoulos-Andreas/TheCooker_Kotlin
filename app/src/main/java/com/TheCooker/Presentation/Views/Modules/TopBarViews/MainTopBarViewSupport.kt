@@ -21,7 +21,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.TheCooker.Presentation.Views.Modules.DrawerModule.ViewModels.DrawerViewModel
 import com.TheCooker.Presentation.Views.Modules.DrawerModule.Views.LogOutAlertDialog
-import com.TheCooker.Domain.Layer.UseCase.GoogleClient
+import com.TheCooker.Domain.Layer.UseCase.GoogleIntents.GoogleClient
 import com.TheCooker.Presentation.Views.Modules.LoginModule.ViewModels.LoginViewModel
 import com.TheCooker.Common.Layer.NavGraphs.TopNavGraph
 import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel

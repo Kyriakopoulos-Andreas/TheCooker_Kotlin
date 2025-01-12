@@ -24,10 +24,13 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.ExperimentalMaterialApi
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.ModalBottomSheetLayout
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -67,10 +70,10 @@ import com.TheCooker.Domain.Layer.Models.ScreenModels.TopBarsModel
 import com.TheCooker.R
 import com.TheCooker.dataLayer.dto.MealItem
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealDetailModel
+import com.TheCooker.Presentation.Views.Modules.Dividers.BlackFatDivider
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CreateMealViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsDetailViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsViewModel
-import com.example.cooker.ListView.CustomDivider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -231,7 +234,7 @@ fun CreateMeal(
 
             Spacer(modifier = Modifier.padding(top = 8.dp))
 
-            CustomDivider()
+            BlackFatDivider()
         }
 
         item {
@@ -314,7 +317,7 @@ fun CreateMeal(
 
             }
 
-            CustomDivider()
+            BlackFatDivider()
 
             Row(
                 modifier = Modifier
@@ -457,7 +460,7 @@ fun CreateMeal(
 
 
             }
-            CustomDivider()
+            BlackFatDivider()
         }
 
         item {
@@ -589,7 +592,7 @@ fun CreateMeal(
                 }
             }
 
-            CustomDivider()
+            BlackFatDivider()
 
         }
 
