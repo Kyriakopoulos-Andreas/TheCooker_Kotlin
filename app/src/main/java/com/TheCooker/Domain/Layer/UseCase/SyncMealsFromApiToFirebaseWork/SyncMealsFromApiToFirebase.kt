@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.TheCooker.Domain.Layer.Repositories.RecipeRepo
+import com.TheCooker.dataLayer.Repositories.RecipeRepo
 import com.TheCooker.dataLayer.Api.ApiService
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject

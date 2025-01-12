@@ -29,7 +29,7 @@ import androidx.navigation.compose.composable
 import com.TheCooker.Domain.Layer.Models.ScreenModels.TopBarMenuModel
 import com.TheCooker.Domain.Layer.Models.ScreenModels.DrawerScreensModel
 import com.TheCooker.Presentation.Views.Modules.DrawerModule.Views.Options
-import com.TheCooker.Domain.Layer.UseCase.GoogleClient
+import com.TheCooker.Domain.Layer.UseCase.GoogleIntents.GoogleClient
 import com.TheCooker.Presentation.Views.Modules.LoginModule.ViewModels.LoginViewModel
 import com.example.cooker.ChatView.NotificationView
 import com.example.cooker.HomeView.HomeView
@@ -41,6 +41,7 @@ import com.TheCooker.Presentation.Views.Modules.DrawerModule.Views.Information
 import com.TheCooker.Presentation.Views.Modules.ProfileModule.Views.ProfileView
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealDetailModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealModel
+import com.TheCooker.Presentation.Views.Modules.FriendRequestView
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CreateMealViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.Views.CreateMeal
 import com.TheCooker.Presentation.Views.Modules.SearchModule.Views.MealDetailView
@@ -120,15 +121,19 @@ fun TopNavGraph(
                 MainTopBarViewSupport(user, googleClient = client, navLogin, loginViewModel, createMealViewModel, detailViewModel, mealsViewModel ,categoryViewModel= categoryViewModel)
             }
             composable(DrawerScreensModel.drawerScreensList[0].route) {
-                Calendar(topBar = TopBarsModel)
+
+                ProfileView(userData = user)
             }
             composable(DrawerScreensModel.drawerScreensList[1].route) {
-                Options(topBar = TopBarsModel)
+                Calendar(topBar = TopBarsModel)
             }
             composable(DrawerScreensModel.drawerScreensList[2].route) {
-                Information(topBar = TopBarsModel)
+                Options(topBar = TopBarsModel)
             }
             composable(DrawerScreensModel.drawerScreensList[3].route) {
+                Information(topBar = TopBarsModel)
+            }
+            composable(DrawerScreensModel.drawerScreensList[4].route) {
                 Help(topBar = TopBarsModel)
             }
             composable(route = "CreateMeal?recipeId={recipeId}") { backStackEntry ->
@@ -337,9 +342,11 @@ fun TopNavGraph(
                 HomeView()
             }
 
-            composable(route = TopBarMenuModel.ProfileView.route) {
-                ProfileView(userData = user)
+            composable(route = TopBarMenuModel.FriendRequestView.route) {
+                FriendRequestView()
             }
+
+
             composable(route = TopBarMenuModel.NotificationView.route) {
                 NotificationView()
             }

@@ -16,12 +16,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.TheCooker.Domain.Layer.UseCase.GoogleClient
+import com.TheCooker.Domain.Layer.UseCase.GoogleIntents.GoogleClient
 import com.TheCooker.Common.Layer.NavGraphs.LoginNavigator
 import com.TheCooker.Presentation.Views.Modules.LoginModule.ViewModels.LoginViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CreateMealViewModel
 import com.TheCooker.Domain.Layer.UseCase.SyncMealsFromApiToFirebaseWork.scheduleMonthlySync
-import com.TheCooker.Presentation.Views.Modules.ProfileModule.SplashScreen.ViewModels.SplashScreenViewModel
+import com.TheCooker.Presentation.Views.Modules.ViewModels.SplashScreenViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsDetailViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CategoryViewModel
