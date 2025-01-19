@@ -121,8 +121,12 @@ fun TopNavGraph(
                 MainTopBarViewSupport(user, googleClient = client, navLogin, loginViewModel, createMealViewModel, detailViewModel, mealsViewModel ,categoryViewModel= categoryViewModel)
             }
             composable(DrawerScreensModel.drawerScreensList[0].route) {
+                val postRecipe = navController.previousBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("PostRecipe")
+                Log.d("PostRecipeOnProfile", postRecipe.toString())
+                navController.previousBackStackEntry?.savedStateHandle?.set("PostRecipe", postRecipe)
 
-                ProfileView(userData = user)
+
+                ProfileView(userData = user, navigator = navController, topBarManager = TopBarsModel)
             }
             composable(DrawerScreensModel.drawerScreensList[1].route) {
                 Calendar(topBar = TopBarsModel)
@@ -138,16 +142,6 @@ fun TopNavGraph(
             }
             composable(route = "CreateMeal?recipeId={recipeId}") { backStackEntry ->
                 val recipeId = backStackEntry.arguments?.getString("recipeId")
-
-                //Fetch ξανα απο την βαση των meals μετα το update γιατι υπηρχε θεμα με το combineMeals
-//                if(backFromUpdate)
-//                scope.launch {
-//                    mealsViewModel.fetchMeals("", sharedCategoryId)
-//
-//                }
-
-
-
                 CreateMeal(
                     mealDetailViewModel = detailViewModel ,
                     recipeId = recipeId,
@@ -159,8 +153,6 @@ fun TopNavGraph(
                     mealsViewModel = mealsViewModel,
                     createMealViewModel = createMealViewModel,
                 )
-
-
                 }
 
 
@@ -325,8 +317,21 @@ fun TopNavGraph(
             }
 
             composable(route = "MealDetailView") {
-                val navBackStackEntry = navController.currentBackStackEntry
-                val detail = navBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("updatedMeal")
+                val navBackStackEntry = navController.previousBackStackEntry
+                var detail = navBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("updatedMeal")
+
+
+                val postDetail = remember {
+                    navBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("PostRecipe")
+                }
+                Log.d("PostDetail", postDetail.toString())
+
+
+
+                if(postDetail != null){
+                    detail = postDetail
+                    detailViewModel.setDetailsForPost(postDetail)
+                }
 
 
                 navController.previousBackStackEntry?.savedStateHandle?.set("updatedRecipe", detail)

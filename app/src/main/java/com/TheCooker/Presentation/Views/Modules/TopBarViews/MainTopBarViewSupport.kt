@@ -59,7 +59,8 @@ fun MainTopBarViewSupport(
                 menuTopBarRoute = true,
                 mealTopBarRoute = false,
                 drawerMenuRoute = false,
-                updateBar = false
+                updateBar = false,
+                postBarRoute = false
             )
         )
     }
@@ -199,7 +200,21 @@ fun MainTopBarViewSupport(
                                 mealsViewModel = mealsViewModel
                             )
                         }
-                    } },
+                    } else if(topBar.postBarRoute){
+                        SecondaryTopBarView(
+                            title = "",
+                            topBar = topBar,
+                            navController,
+                            scaffoldState,
+                            scope,
+                            previousRoute,
+                            isUserRecipe = true,
+                            openBottomSheetMealDetailMenu = showModalSheet,
+                            mealDetail = mealsDetailViewModel,
+                            mealsViewModel = mealsViewModel
+                        )
+                    }
+                         },
                 drawerContent = {
                     DrawerContent(
                         title = title,

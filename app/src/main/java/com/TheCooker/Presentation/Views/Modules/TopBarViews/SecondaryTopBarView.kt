@@ -108,6 +108,8 @@ fun SecondaryTopBarView(
 
 
 
+
+
                         if(topBar.updateBar){
                             topBar.updateBar = false
                             topBar.mealTopBarRoute = true
@@ -117,7 +119,11 @@ fun SecondaryTopBarView(
 
                         }
 
-                        if (!topBar.mealTopBarRoute && !topBar.updateBar && !topBar.drawerMenuRoute) {
+
+
+
+
+                        if (!topBar.mealTopBarRoute && !topBar.updateBar && !topBar.drawerMenuRoute && !topBar.postBarRoute) {
                             topBar.menuTopBarRoute = true
                             Log.d("PreviousRoute", "jOIN")
 
@@ -135,13 +141,18 @@ fun SecondaryTopBarView(
                         else {
                             Log.d("PreviousRoute", "Previous route: ${navController.currentBackStack.value}")
                             if(backFromUpdate){
-
-
                                 navController.navigate("SearchView")
                             }else{
                                 navController.popBackStack()
                             }
 
+                            if(topBar.postBarRoute && !topBar.mealTopBarRoute && !topBar.updateBar && !topBar.drawerMenuRoute){
+                                topBar.postBarRoute = false
+                                topBar.menuTopBarRoute = false
+                                topBar.drawerMenuRoute = true
+                                navController.navigate("Profile")
+
+                            }
 
 
                         }
@@ -185,7 +196,7 @@ fun SecondaryTopBarView(
 
             Log.d("ExtraTopBar", "Title: ${topBar.drawerMenuRoute}")
 
-            if (topBar.drawerMenuRoute){
+            if (topBar.drawerMenuRoute && !topBar.postBarRoute){
                 Text(
                     text = title,
                     fontFamily = FontFamily.Monospace,

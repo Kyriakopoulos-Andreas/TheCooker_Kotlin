@@ -15,7 +15,8 @@ data class UserMealDetailModel(
     var recipeImage: String? = null,
     val creatorId: String? = null,
     val timestamp: Long = System.currentTimeMillis(),
-    val isUserRecipe: Boolean = true
+    val isUserRecipe: Boolean = true,
+    val visibility: Boolean? = null
 ) : Parcelable, MealItem {
     override val id: String? get() = recipeId
     override val name: String? get() = recipeName

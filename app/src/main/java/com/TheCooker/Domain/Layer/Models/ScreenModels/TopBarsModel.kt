@@ -4,6 +4,7 @@ data class TopBarsModel(
     var menuTopBarRoute: Boolean,
     var mealTopBarRoute: Boolean,
     var drawerMenuRoute: Boolean,
+    var postBarRoute: Boolean,
     var updateBar: Boolean,
     var flagForRecomposeMealsViewWithTheUpdatedRecipe: Boolean = false
 )
