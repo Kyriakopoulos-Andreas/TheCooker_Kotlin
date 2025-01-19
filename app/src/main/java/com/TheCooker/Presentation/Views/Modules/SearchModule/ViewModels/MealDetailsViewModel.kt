@@ -52,6 +52,9 @@ class MealsDetailViewModel @Inject constructor(
     fun copyDetails(details: UserMealDetailModel, updateDetails: UserMealDetailModel?): UserMealDetailModel {
         return copyObj(details, updateDetails)
     }
+    fun setDetailsForPost(details: UserMealDetailModel){
+        _mealsDetailState.value = _mealsDetailState.value?.copy(list = listOf(recipeDetails.UserMealDetail(listOf(details))))
+    }
 
     private fun copyObj(details: UserMealDetailModel, updateDetails: UserMealDetailModel?): UserMealDetailModel {
         val updatedDetail = details.copy(

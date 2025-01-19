@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
 import com.TheCooker.CookerApp
 import com.TheCooker.Domain.Layer.Models.RecipeModels.ApiMealDetailModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.CategoryModel
@@ -123,6 +124,28 @@ class RecipeRepo@Inject constructor(
         }catch (e:Exception){
             Log.d("RecipeRepo", "Error fetching recipes: ${e.message}")
             throw e.cause ?: e
+        }
+    }
+
+    suspend fun fetchRecipeShares(): uploadDownloadResource<List<UserMealDetailModel>> {
+        return try {
+            Log.d("RecipeRepo", "Trying to fetch recipe shares")
+            val querySnapshot = firestore.collection("recipes")
+                .whereEqualTo("creatorId", userData.userData?.uid)
+                .whereEqualTo("visibility", true)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .get()
+                .addOnFailureListener { e -> // Διαχειριζομαι τα σφαλαματα του firestore
+                    Log.e("RecipeRepo", "Error fetching recipe shares: ${e.message}")
+                }
+                .await()
+            val shares = querySnapshot.toObjects(UserMealDetailModel::class.java)
+            Log.d("RecipeRepo", "Fetched recipe shares: $shares")
+            uploadDownloadResource.Success(shares)
+        }catch (e: Exception) {
+            Log.e("RecipeRepo", "Error fetching recipes: ${e.message}")
+            uploadDownloadResource.Error(e)
+
         }
     }
 
@@ -330,6 +353,19 @@ class RecipeRepo@Inject constructor(
         newMealDetails.forEach { detail ->
             Log.d("SavingMealDetail", "Saving meal detail with ID: ${detail.idMeal} for mealId: $mealId")
             saveMealDetails(detail)
+        }
+    }
+
+    suspend fun deletePost(post: UserMealDetailModel?): uploadDownloadResource<Unit>{
+        return try {
+            if (post != null) {
+                firestore.collection("recipes")
+                    .document(post.recipeId ?: "")
+                    .update("visibility", false)
+            } // Ενημερώνεις το πεδίο "visibility" σε false
+            uploadDownloadResource.Success(Unit)
+        }catch (e: Exception){
+            uploadDownloadResource.Error(e)
         }
     }
 

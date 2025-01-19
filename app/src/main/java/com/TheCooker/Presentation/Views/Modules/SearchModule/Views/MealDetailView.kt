@@ -46,6 +46,8 @@ fun MealDetailView(
     updateDetails: UserMealDetailModel?
 ) {
     val detailState = detailViewModel.mealsDetailState.observeAsState()
+    Log.d("JoinOnDetails", "Joinnnn")
+    Log.d("TestDetailList", "User detail: $updateDetails")
 
 
 
@@ -58,12 +60,15 @@ fun MealDetailView(
         when {
             detailState.value!!.loading -> {
                 CircularProgressIndicator()
+                Log.d("TestPostDetailLoad", "Loading...")
             }
             detailState.value!!.error != null -> {
                 Text(text = detailState.value!!.error ?: "Unknown error", color = MaterialTheme.colorScheme.error)
+                Log.d("TestPostDetailLoad", "error...")
             }
             else -> {
                 detailState.value!!.list.forEach { detail ->
+                    Log.d("TestPostDetailLoad", "PreJoin...")
                     Log.d("TestDetailList", "User detail: $detail")
 
                     when (detail) {
@@ -73,6 +78,7 @@ fun MealDetailView(
                             }
                         }
                         is MealsDetailViewModel.recipeDetails.UserMealDetail -> {
+                            Log.d("TestDetailList", "User detail: $detail")
                             detail.mealDetail.forEach { userDetail ->
                                 Log.d("UserRecipeTest", "User detail: $userDetail")
                                 ViewUserDetails(userDetail,  updateDetails, detailViewModel)

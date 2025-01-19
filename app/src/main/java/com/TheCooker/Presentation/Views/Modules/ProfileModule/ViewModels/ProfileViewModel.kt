@@ -7,27 +7,38 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.TheCooker.Common.Layer.Check.isInternetAvailable
 import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
 import com.TheCooker.DI.Module.UserDataProvider
+import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealDetailModel
+import com.TheCooker.dataLayer.Repositories.RecipeRepo
 import com.TheCooker.dataLayer.Repositories.UserRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val _userRepo: UserRepo,
-    val _userDataProvider: UserDataProvider
+    val _userDataProvider: UserDataProvider,
+    private val _recipeRepo: RecipeRepo
 ) : ViewModel() {
 
 
     private val _information = mutableStateOf(false)
     val information: State<Boolean> get() = _information
+
     private val _editProfile = mutableStateOf(false)
     val editProfile: State<Boolean> get() = _editProfile
+
+    private val _showShares= mutableStateOf(false)
+    val showShares: State<Boolean> get() = _showShares
+
 
     private val _country by lazy { mutableStateOf("") }
     val country: State<String> get() = _country
@@ -39,6 +50,21 @@ class ProfileViewModel @Inject constructor(
     val chefLevel: State<String> get() = _chefLevel
     private val _specialties = mutableStateOf("")
     val specialties: State<String> get() = _specialties
+
+    private val _errorFetchingShares = mutableStateOf("")
+    val errorFetchingShares: State<String> get() = _errorFetchingShares
+
+    private val _deletePostResult = mutableStateOf("")
+    val deletePostResult: State<String> get() = _deletePostResult
+
+    private val _shares = MutableStateFlow<List<UserMealDetailModel>>(emptyList())
+    val shares: MutableStateFlow<List<UserMealDetailModel>> get() = _shares
+
+
+
+
+
+
 
 
 
@@ -76,8 +102,22 @@ class ProfileViewModel @Inject constructor(
 
     }
 
+    // Use timestamp and transform it in true format to use it at post
+    fun formatTimestamp(timestamp: Long?): String {
+        if (timestamp == null) return "Unknown Date"
+        val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        return sdf.format(Date(timestamp))
+    }
+
+    fun setDeletePostResult(result: String) {
+        _deletePostResult.value = result
+    }
 
 
+
+    fun setShowShares(show: Boolean){
+        _showShares.value = show
+    }
 
 
 
@@ -106,6 +146,20 @@ class ProfileViewModel @Inject constructor(
         _specialties.value = specialty
     }
 
+    suspend fun deletePost(post: UserMealDetailModel?) {
+        if(post != null) {
+            when (val result = _recipeRepo.deletePost(post)) {
+                is uploadDownloadResource.Success -> {
+                    _deletePostResult.value = "Post deleted successfully"
+                }
+
+                is uploadDownloadResource.Error -> {
+                    _deletePostResult.value = "Error deleting post: ${result.exception}"
+                }
+            }
+        }
+    }
+
 
 
 
@@ -126,7 +180,23 @@ class ProfileViewModel @Inject constructor(
                 _saveInfoResult.value = "Something goes wrong \n Please try to save again"
             }
         }
+    }
 
+    suspend fun fetchShares(){
+
+       val fetchedResults = _recipeRepo.fetchRecipeShares()
+        Log.d("ProfileViewModel", "Shares fetched successfully")
+
+        when(fetchedResults){
+            is uploadDownloadResource.Success -> {
+                _shares.value = fetchedResults.data
+                Log.d("ProfileViewModel", "Shares fetched successfully")
+            }
+            is uploadDownloadResource.Error -> {
+                Log.d("ProfileViewModel", "Error fetching shares: ${fetchedResults.exception}")
+                _errorFetchingShares.value = "Somethings goes wrong. \n Please try again"
+            }
+            }
 
     }
 }
