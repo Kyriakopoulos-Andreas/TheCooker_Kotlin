@@ -74,9 +74,7 @@ import com.TheCooker.Presentation.Views.Modules.Dividers.BlackFatDivider
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CreateMealViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsDetailViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 @SuppressLint("SuspiciousIndentation")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
@@ -90,11 +88,19 @@ fun CreateMeal(
     navController: NavController,
     mealsViewModel: MealsViewModel,
     combineMeals: MutableList<MealItem>,
-    TopBarsModel: TopBarsModel
+    TopBarsModel: TopBarsModel,
+    postForUpdate: UserMealDetailModel?
 ) {
 
     LaunchedEffect(Unit) {
         createMealViewModel.resetStates()
+        mealDetailViewModel.setUpdateSaveButtonEnabled()
+
+        if(postForUpdate != null){
+
+            mealDetailViewModel.updatePostState(true)
+        }
+        Log.d("testPostUpdate", postForUpdate.toString())
     }
 
 
@@ -104,16 +110,20 @@ fun CreateMeal(
     val ingredients by remember { mutableStateOf(createMealViewModel.ingredients) }
     val steps by remember {mutableStateOf(createMealViewModel.steps)}
     val mealName by createMealViewModel.mealName
-    val stepOfCompletion by createMealViewModel.stateOfCompletion.collectAsState()
+    val stepOfCompletionSave by createMealViewModel.stateOfCompletion.collectAsState()
     val mealNameError by createMealViewModel.mealNameError.collectAsState()
     val ingredientError by createMealViewModel.ingredientsError.collectAsState()
     val stepError by createMealViewModel.stepsError.collectAsState()
-    val updatedMealNameError by createMealViewModel.mealNameError.collectAsState()
-    val updatedIngredientError by createMealViewModel.ingredientsError.collectAsState()
-    val updatedStepError by createMealViewModel.stepsError.collectAsState()
+    val updatedMealNameError by mealDetailViewModel.updatedMealNameError.collectAsState()
+    val updatedIngredientError by mealDetailViewModel.ingredientsError.collectAsState()
+    val updatedStepError by mealDetailViewModel.stepsError.collectAsState()
     val saveButtonDisabler by remember { mutableStateOf(createMealViewModel.saveButtonDisabled) }
+    val updateButtonDisabler by remember { mutableStateOf(mealDetailViewModel.updateDetailsButtonDisabled) }
     val coroutineScope = rememberCoroutineScope()
     var hasLaunched by rememberSaveable { mutableStateOf(false) }
+    val stepOfCompletionUpdate by mealDetailViewModel.stateOfCompletion.collectAsState()
+    val updatePostState by mealDetailViewModel.updatePost.collectAsState()
+
 
 
 
@@ -130,6 +140,7 @@ fun CreateMeal(
 
     val modalSheetStateIngredient = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden
+
     )
 
 
@@ -138,6 +149,7 @@ fun CreateMeal(
     Log.d("RecipeId", recipeId.toString())
     val roundedCornerRadius = 12.dp
     val modifier = Modifier.fillMaxWidth()
+
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -151,14 +163,16 @@ fun CreateMeal(
     val imageTitleUpdate by remember{mealDetailViewModel.updatedMealName}
     val ingredientsUpdate by remember { mutableStateOf(mealDetailViewModel.updatedIngredients) }
     val stepsUpdate by remember { mutableStateOf(mealDetailViewModel.updatedSteps) }
-    var textFieldValue by remember{ mutableStateOf<String>("") }
+
+
+
 
 
 
     LaunchedEffect(detailState.value, recipeId) {
         if(!hasLaunched) {
             Log.d("mealForUpdate", detailState.value.toString())
-            if (detailState?.value?.list?.isNotEmpty() == true) {
+            if (detailState.value?.list?.isNotEmpty() == true) {
                 val detail = detailState.value?.list?.get(0)
                 if (detail is MealsDetailViewModel.recipeDetails.UserMealDetail) {
                     imageUrl = detail.mealDetail.firstOrNull()?.recipeImage
@@ -182,7 +196,9 @@ fun CreateMeal(
 
                     Log.d("First", "UserMealDetail found: $imageUrl")
                 }
+
             }
+
             if (recipeId == null) {
                 imageUrl = "android.resource://com.TheCooker/${R.drawable.addmeal}"
             }
@@ -190,8 +206,30 @@ fun CreateMeal(
 
     }
 
+    LaunchedEffect(key1 = updatePostState) {
+        if (updatePostState)  {
+            if (postForUpdate != null) {
+                Log.d("TestPostLaunch" , "Test")
+                mealDetailViewModel.setDetailsForPost(postForUpdate)
+            }
+        }
+    }
 
-    val finalImageUrl = imageUri ?: imageUrl
+    var finalImageUrl = imageUri ?: imageUrl
+//    if (postForUpdate != null) {
+//        if(postForUpdate.creatorId != null){
+//            mealDetailViewModel.setDetailsForPost(postForUpdate)
+//            postForUpdate.recipeName?.let { mealDetailViewModel.updatedMealName(it) }
+//            postForUpdate.recipeIngredients?.let { mealDetailViewModel.updatedIngredients(it) }
+//            postForUpdate.steps?.let { mealDetailViewModel.updatedSteps(it) }
+//            Log.d("TestCreatorId", postForUpdate.creatorId)
+//
+//
+//            finalImageUrl = postForUpdate.recipeImage
+//        }
+//    }
+
+
 
 
 
@@ -201,6 +239,7 @@ fun CreateMeal(
         verticalArrangement = Arrangement.Top
     ) {
         item {
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Start
@@ -255,7 +294,9 @@ fun CreateMeal(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                textFieldValue = if (recipeId != null) imageTitleUpdate else mealName
+
+                  val  textFieldValue = if (recipeId != null || updatePostState) imageTitleUpdate else mealName
+
 
                 Row(
                     modifier = Modifier
@@ -267,12 +308,15 @@ fun CreateMeal(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                        value = textFieldValue,
+                        value = textFieldValue ,
                         onValueChange = {newValue ->
-                            if(recipeId != null)
-                                mealDetailViewModel.updatedMealName(newValue)
-                            else
-                                createMealViewModel.setMealName(newValue)
+                                if(recipeId != null || updatePostState) {
+                                    mealDetailViewModel.updatedMealName(newValue)
+                                    Log.d("TestNameOnPostUpdate", "Test")
+                                }
+                                else {
+                                    createMealViewModel.setMealName(newValue)
+                                }
                         },
                         label = { Text("Meal Title") },
                         colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -288,9 +332,10 @@ fun CreateMeal(
                     )
 
                 }
-                if(recipeId != null) {
+                if(recipeId != null || updatePostState) {
                     updatedMealNameError?.let {
                         if (it != "✔") {
+                            Log.d("MealNameError", it)
                             Text(
                                 text = it,
                                 color = Color.Red,
@@ -334,7 +379,14 @@ fun CreateMeal(
             }
         }
 
-        val ingredientsValue = if (recipeId != null) ingredientsUpdate else ingredients
+        val  ingredientsValue =  if (recipeId != null || updatePostState) ingredientsUpdate else ingredients
+
+//        if (postForUpdate != null) {
+//            if(!postForUpdate.creatorId.isNullOrBlank())
+//                ingredientsValue = postForUpdate.recipeIngredients!!
+//        }else{
+//            ingredientsValue =  if (recipeId != null) ingredientsUpdate else ingredients
+//        }
 
         itemsIndexed(ingredientsValue) { index, ingredient ->
             Row(
@@ -348,7 +400,7 @@ fun CreateMeal(
                     modifier = Modifier.weight(1f),
                     value = ingredient,
                     onValueChange = { newIngredient ->
-                        if (recipeId != null)
+                        if (recipeId != null || updatePostState)
                             mealDetailViewModel.updateIngredient(index, newIngredient)
                         else{
                             createMealViewModel.updateIngredient(index, newIngredient)
@@ -412,7 +464,7 @@ fun CreateMeal(
                         "Add Ingredient",
                         modifier = Modifier.clickable {
 
-                            if (recipeId != null)
+                            if (recipeId != null || updatePostState)
                                 mealDetailViewModel.addIngredientAtEnd()
                             else
                                 createMealViewModel.addIngredientAtEnd()
@@ -429,7 +481,7 @@ fun CreateMeal(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically) {
 
-                    if (recipeId != null) {
+                    if (recipeId != null || updatePostState) {
                         updatedIngredientError.let {
                             if (it != "✔") {
                                 if (it != null) {
@@ -478,7 +530,7 @@ fun CreateMeal(
 
             }
         }
-        val stepsValue = if(recipeId != null){ stepsUpdate} else{ steps}
+        val stepsValue = if(recipeId != null || updatePostState){ stepsUpdate} else{ steps}
 
         itemsIndexed(stepsValue) { index, step ->
             Row(
@@ -492,7 +544,7 @@ fun CreateMeal(
                     modifier = Modifier.weight(1f),
                     value = step,
                     onValueChange = { step ->
-                        if (recipeId != null){
+                        if (recipeId != null || updatePostState){
                             mealDetailViewModel.updateStep(index, step)}
                         else{
                             createMealViewModel.updateSteps(index, step)}
@@ -545,7 +597,7 @@ fun CreateMeal(
                     Text(
                         "Add Step",
                         modifier = Modifier.clickable {
-                            if (recipeId != null)
+                            if (recipeId != null || updatePostState)
                                 mealDetailViewModel.addStepAtTheEnd()
                             else
                                 createMealViewModel.addStepAtTheEnd()
@@ -562,7 +614,7 @@ fun CreateMeal(
                     .padding(bottom = 4.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically) {
-                    if (recipeId != null) {
+                    if (recipeId != null || updatePostState) {
                         updatedStepError.let {
                             if(it != "✔"){
                                 if (it != null) {
@@ -611,34 +663,46 @@ fun CreateMeal(
                             return@Button
                         }
 
-                        createMealViewModel.setSaveButtonDisabled()
-                        createMealViewModel.validateSave()
+
+                        Log.d("RecipeIdTest2", recipeId.toString())
+                        if(recipeId != null || updatePostState){
+                            mealDetailViewModel.validateUpdate()
+                            mealDetailViewModel.setUpdateSaveButtonDisabled()
+                        }else{
+                            createMealViewModel.validateSave()
+                            createMealViewModel.setSaveButtonDisabled()
+                        }
+
                         coroutineScope.launch {
-                            if (recipeId != null) {
-                                createMealViewModel.saveOrUpdateRecipe(
-                                    visibility = false,
-                                    recipeId = recipeId,
-                                    mealDetailViewModel = mealDetailViewModel,
-                                    createMealViewModel = createMealViewModel,
-                                    mealsViewModel = mealsViewModel,
-                                    navController = navController,
-                                    saveNavigateBack = {
-                                        saveNavigateBack()
-                                    },
-                                    combineMeals = combineMeals,
-                                    creatorId = creatorId.toString(),
-                                    imageUri = imageUri,
-                                    imageUrl = imageUrl,
-                                    ingredients = ingredientsUpdate,
-                                    mealName = imageTitleUpdate,
-                                    steps = stepsUpdate,
-                                    categoryId = categoryId,
-                                    topBarsModel = TopBarsModel,
-                                )
+                            if (recipeId != null || updatePostState) {
+                                if(stepOfCompletionUpdate == true) {
+                                    Log.d("TestUpdatePostSAVE", "Test")
+                                    createMealViewModel.saveOrUpdateRecipe(
+                                        visibility = false,
+                                        recipeId = if(updatePostState) postForUpdate?.recipeId.toString() else recipeId,
+                                        mealDetailViewModel = mealDetailViewModel,
+                                        createMealViewModel = createMealViewModel,
+                                        mealsViewModel = mealsViewModel,
+                                        navController = navController,
+                                        saveNavigateBack = {
+                                            saveNavigateBack()
+                                        },
+                                        combineMeals = combineMeals,
+                                        creatorId = creatorId.toString(),
+                                        imageUri = imageUri,
+                                        imageUrl = imageUrl,
+                                        ingredients = ingredientsUpdate,
+                                        mealName = imageTitleUpdate,
+                                        steps = stepsUpdate,
+                                        categoryId = categoryId,
+                                        topBarsModel = TopBarsModel,
+                                    )
+                                }else{
+                                    mealDetailViewModel.setUpdateSaveButtonEnabled()
+                                }
+
                             } else {
-
-                                if (stepOfCompletion == true) {
-
+                                if (stepOfCompletionSave == true) {
                                     createMealViewModel.saveOrUpdateRecipe(
                                         visibility = false,
                                         recipeId = recipeId,
@@ -659,7 +723,6 @@ fun CreateMeal(
                                         categoryId = categoryId,
                                         topBarsModel = TopBarsModel,
                                     )
-
                                 }else{
                                     createMealViewModel.setSaveButtonEnabled()
                                 }
@@ -667,7 +730,7 @@ fun CreateMeal(
                         }
                     },
                     modifier = Modifier.width(150.dp),
-                    enabled = saveButtonDisabler.value,
+                    enabled = if(recipeId != null || updatePostState ) updateButtonDisabler.value else saveButtonDisabler.value,
                     colors = ButtonColors(
                         containerColor = Color(0xFFFFC107),
                         contentColor = Color.White,
@@ -683,7 +746,7 @@ fun CreateMeal(
 
                 }
                 Spacer(modifier = Modifier.padding(start = 8.dp))
-                if(recipeId == null) {
+                if(recipeId == null && !updatePostState) {
                     Button(
                         onClick = {
 
@@ -696,7 +759,7 @@ fun CreateMeal(
                             createMealViewModel.setSaveButtonDisabled()
                             createMealViewModel.validateSave()
                             coroutineScope.launch {
-                                if (stepOfCompletion == true) {
+                                if (stepOfCompletionSave == true) {
                                     createMealViewModel.saveOrUpdateRecipe(
                                         visibility = true,
                                         recipeId = recipeId,
@@ -763,7 +826,7 @@ fun CreateMeal(
                 modifier = modifier,
                 onAddClick = {
                     if (selectedIndex >= 0) {
-                        if (recipeId != null)
+                        if (recipeId != null || updatePostState )
                             mealDetailViewModel.addIngredientAfter(selectedIndex)
                         else
                             createMealViewModel.addIngredientAfter(selectedIndex)
@@ -772,7 +835,7 @@ fun CreateMeal(
                 },
                 onDeleteClick = {
                     if (selectedIndex >= 0) {
-                        if (recipeId != null)
+                    if (recipeId != null || updatePostState)
                             mealDetailViewModel.removeIngredient(selectedIndex)
                         else
                             createMealViewModel.removeIngredient(selectedIndex)
@@ -793,7 +856,7 @@ fun CreateMeal(
                 modifier = modifier,
                 onAddClick = {
                     if (selectedIndex >= 0) {
-                        if (recipeId != null)
+                        if (recipeId != null || updatePostState)
                             mealDetailViewModel.addStepAfter(selectedIndex)
                         else
                             createMealViewModel.addStepAfter(selectedIndex)
@@ -802,7 +865,7 @@ fun CreateMeal(
                 },
                 onDeleteClick = {
                     if (selectedIndex >= 0) {
-                        if (recipeId != null){
+                        if (recipeId != null || updatePostState){
                             mealDetailViewModel.removeStep(selectedIndex)}
                         else{
                             createMealViewModel.removeStep(selectedIndex)}

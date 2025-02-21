@@ -2,6 +2,7 @@ package com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels
 
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -94,8 +95,19 @@ class MealsDetailViewModel @Inject constructor(
 
     private val _updatedStateOfCompletion = MutableStateFlow<Boolean?>(false)
     val stateOfCompletion: MutableStateFlow<Boolean?> get() = _updatedStateOfCompletion
+
+    private val _updatePost = MutableStateFlow<Boolean>(false)
+    val updatePost : MutableStateFlow<Boolean> get() = _updatePost
+
     private val _updateState = MutableLiveData(updateRecipe())
     val updateState: LiveData<updateRecipe> = _updateState
+
+    private val _updateButtonDisabled = mutableStateOf(true)
+    val updateDetailsButtonDisabled: MutableState<Boolean> get() = _updateButtonDisabled
+
+    fun updatePostState(value: Boolean) {
+        _updatePost.value = value
+    }
 
     fun onUpdateTrue() {
         _updateState.value = _updateState.value?.copy(onUpdateRecipe = true)
@@ -106,11 +118,18 @@ class MealsDetailViewModel @Inject constructor(
     }
 
 
+    fun setUpdateSaveButtonDisabled() {
+        _updateButtonDisabled.value = false
+    }
 
+    fun setUpdateSaveButtonEnabled(){
+        _updateButtonDisabled.value = true
+    }
 
 
     fun updatedMealName(name: String){
         _updatedMealName.value = name
+
     }
     fun updatedIngredients(ingredients: List<String>){
         _updatedIngredients.clear()
@@ -118,6 +137,7 @@ class MealsDetailViewModel @Inject constructor(
     }
     fun updateIngredient(index: Int, newValue: String) {
         _updatedIngredients[index] = newValue
+
     }
 
     fun addIngredientAtEnd() {
@@ -194,10 +214,12 @@ class MealsDetailViewModel @Inject constructor(
     fun updatedSteps(steps: List<String>){
         _updatedSteps.clear()
         _updatedSteps.addAll(steps)
+
     }
 
     fun updateStep(index: Int, newValue: String) {
         _updatedSteps[index] = newValue
+
     }
 
     fun addStepAtTheEnd() {
@@ -213,6 +235,8 @@ class MealsDetailViewModel @Inject constructor(
             _updatedSteps.removeAt(index)
         }
     }
+
+
 
 
 

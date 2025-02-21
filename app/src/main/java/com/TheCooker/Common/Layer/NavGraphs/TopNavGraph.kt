@@ -121,9 +121,9 @@ fun TopNavGraph(
                 MainTopBarViewSupport(user, googleClient = client, navLogin, loginViewModel, createMealViewModel, detailViewModel, mealsViewModel ,categoryViewModel= categoryViewModel)
             }
             composable(DrawerScreensModel.drawerScreensList[0].route) {
-                val postRecipe = navController.previousBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("PostRecipe")
+                val postRecipe = navController.previousBackStackEntry?.savedStateHandle?.get<UserMealDetailModel?>("PostRecipe")
                 Log.d("PostRecipeOnProfile", postRecipe.toString())
-                navController.previousBackStackEntry?.savedStateHandle?.set("PostRecipe", postRecipe)
+                navController.currentBackStackEntry?.savedStateHandle?.set("PostRecipe", postRecipe)
 
 
                 ProfileView(userData = user, navigator = navController, topBarManager = TopBarsModel)
@@ -141,7 +141,18 @@ fun TopNavGraph(
                 Help(topBar = TopBarsModel)
             }
             composable(route = "CreateMeal?recipeId={recipeId}") { backStackEntry ->
-                val recipeId = backStackEntry.arguments?.getString("recipeId")
+                var recipeId = backStackEntry.arguments?.getString("recipeId")
+                val postUpdate = navController.currentBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("PostRecipe")
+                if (recipeId != null) {
+                    Log.d("CheckRecipeId", recipeId)
+                }
+
+//                if(postUpdate != null){
+//                    recipeId = null
+//                }
+
+
+                Log.d("PostUpdate", postUpdate.toString())
                 CreateMeal(
                     mealDetailViewModel = detailViewModel ,
                     recipeId = recipeId,
@@ -152,6 +163,8 @@ fun TopNavGraph(
                     TopBarsModel = TopBarsModel,
                     mealsViewModel = mealsViewModel,
                     createMealViewModel = createMealViewModel,
+                    postForUpdate = postUpdate
+
                 )
                 }
 
@@ -317,8 +330,9 @@ fun TopNavGraph(
             }
 
             composable(route = "MealDetailView") {
-                val navBackStackEntry = navController.previousBackStackEntry
+                val navBackStackEntry = navController.currentBackStackEntry
                 var detail = navBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("updatedMeal")
+                Log.d("DetailOnNav", detail.toString())
 
 
                 val postDetail = remember {

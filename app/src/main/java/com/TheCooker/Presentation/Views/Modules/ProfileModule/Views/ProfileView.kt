@@ -77,6 +77,7 @@ import kotlinx.coroutines.launch
 fun ProfileView(userData: UserDataModel?,
                 navigator: NavController,
                 topBarManager: TopBarsModel,
+
                 ) {
     var imageUriProfile by remember { mutableStateOf<Uri?>(null) }
     var imageUriBackground by remember { mutableStateOf<Uri?>(null) }
@@ -455,6 +456,14 @@ fun ProfileView(userData: UserDataModel?,
                                 },
                 onUpdateClick = {
                     coroutineScope.launch {
+                        if(!isInternetAvailable(context = context)){
+                            profileViewModel.setDeletePostResult("No internet connection")
+                        }
+                        Log.d("PostUpdate", selectedShare.toString())
+
+                        navigator.currentBackStackEntry?.savedStateHandle?.set<UserMealDetailModel?>("PostRecipe", selectedShare)
+                        navigator.navigate("CreateMeal")
+
                         modalSheetState.hide()
                     }
                 }
