@@ -165,7 +165,7 @@ fun SecondaryTopBarView(
                 }
                 Spacer(modifier = Modifier.weight(1f))
 
-                if (topBar.mealTopBarRoute && topBar.updateBar == false)
+                if (  topBar.mealTopBarRoute && !topBar.updateBar)
                     if (isUserRecipe) {
                         TextButton(
                             onClick = { /* Κώδικας για τη λειτουργία Share */ },
