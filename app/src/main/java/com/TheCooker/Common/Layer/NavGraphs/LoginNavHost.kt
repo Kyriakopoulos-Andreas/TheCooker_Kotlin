@@ -130,7 +130,15 @@ fun LoginNavigator(viewModel: LoginViewModel,
             composable(route = "MenuView") {
                 val user = viewModel.userData.value   // Get the user from googleSignIn using the viewModel and not the backStack
                 //val user = navController2.previousBackStackEntry?.savedStateHandle?.get<UserDataModel>("User")
-                    MainTopBarViewSupport(viewModel.userData.value ?: user, client, navController2, loginViewModel = viewModel, createMealViewModel = createMealViewModel, mealsDetailViewModel = mealsDetailViewModel, mealsViewModel = mealsViewModel, categoryViewModel = categoryViewModel )
+                    MainTopBarViewSupport(viewModel.userData.value ?: user,
+                        client,
+                        navController2,
+                        loginViewModel = viewModel,
+                        createMealViewModel = createMealViewModel,
+                        mealsDetailViewModel = mealsDetailViewModel,
+                        mealsViewModel = mealsViewModel,
+                        categoryViewModel = categoryViewModel,
+                        )
 
             }
 

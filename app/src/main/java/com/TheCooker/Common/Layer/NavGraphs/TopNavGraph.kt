@@ -118,7 +118,7 @@ fun TopNavGraph(
         ) {
 
             composable(route = "MenuView") {
-                MainTopBarViewSupport(user, googleClient = client, navLogin, loginViewModel, createMealViewModel, detailViewModel, mealsViewModel ,categoryViewModel= categoryViewModel)
+                MainTopBarViewSupport(user, googleClient = client, navLogin, loginViewModel, createMealViewModel, detailViewModel, mealsViewModel ,categoryViewModel= categoryViewModel, )
             }
             composable(DrawerScreensModel.drawerScreensList[0].route) {
                 val postRecipe = navController.previousBackStackEntry?.savedStateHandle?.get<UserMealDetailModel?>("PostRecipe")
@@ -160,7 +160,7 @@ fun TopNavGraph(
                     saveNavigateBack = navController::popBackStack,
                     navController = navController,
                     combineMeals = combinedMeals,
-                    TopBarsModel = TopBarsModel,
+                    topBarsModel = TopBarsModel,
                     mealsViewModel = mealsViewModel,
                     createMealViewModel = createMealViewModel,
                     postForUpdate = postUpdate

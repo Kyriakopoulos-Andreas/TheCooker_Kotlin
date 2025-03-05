@@ -1,8 +1,13 @@
 package com.TheCooker.Presentation.Views.Modules.TopBarViews
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Scaffold
@@ -15,6 +20,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -26,13 +34,18 @@ import com.TheCooker.Presentation.Views.Modules.LoginModule.ViewModels.LoginView
 import com.TheCooker.Common.Layer.NavGraphs.TopNavGraph
 import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Domain.Layer.Models.ScreenModels.TopBarsModel
+import com.TheCooker.Domain.Layer.UseCase.Location.Permissions.LocationUtils
+import com.TheCooker.Domain.Layer.UseCase.Location.LocationViewModel
+
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CreateMealViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.Views.BottomSheetMealDetailMenu
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsDetailViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CategoryViewModel
 import com.example.cooker.ListView.DrawerContent
+
 import kotlinx.coroutines.launch
+
 
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -48,25 +61,11 @@ fun MainTopBarViewSupport(
     mealsDetailViewModel: MealsDetailViewModel,
     mealsViewModel: MealsViewModel,
     categoryViewModel: CategoryViewModel,
-
     ) {
 
-    val meal by mealsDetailViewModel.mealsDetailState.observeAsState()
-
-    val topBar by remember {
-        mutableStateOf(
-            TopBarsModel(
-                menuTopBarRoute = true,
-                mealTopBarRoute = false,
-                drawerMenuRoute = false,
-                updateBar = false,
-                postBarRoute = false
-            )
-        )
-    }
-
-
+    val locationViewModel: LocationViewModel = hiltViewModel()
     val viewModel: DrawerViewModel = viewModel()
+    val meal by mealsDetailViewModel.mealsDetailState.observeAsState()
     val currentScreen = remember {
         viewModel.currentScreen.value
     }
@@ -77,21 +76,68 @@ fun MainTopBarViewSupport(
     }
     val previousRoute = remember { mutableStateOf<String?>(null) }
 
-
     val dialogOpenLogOut = remember {
         mutableStateOf(false)
     }
-
     val dialogOpenDeleteRecipe = remember {
         mutableStateOf(false)
     }
-
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { permission ->
+            if (permission) {
+                Toast.makeText(context,
+                    "Permission Accepted", Toast.LENGTH_LONG)
+                    .show()
+            } else {
+                val rationaleRequired = ActivityCompat.shouldShowRequestPermissionRationale(
+                    context as Activity,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+                if(rationaleRequired){
+                    Toast.makeText(context,
+                        "Location permission is required for better user experience", Toast.LENGTH_LONG)
+                        .show()
+                }
+            }
+
+        }
+    )
+
+
+    LaunchedEffect(Unit) {
+        if (!LocationUtils.hasLocationPermission(context)) {
+            requestPermissionLauncher.launch(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+        }else {
+            locationViewModel.requestLocation(context)
+        }
+    }
+
+
+
+    val topBar by remember {
+        mutableStateOf(
+            TopBarsModel(
+                menuTopBarRoute = true,
+                mealTopBarRoute = false,
+                drawerMenuRoute = false,
+                updateBar = false,
+                postBarRoute = false,
+                updatePostRoute = false
+            )
+        )
+    }
+
+
+
 
 
     val closeDrawer: () -> Unit = {
@@ -124,10 +170,6 @@ fun MainTopBarViewSupport(
         Log.d("DetailExistsUser", userMealDetailExists.value.toString())
         Log.d("DetailExistsApi", apiMealDetailExists.value.toString())
     }
-
-
-
-
 
 
 
@@ -168,10 +210,7 @@ fun MainTopBarViewSupport(
                             mealsViewModel = mealsViewModel
                         )
                     } else if (topBar.mealTopBarRoute) {
-                        Log.d("111", userMealDetailExists.value.toString())
-                        Log.d("TopBarStatusMain1", "mealTopBarRoute: ${topBar.mealTopBarRoute}, updateBar: ${topBar.updateBar}")
                         if (userMealDetailExists.value) {
-                            Log.d("TopBarStatusMain", "mealTopBarRoute: ${topBar.mealTopBarRoute}, updateBar: ${topBar.updateBar}")
                             title.value = ""
                             SecondaryTopBarView(
                                 title = title.value,
@@ -201,6 +240,19 @@ fun MainTopBarViewSupport(
                             )
                         }
                     } else if(topBar.postBarRoute){
+                        SecondaryTopBarView(
+                            title = "",
+                            topBar = topBar,
+                            navController,
+                            scaffoldState,
+                            scope,
+                            previousRoute,
+                            isUserRecipe = true,
+                            openBottomSheetMealDetailMenu = showModalSheet,
+                            mealDetail = mealsDetailViewModel,
+                            mealsViewModel = mealsViewModel
+                        )
+                    }else if(topBar.updatePostRoute){
                         SecondaryTopBarView(
                             title = "",
                             topBar = topBar,

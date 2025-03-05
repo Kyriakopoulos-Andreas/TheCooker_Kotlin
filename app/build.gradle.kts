@@ -64,9 +64,7 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
-
     implementation ("com.google.firebase:firebase-storage-ktx")
-
     implementation("com.google.dagger:hilt-android:2.52")
     implementation("androidx.work:work-runtime-ktx:2.9.1")
     implementation("androidx.hilt:hilt-common:1.2.0")
@@ -76,30 +74,22 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.2.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
     kapt("androidx.hilt:hilt-compiler:1.0.0-alpha01")
-    kapt("com.google.dagger:hilt-compiler:2.52") // Ενημέρωσε την έκδοση
-        //implementation("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
-
+    kapt("com.google.dagger:hilt-compiler:2.52")
+    //implementation("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-
     implementation ("com.squareup.inject:assisted-inject-annotations-dagger2:0.5.2")
     kapt ("com.squareup.inject:assisted-inject-processor-dagger2:0.5.2")
-
     implementation("androidx.core:core-splashscreen:1.0.1")
-
-
-
-
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.firebaseui:firebase-ui-auth:8.0.2")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
-
     implementation ("androidx.compose.runtime:runtime-livedata:1.6.8")
     implementation ("androidx.activity:activity-ktx:1.9.1")
-
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
     implementation("androidx.core:core-ktx:1.13.1")
@@ -122,4 +112,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("androidx.test.espresso:espresso-core:3.6.1")
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
 }
