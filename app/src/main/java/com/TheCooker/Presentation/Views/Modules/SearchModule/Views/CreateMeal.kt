@@ -88,16 +88,18 @@ fun CreateMeal(
     navController: NavController,
     mealsViewModel: MealsViewModel,
     combineMeals: MutableList<MealItem>,
-    TopBarsModel: TopBarsModel,
+    topBarsModel: TopBarsModel,
     postForUpdate: UserMealDetailModel?
 ) {
 
     LaunchedEffect(Unit) {
         createMealViewModel.resetStates()
         mealDetailViewModel.setUpdateSaveButtonEnabled()
+        mealDetailViewModel.resetUpdateStates()
+
 
         if(postForUpdate != null){
-
+            topBarsModel.updatePostRoute = true
             mealDetailViewModel.updatePostState(true)
         }
         Log.d("testPostUpdate", postForUpdate.toString())
@@ -164,7 +166,14 @@ fun CreateMeal(
     val ingredientsUpdate by remember { mutableStateOf(mealDetailViewModel.updatedIngredients) }
     val stepsUpdate by remember { mutableStateOf(mealDetailViewModel.updatedSteps) }
 
-
+    LaunchedEffect(key1 = updatePostState) {
+        if (updatePostState)  {
+            if (postForUpdate != null) {
+                Log.d("TestPostLaunch" , "Test")
+                mealDetailViewModel.setDetailsForPost(postForUpdate)
+            }
+        }
+    }
 
 
 
@@ -206,14 +215,7 @@ fun CreateMeal(
 
     }
 
-    LaunchedEffect(key1 = updatePostState) {
-        if (updatePostState)  {
-            if (postForUpdate != null) {
-                Log.d("TestPostLaunch" , "Test")
-                mealDetailViewModel.setDetailsForPost(postForUpdate)
-            }
-        }
-    }
+
 
     var finalImageUrl = imageUri ?: imageUrl
 //    if (postForUpdate != null) {
@@ -695,7 +697,7 @@ fun CreateMeal(
                                         mealName = imageTitleUpdate,
                                         steps = stepsUpdate,
                                         categoryId = categoryId,
-                                        topBarsModel = TopBarsModel,
+                                        topBarsModel = topBarsModel,
                                     )
                                 }else{
                                     mealDetailViewModel.setUpdateSaveButtonEnabled()
@@ -721,12 +723,15 @@ fun CreateMeal(
                                         mealName = mealName,
                                         steps = steps,
                                         categoryId = categoryId,
-                                        topBarsModel = TopBarsModel,
+                                        topBarsModel = topBarsModel,
                                     )
                                 }else{
                                     createMealViewModel.setSaveButtonEnabled()
                                 }
+                                mealDetailViewModel.updatePostState(false)
+                                mealDetailViewModel.resetUpdateStates()
                             }
+
                         }
                     },
                     modifier = Modifier.width(150.dp),
@@ -778,7 +783,7 @@ fun CreateMeal(
                                         mealName = mealName,
                                         steps = steps,
                                         categoryId = categoryId,
-                                        topBarsModel = TopBarsModel,
+                                        topBarsModel = topBarsModel,
                                     )
 
                                 }else{

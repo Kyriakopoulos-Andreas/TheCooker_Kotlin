@@ -359,4 +359,19 @@ class MealsDetailViewModel @Inject constructor(
     fun resetState() {
         _mealsDetailState.value = MealsDetailState(loading = false, list = emptyList(), error = null)
     }
+
+    fun resetUpdateStates(){
+        updatedMealNameError.value = ""
+        _updatedIngredientsError.value = ""
+        _updatedMealName.value = ""
+        _updatedStepsError.value = ""
+        _updatedStateOfCompletion.value = false
+        _updatedSteps.clear()
+        _updatedSteps.add(0, "")
+        _updatedSteps.add(1, "")
+        _updatedIngredients.clear()
+        _updatedIngredients.add(0, "")
+        _updatedIngredients.add(1, "")
+        _updateButtonDisabled.value = true
+    }
 }

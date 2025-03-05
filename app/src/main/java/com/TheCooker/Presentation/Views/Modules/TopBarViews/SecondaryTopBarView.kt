@@ -119,6 +119,18 @@ fun SecondaryTopBarView(
 
                         }
 
+                        if(topBar.updatePostRoute){
+                            topBar.updatePostRoute = false
+                            topBar.updateBar = false
+                            topBar.menuTopBarRoute = false
+                            topBar.postBarRoute = true
+                            topBar.mealTopBarRoute = false
+                            topBar.drawerMenuRoute = false
+
+
+                            Log.d("ExtraTopBar3", "mealTopBarRoute: ${topBar.mealTopBarRoute}, updateBar: ${topBar.updateBar}")
+                        }
+
 
 
 

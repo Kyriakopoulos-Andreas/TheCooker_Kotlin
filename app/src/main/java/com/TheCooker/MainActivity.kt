@@ -46,11 +46,9 @@ private val viewModel: SplashScreenViewModel by viewModels()
 
 
 
-
-        // Κάνω sync σε μια προκαθορισμένη ημερομηνία
         scheduleMonthlySync(this)
         setContent {
-            // Ορίζουμε το ViewModelStore για τη διαχείριση των ViewModels
+
             TheCookerTheme {
                 val categoryViewModel = hiltViewModel<CategoryViewModel>()
                 val mealsDetailViewModel = hiltViewModel<MealsDetailViewModel>()
