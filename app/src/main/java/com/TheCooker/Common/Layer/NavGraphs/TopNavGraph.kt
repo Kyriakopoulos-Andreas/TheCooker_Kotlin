@@ -41,7 +41,7 @@ import com.TheCooker.Presentation.Views.Modules.DrawerModule.Views.Information
 import com.TheCooker.Presentation.Views.Modules.ProfileModule.Views.ProfileView
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealDetailModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealModel
-import com.TheCooker.Presentation.Views.Modules.FriendRequestView
+import com.TheCooker.Presentation.Views.Modules.FriendReuestsView.FriendRequestView
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CreateMealViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.Views.CreateMeal
 import com.TheCooker.Presentation.Views.Modules.SearchModule.Views.MealDetailView

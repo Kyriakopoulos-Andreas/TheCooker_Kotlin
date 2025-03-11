@@ -3,7 +3,10 @@ package com.TheCooker.Presentation.Views.Modules.TopBarViews
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.location.LocationManager
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -50,7 +53,9 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "CoroutineCreationDuringComposition")
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "CoroutineCreationDuringComposition",
+    "StateFlowValueCalledInComposition"
+)
 @Composable
 fun MainTopBarViewSupport(
     userData: UserDataModel?,
@@ -91,35 +96,74 @@ fun MainTopBarViewSupport(
     val context = LocalContext.current
 
     val requestPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { permission ->
-            if (permission) {
-                Toast.makeText(context,
-                    "Permission Accepted", Toast.LENGTH_LONG)
-                    .show()
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { permissions ->
+            val coarseGranted = permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+            val fineGranted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+
+            if (coarseGranted || fineGranted) {
+                Toast.makeText(context, "Permission Accepted", Toast.LENGTH_LONG).show()
+
+                // Request location updates
+                scope.launch {
+                    locationViewModel.requestLocation(context)
+
+                    // After getting the location permission, check if GPS is enabled
+                    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                    val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+
+                    if (!isGpsEnabled) {
+                        // If GPS is disabled, open the location settings
+                        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                        context.startActivity(intent)
+                    }
+                }
             } else {
+                // Show rationale message if permission is denied
                 val rationaleRequired = ActivityCompat.shouldShowRequestPermissionRationale(
                     context as Activity,
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
                 )
-                if(rationaleRequired){
-                    Toast.makeText(context,
-                        "Location permission is required for better user experience", Toast.LENGTH_LONG)
-                        .show()
+                if (rationaleRequired) {
+                    Toast.makeText(
+                        context,
+                        "Location permission is required for better user experience",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
-
         }
     )
 
 
+
     LaunchedEffect(Unit) {
         if (!LocationUtils.hasLocationPermission(context)) {
-            requestPermissionLauncher.launch(android.Manifest.permission.ACCESS_COARSE_LOCATION)
-        }else {
+            requestPermissionLauncher.launch(
+                arrayOf(
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            )
+        } else {
             locationViewModel.requestLocation(context)
+            Log.d("UserLocation", locationViewModel.location.value.toString())
         }
     }
+
+    LaunchedEffect(locationViewModel.location.value) {
+        val location = locationViewModel.location.value
+
+        if (location != null) {
+            // Ενημερώσαμε την τοποθεσία, τώρα μπορείς να το δείξεις στο Toast
+            Toast.makeText(context, "Fixed address: $location", Toast.LENGTH_LONG).show()
+            Log.d("UserLocation1", "Fixed address: $location")
+        } else {
+            // Η τοποθεσία δεν έχει ενημερωθεί ακόμα, μπορείς να δείξεις κάτι άλλο αν θες
+            Log.d("UserLocation", "Location is still null")
+        }
+    }
+
 
 
 

@@ -7,6 +7,7 @@ import com.TheCooker.Common.Layer.Resources.LoginResults
 import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
 import com.TheCooker.DI.Module.UserDataProvider
 import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
+import com.TheCooker.Domain.Layer.UseCase.Location.LocationData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -57,6 +58,18 @@ class UserRepo@Inject constructor(
             CreatePasswordResource.Error(e)
         }
     }
+
+    suspend fun updateUserLocation(location: LocationData, user: UserDataModel) {
+        try {
+            val userRef = firestore.collection("users").document(user.email.toString())
+            userRef.update("countryFromWhichUserConnected", location.country)
+            userRef.update("cityFromWhichUserConnected", location.city)
+            userRef.update("connectedAddress", location.address)
+        }catch (e: Exception){
+            Log.d("UserRepo", "Error updating user location: ${e.message}")
+        }
+    }
+
 
     suspend fun saveUserToFirestore(user: UserDataModel) {
         firestore.collection("users").document(user.email.toString()).set(user).await()

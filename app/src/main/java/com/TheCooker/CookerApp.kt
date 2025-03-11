@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.work.Configuration
 import com.TheCooker.Domain.Layer.UseCase.SyncMealsFromApiToFirebaseWork.SyncMealsWorkerFactory
+
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -29,6 +30,7 @@ class CookerApp : Application(), Configuration.Provider {
     @SuppressLint("HardwareIds")
     override fun onCreate() {
         super.onCreate()
+
         HARD_CODED_ADMIN_ID = getString(R.string.Pixel6DeviceID)
 
 

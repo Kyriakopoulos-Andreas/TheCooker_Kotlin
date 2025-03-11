@@ -1,4 +1,4 @@
-package com.TheCooker.Domain.Layer.Models.LoginModels
+package com.TheCooker.Common.Layer.Resources
 
 data class SignInState(
     val isSignInSuccessful: Boolean = false,

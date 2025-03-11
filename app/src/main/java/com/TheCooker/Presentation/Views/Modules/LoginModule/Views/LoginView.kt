@@ -44,7 +44,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.TheCooker.Presentation.Views.Modules.LoginModule.ViewModels.LoginViewModel
 import com.TheCooker.Common.Layer.Resources.LoginResults
-import com.TheCooker.Domain.Layer.Models.LoginModels.SignInState
+import com.TheCooker.Common.Layer.Resources.SignInState
 import com.TheCooker.R
 
 @SuppressLint("CoroutineCreationDuringComposition", "SuspiciousIndentation")

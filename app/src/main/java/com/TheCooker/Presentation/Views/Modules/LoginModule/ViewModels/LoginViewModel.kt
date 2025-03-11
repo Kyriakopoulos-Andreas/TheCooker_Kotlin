@@ -8,7 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
-import com.TheCooker.Domain.Layer.Models.LoginModels.SignInState
+import com.TheCooker.Common.Layer.Resources.SignInState
 
 import com.TheCooker.dataLayer.Repositories.UserRepo
 import com.TheCooker.Common.Layer.Resources.CreatePasswordResource
