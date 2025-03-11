@@ -11,10 +11,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.TheCooker.Domain.Layer.UseCase.GoogleIntents.GoogleClient
 import com.TheCooker.Common.Layer.NavGraphs.LoginNavigator
@@ -43,9 +46,6 @@ private val viewModel: SplashScreenViewModel by viewModels()
         super.onCreate(savedInstanceState)
         installSplashScreen().setKeepOnScreenCondition { false }
 
-
-
-
         scheduleMonthlySync(this)
         setContent {
 
@@ -57,7 +57,7 @@ private val viewModel: SplashScreenViewModel by viewModels()
                 val createMealViewModel = hiltViewModel<CreateMealViewModel>()
 
                 Surface(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().systemBarsPadding(),
                         color = MaterialTheme.colorScheme.background
                     ) {
 

@@ -15,4 +15,7 @@ data class UserDataModel(
     var specialties: String? = "",
     var chefLevel: String? = "",
     var goldenChefHats: Int? = 0,
+    var countryFromWhichUserConnected: String? = null,
+    var cityFromWhichUserConnected: String? = null,
+    var connectedAddress: String? = null,
 ) : Serializable

@@ -39,7 +39,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+        encoding = "UTF-8"
     }
+
     kotlinOptions {
         jvmTarget = "1.8"
     }
@@ -113,4 +115,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("androidx.test.espresso:espresso-core:3.6.1")
     implementation("com.google.android.gms:play-services-auth:21.3.0")
+    implementation("com.google.android.gms:play-services-maps:19.1.0")
+    implementation ("org.apache.commons:commons-text:1.10.0")
 }
