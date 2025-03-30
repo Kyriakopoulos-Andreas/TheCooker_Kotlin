@@ -114,13 +114,34 @@ class GoogleClient@Inject constructor(
 
     suspend fun signOut() {
         try {
+            val currentUser = Firebase.auth.currentUser
+
+            // **Έλεγχος αν ο χρήστης είναι ήδη συνδεδεμένος**
+            if (currentUser != null) {
+                Log.d("Auth", "User is currently logged in as: ${currentUser.email}")
+            } else {
+                Log.e("Auth", "No user is currently logged in!")
+                return // Αν δεν υπάρχει χρήστης, δεν χρειάζεται sign out
+            }
+
+            // Αν ο χρήστης έχει συνδεθεί με Google Sign-In, κάνε sign out από το Google
             client.signOut().await()
-            auth.signOut()
+
+            // Αποσύνδεση από το Firebase Authentication
+            Firebase.auth.signOut()
+
+            // **Έλεγχος αν έγινε sign out**
+            if (Firebase.auth.currentUser == null) {
+                Log.d("Auth", "User signed out successfully")
+            } else {
+                Log.e("Auth", "Sign out failed! User is still logged in.")
+            }
         } catch (e: Exception) {
-            e.printStackTrace()
-            if (e is CancellationException) throw e
+            Log.e("Auth", "Error during sign out: ${e.message}", e)
+            if (e is CancellationException) throw e // Διατήρηση coroutine cancellation
         }
     }
+
 
 //    fun getSignedInUser(): UserDataModel? = auth.currentUser?.run {
 //        UserDataModel(

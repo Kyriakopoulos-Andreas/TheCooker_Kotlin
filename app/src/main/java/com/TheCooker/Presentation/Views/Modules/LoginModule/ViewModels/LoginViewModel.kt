@@ -1,5 +1,8 @@
 package com.TheCooker.Presentation.Views.Modules.LoginModule.ViewModels
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -7,6 +10,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 
 import com.TheCooker.Common.Layer.Resources.SignInState
 
@@ -15,7 +19,11 @@ import com.TheCooker.Common.Layer.Resources.CreatePasswordResource
 import com.TheCooker.Common.Layer.Resources.LoginResults
 import com.TheCooker.DI.Module.UserDataProvider
 import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
+import com.TheCooker.Domain.Layer.UseCase.GoogleIntents.GoogleClient
+import com.TheCooker.R
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,8 +36,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-  private val _userRepo: UserRepo,
-    private val _userDataProvider: UserDataProvider
+    private val _userRepo: UserRepo,
+    private val _userDataProvider: UserDataProvider,
+    private val firebaseAuth: FirebaseAuth,
+    @ApplicationContext private val context: Context,
+    private val googleClient: GoogleClient
 ) : ViewModel() {
 
 
@@ -197,6 +208,27 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+    fun logout(navController: NavController) {
+        viewModelScope.launch {
+            try {
+                googleClient.signOut()
+                firebaseAuth.signOut()
+
+                if (firebaseAuth.currentUser == null) {
+                    Log.d("Auth", "User signed out successfully")
+                    _authLoginResult.value = LoginResults.Success(false)
+                    _userDataProvider.userData = null
+                    navController.navigate("LoginView") // Μετακίνηση ΜΕΤΑ το sign-out
+                } else {
+                    Log.e("Auth", "Sign out failed! User is still logged in.")
+                }
+            } catch (e: Exception) {
+                Log.e("Auth", "Error during sign out: ${e.message}", e)
+            }
+        }
+    }
+
+
 
     suspend fun validateEmail(): Boolean {
         val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
@@ -321,21 +353,33 @@ class LoginViewModel @Inject constructor(
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
+
             _authLoginResult.value = _userRepo.login(email, password)
             println("Login result: ${_userRepo.login(email, password)}")
             if (_authLoginResult.value is LoginResults.Success) {
                 val currentUser = _userRepo.auth.currentUser
-                println("Current userooooooooooo: $currentUser")
                 if (currentUser != null) {
                     val userDetails = _userRepo.getUserDetails(currentUser.email ?: "")
                     if (userDetails is LoginResults.Success<*>) {
                         _userData.value = userDetails.data as UserDataModel?
-                        println("!!!!!!eeee!!!!!!!!!!!!!!!!!! ${_userData.value}")
+                        _userDataProvider.userData = _userData.value
+                        if(userDetails.data?.profilePictureUrl?.isBlank() == true){
+
+                            viewModelScope.launch {
+                                val defaultUri = Uri.parse("android.resource://${context.packageName}/${R.drawable.tt}")
+                                Log.d("LoginViewModel Uri", defaultUri.toString())
+                                Log.d("LoginViewModel", "Setting default profile picture")
+                                _userDataProvider.userData?.profilePictureUrl = _userRepo.uploadImageAndGetUrl(defaultUri, "profile")
+                                _userRepo.uploadProfilePicture(_userDataProvider.userData?.profilePictureUrl.toString())
+                            }
+                        }
                     }
                 }
             }
         }
     }
+
+
 
     fun onSignInResult(result: LoginResults<UserDataModel>) {
         _state.update {
@@ -367,9 +411,7 @@ class LoginViewModel @Inject constructor(
     fun resetState() {
         _state.update { SignInState() }
     }
-    fun logout() {
-        _authLoginResult.value = LoginResults.Success(false)
-    }
+
 
 }
 

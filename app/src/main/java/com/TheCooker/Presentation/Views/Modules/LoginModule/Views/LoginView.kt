@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +47,7 @@ import com.TheCooker.Presentation.Views.Modules.LoginModule.ViewModels.LoginView
 import com.TheCooker.Common.Layer.Resources.LoginResults
 import com.TheCooker.Common.Layer.Resources.SignInState
 import com.TheCooker.R
+import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition", "SuspiciousIndentation")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,6 +61,7 @@ fun LoginView(viewModel: LoginViewModel,
     val password by viewModel.password
     var passwordVisible by remember { mutableStateOf(false) }
     val popUpCreatePassword = viewModel.isDialogVisible
+    val scope = rememberCoroutineScope()
 
 
 
@@ -191,7 +194,7 @@ fun LoginView(viewModel: LoginViewModel,
 
             Row {
                 Button(
-                    onClick = {viewModel.login(userName, password)
+                    onClick = {scope.launch{viewModel.login(userName, password)}
 
                               },
                     colors = ButtonDefaults.buttonColors(

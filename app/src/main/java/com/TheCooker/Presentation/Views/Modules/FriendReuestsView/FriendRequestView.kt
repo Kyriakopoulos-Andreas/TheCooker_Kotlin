@@ -243,8 +243,7 @@ fun PendingRequest(pendingRequest: UserDataModel, scope: CoroutineScope, viewMod
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    // Αν δεν έχει σταλεί το αίτημα, εμφανίζουμε το κουμπί "Add Friend"
-                  //  if (!friendRequestSent) {
+
                         Button(
                             onClick = {
                                 if (!isInternetAvailable(context)) {
@@ -256,7 +255,7 @@ fun PendingRequest(pendingRequest: UserDataModel, scope: CoroutineScope, viewMod
                                     return@Button
                                 }
                                 scope.launch {
-                                    viewModel.sendFriendRequest(pendingRequest)
+                                    viewModel.acceptFriendRequest(pendingRequest)
                                 }
                             },
                             shape = RoundedCornerShape(8.dp),
@@ -277,10 +276,21 @@ fun PendingRequest(pendingRequest: UserDataModel, scope: CoroutineScope, viewMod
                             )
                         }
 
-                        // Κουμπί "Remove" αν το αίτημα έχει σταλεί
+
                         Button(
                             onClick = {
-                                viewModel.removeSuggestion(pendingRequest.email.toString())
+                                if (!isInternetAvailable(context)) {
+                                    Toast.makeText(
+                                        context,
+                                        "No internet connection. Please check your network settings.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@Button
+                                }
+                                scope.launch {
+                                    viewModel.rejectFriendRequest(pendingRequest)
+                                }
+
                             },
                             shape = RoundedCornerShape(8.dp),
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(

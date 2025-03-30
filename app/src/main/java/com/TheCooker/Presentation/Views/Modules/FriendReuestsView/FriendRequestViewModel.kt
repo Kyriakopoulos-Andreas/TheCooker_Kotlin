@@ -41,31 +41,29 @@ class FriendRequestViewModel @Inject constructor(
             Log.d("Error", "Failed to remove suggestion: ${currentData}")
         }
     }
-
-    fun fetchFriendSuggestions() {
+    suspend fun rejectFriendRequest(receiver: UserDataModel) {
         viewModelScope.launch {
             try {
-                val result = userRepository.fetchFriendSuggests(userDataProvider)
-                _friendSuggestions.value = uploadDownloadResource.Success(result)
+                val result = userDataProvider.userData.let {
+                    userRepository.declineFriendRequest(
+                        receiver,
+                        it!!
+                    )
+                }
+                if(result){
+                    val currentFriendRequests = _friendRequests.value
+                    if (currentFriendRequests is uploadDownloadResource.Success) {
+                        val updatedList = currentFriendRequests.data.filterNot { it.email == receiver.email }
+                        _friendRequests.value = uploadDownloadResource.Success(updatedList)
+                    }
+                }
+                Log.d("FriendRequestViewModel", "Friend request rejected successfully: $result")
             } catch (e: Exception) {
-                _friendSuggestions.value = uploadDownloadResource.Error(e)
-                Log.d("FriendRequestViewModel", "Error fetching friend suggestions on ViewModel: ${e.message}")
+                Log.d("FriendRequestViewModel", "Error rejecting friend request on ViewModel: ${e.message}")
+
             }
         }
     }
-
-    fun fetchFriendRequests(){
-        viewModelScope.launch {
-            try {
-                val result = userRepository.fetchFriendRequests(userDataProvider)
-                _friendRequests.value = uploadDownloadResource.Success(result)
-            }catch(e: Exception){
-                _friendRequests.value = uploadDownloadResource.Error(e)
-                Log.d("FriendRequestViewModel", "Error fetching friend requests on ViewModel: ${e.message}")
-            }
-        }
-    }
-
 
     suspend fun removeFriendRequest(receiver: UserDataModel) {
         val updatedMap = _friendRequestSentState.value.toMutableMap()
@@ -80,12 +78,62 @@ class FriendRequestViewModel @Inject constructor(
                 _friendRequestSentState.emit(updatedMap)
             }catch (e: Exception){
                 updatedMap[receiver.email.toString()]
-               Log.d("FriendRequestViewModel", "Error removing friend request on ViewModel: ${e.message}")
+                Log.d("FriendRequestViewModel", "Error removing friend request on ViewModel: ${e.message}")
             }
 
         }
 
     }
+
+    fun fetchFriendSuggestions() {
+        viewModelScope.launch {
+            try {
+                val result = userRepository.fetchFriendSuggests(userDataProvider)
+                _friendSuggestions.value = uploadDownloadResource.Success(result)
+            } catch (e: Exception) {
+                _friendSuggestions.value = uploadDownloadResource.Error(e)
+                Log.d("FriendRequestViewModel", "Error fetching friend suggestions on ViewModel: ${e.message}")
+            }
+        }
+    }
+
+    fun acceptFriendRequest(receiver: UserDataModel) {
+        viewModelScope.launch {
+            try{
+                val result = userDataProvider.userData.let { userRepository.acceptFriendRequest(it!!, receiver) }
+                if(result){
+                    val currentFriendRequests = _friendRequests.value
+                    if (currentFriendRequests is uploadDownloadResource.Success) {
+                        val updatedList = currentFriendRequests.data.filterNot { it.email == receiver.email }
+                        _friendRequests.value = uploadDownloadResource.Success(updatedList)
+                    }
+
+                }
+
+            }catch(e: Exception){
+                Log.d("FriendRequestViewModel", "Error accepting friend request on ViewModel: ${e.message}")
+            }
+
+        }
+
+
+    }
+
+
+    fun fetchFriendRequests(){
+        viewModelScope.launch {
+            try {
+                val result = userRepository.fetchFriendRequests(userDataProvider)
+                _friendRequests.value = uploadDownloadResource.Success(result)
+            }catch(e: Exception){
+                _friendRequests.value = uploadDownloadResource.Error(e)
+                Log.d("FriendRequestViewModel", "Error fetching friend requests on ViewModel: ${e.message}")
+            }
+        }
+    }
+
+
+
 
     suspend fun sendFriendRequest(receiver: UserDataModel) {
         viewModelScope.launch {
