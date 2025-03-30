@@ -16,7 +16,6 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
-import okhttp3.internal.wait
 import javax.inject.Inject
 
 class UserRepo@Inject constructor(
@@ -66,7 +65,8 @@ class UserRepo@Inject constructor(
     suspend fun fetchFriendRequests(user: UserDataProvider): List<UserDataModel> {
         try {
             // Βήμα 1: Ανάκτηση του πίνακα των αιτημάτων από το PendingFriendRequests
-            val userRef = firestore.collection("PendingFriendRequests").document(user.userData?.email.toString())
+            val userRef = firestore.collection("PendingFriendRequests")
+                .document(user.userData?.email.toString())
             val userDoc = userRef.get().await()
 
             // Λήψη του πεδίου "requests" που περιέχει τα emails των χρηστών
@@ -100,75 +100,142 @@ class UserRepo@Inject constructor(
     }
 
 
-   fun updateUserLocation(location: LocationData, user: UserDataModel) {
-       val europeanCountries = mapOf(
-           "Shqipëria" to "Albania",
-           "Andorra" to "Andorra",
-           "Հայաստան" to "Armenia",
-           "Österreich" to "Austria",
-           "Azərbaycan" to "Azerbaijan",
-           "Беларусь" to "Belarus",
-           "België / Belgique / Belgien" to "Belgium",
-           "Bosna i Hercegovina" to "Bosnia and Herzegovina",
-           "България" to "Bulgaria",
-           "Hrvatska" to "Croatia",
-           "Κύπρος" to "Cyprus",
-           "Kıbrıs" to "Cyprus",
-           "Česká republika" to "Czech Republic",
-           "Danmark" to "Denmark",
-           "Eesti" to "Estonia",
-           "Suomi" to "Finland",
-           "France" to "France",
-           "საქართველო" to "Georgia",
-           "Deutschland" to "Germany",
-           "Ελλάδα" to "Greece",
-           "Greece" to "Greece",
-           "Magyarország" to "Hungary",
-           "Ísland" to "Iceland",
-           "Éire" to "Ireland",
-           "Ireland" to "Ireland",
-           "Italia" to "Italy",
-           "Қазақстан" to "Kazakhstan",
-           "Latvija" to "Latvia",
-           "Liechtenstein" to "Liechtenstein",
-           "Lietuva" to "Lithuania",
-           "Lëtzebuerg" to "Luxembourg",
-           "Malta" to "Malta",
-           "Moldova" to "Moldova",
-           "Monaco" to "Monaco",
-           "Crna Gora" to "Montenegro",
-           "Nederland" to "Netherlands",
-           "Северна Македонија" to "North Macedonia",
-           "Norge" to "Norway",
-           "Polska" to "Poland",
-           "Portugal" to "Portugal",
-           "România" to "Romania",
-           "Россия" to "Russia",
-           "San Marino" to "San Marino",
-           "Србија" to "Serbia",
-           "Slovensko" to "Slovakia",
-           "Slovenija" to "Slovenia",
-           "España" to "Spain",
-           "Sverige" to "Sweden",
-           "Schweiz" to "Switzerland",
-           "Suisse" to "Switzerland",
-           "Svizzera" to "Switzerland",
-           "Svizra" to "Switzerland",
-           "Türkiye" to "Turkey",
-           "Україна" to "Ukraine",
-           "United Kingdom" to "United Kingdom",
-           "UK" to "United Kingdom",
-           "Vaticano" to "Vatican City"
-       )
-       try {
-           val userRef = firestore.collection("users").document(user.email.toString())
-           val standardizedCountry = europeanCountries[location.country] ?: location.country
-           userRef.update("countryFromWhichUserConnected", standardizedCountry)
-           userRef.update("cityFromWhichUserConnected", location.city)
-           userRef.update("connectedAddress", location.address)
-       } catch (e: Exception) {
-           Log.d("UserRepo", "Error updating user location: ${e.message}")
-       }
+    fun updateUserLocation(location: LocationData, user: UserDataModel) {
+        val europeanCountries = mapOf(
+            "Shqipëria" to "Albania",
+            "Andorra" to "Andorra",
+            "Հայաստան" to "Armenia",
+            "Österreich" to "Austria",
+            "Azərbaycan" to "Azerbaijan",
+            "Беларусь" to "Belarus",
+            "België / Belgique / Belgien" to "Belgium",
+            "Bosna i Hercegovina" to "Bosnia and Herzegovina",
+            "България" to "Bulgaria",
+            "Hrvatska" to "Croatia",
+            "Κύπρος" to "Cyprus",
+            "Kıbrıs" to "Cyprus",
+            "Česká republika" to "Czech Republic",
+            "Danmark" to "Denmark",
+            "Eesti" to "Estonia",
+            "Suomi" to "Finland",
+            "France" to "France",
+            "საქართველო" to "Georgia",
+            "Deutschland" to "Germany",
+            "Ελλάδα" to "Greece",
+            "Greece" to "Greece",
+            "Magyarország" to "Hungary",
+            "Ísland" to "Iceland",
+            "Éire" to "Ireland",
+            "Ireland" to "Ireland",
+            "Italia" to "Italy",
+            "Қазақстан" to "Kazakhstan",
+            "Latvija" to "Latvia",
+            "Liechtenstein" to "Liechtenstein",
+            "Lietuva" to "Lithuania",
+            "Lëtzebuerg" to "Luxembourg",
+            "Malta" to "Malta",
+            "Moldova" to "Moldova",
+            "Monaco" to "Monaco",
+            "Crna Gora" to "Montenegro",
+            "Nederland" to "Netherlands",
+            "Северна Македонија" to "North Macedonia",
+            "Norge" to "Norway",
+            "Polska" to "Poland",
+            "Portugal" to "Portugal",
+            "România" to "Romania",
+            "Россия" to "Russia",
+            "San Marino" to "San Marino",
+            "Србија" to "Serbia",
+            "Slovensko" to "Slovakia",
+            "Slovenija" to "Slovenia",
+            "España" to "Spain",
+            "Sverige" to "Sweden",
+            "Schweiz" to "Switzerland",
+            "Suisse" to "Switzerland",
+            "Svizzera" to "Switzerland",
+            "Svizra" to "Switzerland",
+            "Türkiye" to "Turkey",
+            "Україна" to "Ukraine",
+            "United Kingdom" to "United Kingdom",
+            "UK" to "United Kingdom",
+            "Vaticano" to "Vatican City"
+        )
+        try {
+            val userRef = firestore.collection("users").document(user.email.toString())
+            val standardizedCountry = europeanCountries[location.country] ?: location.country
+            userRef.update("countryFromWhichUserConnected", standardizedCountry)
+            userRef.update("cityFromWhichUserConnected", location.city)
+            userRef.update("connectedAddress", location.address)
+        } catch (e: Exception) {
+            Log.d("UserRepo", "Error updating user location: ${e.message}")
+        }
+    }
+
+    suspend fun declineFriendRequest(receiver: UserDataModel, sender: UserDataModel): Boolean {
+        try {
+
+            val senderEmail = sender.email ?: run {
+                Log.d("UserRepo", "Sender email is null.")
+                return false
+            }
+
+            val receiverEmail = receiver.email ?: run {
+                Log.d("UserRepo", "Receiver email is null.")
+                return false
+            }
+            val pendingRef = firestore.collection("PendingFriendRequests").document(senderEmail)
+            val sendingRef = firestore.collection("SendingFriendRequests").document(receiverEmail)
+
+
+            val pendingDoc = pendingRef.get().await()
+            val sendingDoc = sendingRef.get().await()
+
+            deleteNotification(sender, receiver)
+            if (pendingDoc.exists()) {
+                pendingRef.update("requests", FieldValue.arrayRemove(receiverEmail)).await()
+            } else {
+                Log.d("UserRepo", "Pending request document does not exist.")
+            }
+
+            if (sendingDoc.exists()) {
+                sendingRef.update("requests", FieldValue.arrayRemove(senderEmail)).await()
+            } else {
+                Log.d("UserRepo", "Sending request document does not exist.")
+            }
+
+            return true
+        } catch (e: Exception) {
+            Log.d("UserRepo", "Error removing friend request: ${e.message}")
+            return false
+        }
+
+    }
+
+   private suspend fun acceptedRequestNotificationToSender(sender: UserDataModel, receiver: UserDataModel): Boolean {
+        try {
+            val senderEmail = sender.email ?: run {
+                Log.d("UserRepo", "Sender email is null.")
+                return false
+            }
+            val receiverEmail = receiver.email ?: run {
+                Log.d("UserRepo", "Receiver email is null.")
+                return false
+            }
+            val notificationRef = firestore.collection("Notifications").document(senderEmail)
+                .collection("acceptedRequestNotification").document(receiverEmail)
+
+            val notificationData = hashMapOf(
+                "receiverEmail" to receiverEmail,
+                "timestamp" to FieldValue.serverTimestamp(),
+                "status" to "Accepted",
+                "viewStatus" to "Unread"
+                )
+            notificationRef.set(notificationData).await()
+            return true
+        } catch (e: Exception) {
+            Log.d("UserRepo", "Error creating friend request notification: ${e.message}")
+            return false
+        }
     }
 
     suspend fun acceptFriendRequest(sender: UserDataModel, receiver: UserDataModel): Boolean {
@@ -183,22 +250,61 @@ class UserRepo@Inject constructor(
                 return false
             }
 
-            // Διαγραφή του αιτήματος από τα Pending και Sending collections
-            val pendingRef = firestore.collection("PendingFriendRequests").document(receiverEmail)
-            val sendingRef = firestore.collection("SendingFriendRequests").document(senderEmail)
+            val pendingRef = firestore.collection("PendingFriendRequests").document(senderEmail)
+            val sendingRef = firestore.collection("SendingFriendRequests").document(receiverEmail)
 
-            pendingRef.update("requests", FieldValue.arrayRemove(senderEmail)).await()
-            sendingRef.update("requests", FieldValue.arrayRemove(receiverEmail)).await()
+            val pendingDoc = pendingRef.get().await()
+            val sendingDoc = sendingRef.get().await()
 
-            // Προσθήκη στους AcceptedFriendships
-            val acceptedRef = firestore.collection("AcceptedFriendships").document("${senderEmail}_$receiverEmail")
-            acceptedRef.set(mapOf(
-                "sender" to senderEmail,
-                "receiver" to receiverEmail,
-                "timestamp" to FieldValue.serverTimestamp()
-            )).await()
+            if (pendingDoc.exists()) {
+                pendingRef.update("requests", FieldValue.arrayRemove(receiverEmail)).await()
+            } else {
+                Log.d("UserRepo", "Pending request document does not exist.")
+            }
 
-            return true
+            if (sendingDoc.exists()) {
+                sendingRef.update("requests", FieldValue.arrayRemove(senderEmail)).await()
+            } else {
+                Log.d("UserRepo", "Sending request document does not exist.")
+            }
+
+            val receiverAcceptedRef = firestore
+                .collection("users")
+                .document(senderEmail)
+                .collection("Friends")
+                .document(receiverEmail)
+
+            val senderAcceptedRef = firestore
+                .collection("users")
+                .document(receiverEmail)
+                .collection("Friends")
+                .document(senderEmail)
+
+            senderAcceptedRef.set(
+                mapOf(
+                    "sender" to receiverEmail,
+                    "receiver" to senderEmail,
+                    "timestamp" to FieldValue.serverTimestamp(),
+                    "status" to "Accepted",
+                )
+            ).await()
+
+            receiverAcceptedRef.set(
+                mapOf(
+                    "sender" to receiverEmail,
+                    "receiver" to senderEmail,
+                    "timestamp" to FieldValue.serverTimestamp(),
+                    "status" to "Accepted",
+                )
+            ).await()
+
+            if (!deleteNotification(receiver, sender)) {
+                return false
+            }
+
+
+            return acceptedRequestNotificationToSender(receiver, sender)
+
         } catch (e: FirebaseFirestoreException) {
             Log.d("UserRepo", "Firestore error: ${e.message}")
             return false
@@ -207,6 +313,33 @@ class UserRepo@Inject constructor(
             return false
         }
     }
+
+
+    private suspend fun deleteNotification(sender: UserDataModel, receiver: UserDataModel): Boolean {
+        try {
+
+            val senderEmail = sender.email ?: run {
+                Log.d("UserRepo", "Sender email is null.")
+                return false
+            }
+
+            val receiverEmail = receiver.email ?: run {
+                Log.d("UserRepo", "Receiver email is null.")
+                return false
+            }
+
+            val notificationRef = firestore.collection("Notifications").document(receiverEmail)
+                .collection("FriendRequestNotifications").document(senderEmail)
+
+            notificationRef.delete().await()
+            return true
+        }catch(e: Exception){
+            Log.d("UserRepo", "Error deleting friend request notification: ${e.message}")
+            return false
+        }
+
+    }
+
 
     suspend fun sendFriendRequest(sender: UserDataModel, receiver: UserDataModel): Boolean {
         try {
@@ -251,6 +384,7 @@ class UserRepo@Inject constructor(
 
 
 
+
     private suspend fun createFriendRequestNotification(sender: UserDataModel, receiver: UserDataModel) {
         try {
             val senderEmail = sender.email ?: run {
@@ -261,7 +395,6 @@ class UserRepo@Inject constructor(
                 Log.d("UserRepo", "Receiver email is null.")
                 return
             }
-
 
             val notificationRef = firestore
                 .collection("Notifications")
@@ -288,28 +421,7 @@ class UserRepo@Inject constructor(
         }
     }
 
-    private suspend fun deleteNotification(sender: UserDataModel, receiver: UserDataModel) {
-        try {
 
-            val senderEmail = sender.email ?: run {
-                Log.d("UserRepo", "Sender email is null.")
-                return
-            }
-
-            val receiverEmail = receiver.email ?: run {
-                Log.d("UserRepo", "Receiver email is null.")
-                return
-            }
-
-            val notificationRef = firestore.collection("Notifications").document(receiverEmail)
-                .collection("FriendRequestNotifications").document(senderEmail)
-
-            notificationRef.delete().await()
-        }catch(e: Exception){
-            Log.d("UserRepo", "Error deleting friend request notification: ${e.message}")
-        }
-
-    }
 
 
     suspend fun removeFriendRequest(receiver: UserDataModel, sender: UserDataModel): Boolean {
@@ -375,6 +487,10 @@ class UserRepo@Inject constructor(
             val alreadySendingExistsRequestsRef = firestore.collection("SendingFriendRequests").document(user.userData?.email.toString())
             val alreadySendingExistsRequestsDoc = alreadySendingExistsRequestsRef.get().await()
             val alreadySendingExistsRequests = alreadySendingExistsRequestsDoc.get("requests") as? MutableList<String> ?: emptyList()
+            val alreadyFriendsRef = firestore.collection("users").document(user.userData?.email.toString()).collection("Friends")
+            val alreadyFriendsDoc = alreadyFriendsRef.get().await()
+            val alreadyFriends = alreadyFriendsDoc.documents.mapNotNull { it.getString("sender") }
+
 
 
             val friendRequests = fetchFriendRequests(user)
@@ -423,6 +539,7 @@ class UserRepo@Inject constructor(
 
             suggestions.removeIf { it.email in alreadySendingExistsRequests }
             suggestions.removeAll(friendRequests)
+            suggestions.removeIf { it.email in alreadyFriends }
 
 
 
@@ -503,6 +620,7 @@ class UserRepo@Inject constructor(
         return try {
             val storageRef = storage.reference
             val imageRef = if(type == "profile") {
+
                 storageRef.child("profilePictures/Profile/${_userDataProvider.userData?.email}.jpg")
             }else{
                 storageRef.child("profilePictures/BackGround/${_userDataProvider.userData?.email}.jpg")

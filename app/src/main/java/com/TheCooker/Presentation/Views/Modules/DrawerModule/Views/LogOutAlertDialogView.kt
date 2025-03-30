@@ -37,6 +37,8 @@ fun LogOutAlertDialog(
     loginViewModel: LoginViewModel
 ){
 
+
+
     if (dialogOpen.value) {
         val scope = rememberCoroutineScope()
 
@@ -47,21 +49,10 @@ fun LogOutAlertDialog(
             confirmButton = {
                 TextButton(onClick = {
                     dialogOpen.value = false
-                    loginViewModel.logout()
+                    loginViewModel.logout(navController)
                     loginViewModel.loginInit()
 
 
-                    scope.launch {
-
-                        navController.navigate("LoginView") {
-                        }
-
-                        googleClient.signOut()
-
-                    }
-                    //viewModel.signOut()
-                    //navController.navigate("Login")
-                    //}
                 }) {
                     Text(text = "Confirm",
                         color = Color(0xFFFFC107))
