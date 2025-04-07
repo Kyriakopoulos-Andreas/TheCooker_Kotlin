@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,11 +32,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import com.TheCooker.Common.Layer.NavGraphs.TopNavGraphSharedViewModel
 import com.TheCooker.Domain.Layer.Models.ScreenModels.TopBarMenuModel
 import com.TheCooker.Domain.Layer.Models.ScreenModels.TopBarMenuModel.Companion.getSelectedIcon
 import com.TheCooker.Domain.Layer.Models.ScreenModels.TopBarMenuModel.Companion.getUnselectedIcon
+import com.TheCooker.Presentation.Views.Modules.NotificationModule.Views.NotificationsViewModel
+import com.TheCooker.Presentation.Views.Modules.ViewModels.SharedViewModel
 import com.TheCooker.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -47,13 +52,24 @@ fun TopMenu(
     navController: NavHostController,
     scaffoldState: ScaffoldState,
     scope: CoroutineScope,
-    previousRoute: MutableState<String?>
+    previousRoute: MutableState<String?>,
+
 ) {
     var selectedItem by rememberSaveable {
         mutableStateOf(2)
     }
+    val sharedViewModel = hiltViewModel<SharedViewModel>()
+    val notificationCount = sharedViewModel.unreadCount.collectAsState()
+
+    LaunchedEffect(Unit) {
+        sharedViewModel.startListening()
+    }
+
+
 
     Log.d("TestSelectedIcon", selectedItem.toString())
+
+
 
 
         val currentRoute = navController.currentBackStackEntry?.destination?.route
@@ -102,8 +118,10 @@ fun TopMenu(
                         icon = {
                             BadgedBox(badge = {
                                 if (screen.badgeCount != null) {
-                                    Badge {
-                                        Text(text = screen.badgeCount.toString())
+                                    if(notificationCount.value != 0) {
+                                        Badge {
+                                            Text(text = notificationCount.value.toString())
+                                        }
                                     }
                                 } else if (screen.hasNEWS) {
                                     Badge()

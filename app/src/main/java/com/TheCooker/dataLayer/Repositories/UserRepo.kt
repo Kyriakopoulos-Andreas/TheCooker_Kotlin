@@ -8,16 +8,21 @@ import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
 import com.TheCooker.DI.Module.UserDataProvider
 import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Domain.Layer.UseCase.Location.LocationData
+import com.TheCooker.Presentation.Views.Modules.NotificationModule.Views.AcceptRequestNotification
+import com.TheCooker.Presentation.Views.Modules.NotificationModule.Views.FriendRequestNotifications
+import com.TheCooker.Presentation.Views.Modules.NotificationModule.Views.NotificationModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
+@Suppress("NAME_SHADOWING", "UNREACHABLE_CODE")
 class UserRepo@Inject constructor(
     val auth: FirebaseAuth,
     private val _userDataProvider: UserDataProvider,
@@ -187,6 +192,7 @@ class UserRepo@Inject constructor(
             val sendingRef = firestore.collection("SendingFriendRequests").document(receiverEmail)
 
 
+
             val pendingDoc = pendingRef.get().await()
             val sendingDoc = sendingRef.get().await()
 
@@ -211,7 +217,10 @@ class UserRepo@Inject constructor(
 
     }
 
-   private suspend fun acceptedRequestNotificationToSender(sender: UserDataModel, receiver: UserDataModel): Boolean {
+    private suspend fun acceptedRequestNotificationToSender(
+        sender: UserDataModel,
+        receiver: UserDataModel
+    ): Boolean {
         try {
             val senderEmail = sender.email ?: run {
                 Log.d("UserRepo", "Sender email is null.")
@@ -226,10 +235,12 @@ class UserRepo@Inject constructor(
 
             val notificationData = hashMapOf(
                 "receiverEmail" to receiverEmail,
+                "receiver" to receiver.userName,
                 "timestamp" to FieldValue.serverTimestamp(),
                 "status" to "Accepted",
-                "viewStatus" to "Unread"
-                )
+                "viewStatus" to "Unread",
+                "receiverImageUrl" to receiver.profilePictureUrl
+            )
             notificationRef.set(notificationData).await()
             return true
         } catch (e: Exception) {
@@ -282,8 +293,10 @@ class UserRepo@Inject constructor(
 
             senderAcceptedRef.set(
                 mapOf(
-                    "sender" to receiverEmail,
-                    "receiver" to senderEmail,
+                    "sender" to receiver.userName,
+                    "senderEmail" to receiverEmail,
+                    "receiver" to sender.userName,
+                    "receiverEmail" to senderEmail,
                     "timestamp" to FieldValue.serverTimestamp(),
                     "status" to "Accepted",
                 )
@@ -291,14 +304,17 @@ class UserRepo@Inject constructor(
 
             receiverAcceptedRef.set(
                 mapOf(
-                    "sender" to receiverEmail,
-                    "receiver" to senderEmail,
+                    "sender" to receiver.userName,
+                    "senderEmail" to receiverEmail,
+                    "receiver" to sender.userName,
+                    "receiverEmail" to senderEmail,
                     "timestamp" to FieldValue.serverTimestamp(),
                     "status" to "Accepted",
                 )
             ).await()
 
-            if (!deleteNotification(receiver, sender)) {
+            if (!deleteNotification(sender, receiver)) {
+                Log.d("UserRepo", "Failed to delete notification.")
                 return false
             }
 
@@ -315,7 +331,10 @@ class UserRepo@Inject constructor(
     }
 
 
-    private suspend fun deleteNotification(sender: UserDataModel, receiver: UserDataModel): Boolean {
+    private suspend fun deleteNotification(
+        sender: UserDataModel,
+        receiver: UserDataModel
+    ): Boolean {
         try {
 
             val senderEmail = sender.email ?: run {
@@ -328,12 +347,12 @@ class UserRepo@Inject constructor(
                 return false
             }
 
-            val notificationRef = firestore.collection("Notifications").document(receiverEmail)
-                .collection("FriendRequestNotifications").document(senderEmail)
+            val notificationRef = firestore.collection("Notifications").document(senderEmail)
+                .collection("FriendRequestNotifications").document(receiverEmail)
 
             notificationRef.delete().await()
             return true
-        }catch(e: Exception){
+        } catch (e: Exception) {
             Log.d("UserRepo", "Error deleting friend request notification: ${e.message}")
             return false
         }
@@ -362,12 +381,14 @@ class UserRepo@Inject constructor(
 
             // Δημιουργία ή ενημέρωση του εγγράφου στο Pending collection
             val pendingData = hashMapOf("requests" to FieldValue.arrayUnion(senderEmail))
-            pendingRef.set(pendingData, SetOptions.merge()).await() // Χρησιμοποιούμε set για να δημιουργήσουμε ή να ενημερώσουμε το έγγραφο
+            pendingRef.set(pendingData, SetOptions.merge())
+                .await() // Χρησιμοποιούμε set για να δημιουργήσουμε ή να ενημερώσουμε το έγγραφο
             Log.d("UserRepo", "Pending data written: $pendingData")
 
             // Δημιουργία ή ενημέρωση του εγγράφου στο Sending collection
             val sendingData = hashMapOf("requests" to FieldValue.arrayUnion(receiverEmail))
-            sendingRef.set(sendingData, SetOptions.merge()).await() // Χρησιμοποιούμε set για να δημιουργήσουμε ή να ενημερώσουμε το έγγραφο
+            sendingRef.set(sendingData, SetOptions.merge())
+                .await() // Χρησιμοποιούμε set για να δημιουργήσουμε ή να ενημερώσουμε το έγγραφο
 
             createFriendRequestNotification(sender, receiver)
             return true
@@ -381,11 +402,10 @@ class UserRepo@Inject constructor(
     }
 
 
-
-
-
-
-    private suspend fun createFriendRequestNotification(sender: UserDataModel, receiver: UserDataModel) {
+    private suspend fun createFriendRequestNotification(
+        sender: UserDataModel,
+        receiver: UserDataModel
+    ) {
         try {
             val senderEmail = sender.email ?: run {
                 Log.d("UserRepo", "Sender email is null.")
@@ -405,9 +425,11 @@ class UserRepo@Inject constructor(
 
             val notificationData = hashMapOf(
                 "senderEmail" to senderEmail,
+                "sender" to sender.userName,
                 "timestamp" to FieldValue.serverTimestamp(),
                 "status" to "Pending",
-                "viewStatus" to "Unread"
+                "viewStatus" to "Unread",
+                "senderImageUrl" to sender.profilePictureUrl
             )
 
 
@@ -420,8 +442,6 @@ class UserRepo@Inject constructor(
             Log.d("UserRepo", "Error creating friend request notification: ${e.message}")
         }
     }
-
-
 
 
     suspend fun removeFriendRequest(receiver: UserDataModel, sender: UserDataModel): Boolean {
@@ -451,7 +471,7 @@ class UserRepo@Inject constructor(
             Log.d("UserRepo", "Removed receiverEmail: {$receiverEmail} from Sending requests")
             sendingRef.update("requests", FieldValue.arrayRemove(receiverEmail)).await()
             Log.d("UserRepo", "Removed receiverEmail from Sending requests")
-            deleteNotification(sender, receiver)
+            deleteNotification(receiver, sender)
 
             return true
         } catch (e: FirebaseFirestoreException) {
@@ -464,9 +484,6 @@ class UserRepo@Inject constructor(
     }
 
 
-
-
-
     suspend fun fetchFriendSuggests(user: UserDataProvider): List<UserDataModel> {
         val suggestions = mutableListOf<UserDataModel>()
         val addedUserEmails = mutableSetOf<String>() // Set για αποφυγή διπλότυπων
@@ -477,6 +494,9 @@ class UserRepo@Inject constructor(
             val userCity = userDoc.getString("cityFromWhichUserConnected")
             val userCountry = userDoc.getString("countryFromWhichUserConnected")
 
+
+
+
             // Φέρνουμε χρήστες από την ίδια πόλη
             val cityQuery = firestore.collection("users")
                 .whereEqualTo("cityFromWhichUserConnected", userCity)
@@ -484,13 +504,18 @@ class UserRepo@Inject constructor(
                 .get()
                 .await()
 
-            val alreadySendingExistsRequestsRef = firestore.collection("SendingFriendRequests").document(user.userData?.email.toString())
+            val alreadySendingExistsRequestsRef = firestore.collection("SendingFriendRequests")
+                .document(user.userData?.email.toString())
             val alreadySendingExistsRequestsDoc = alreadySendingExistsRequestsRef.get().await()
-            val alreadySendingExistsRequests = alreadySendingExistsRequestsDoc.get("requests") as? MutableList<String> ?: emptyList()
-            val alreadyFriendsRef = firestore.collection("users").document(user.userData?.email.toString()).collection("Friends")
+            val alreadySendingExistsRequests =
+                alreadySendingExistsRequestsDoc.get("requests") as? MutableList<String>
+                    ?: emptyList()
+            val alreadyFriendsRef =
+                firestore.collection("users").document(user.userData?.email.toString())
+                    .collection("Friends")
             val alreadyFriendsDoc = alreadyFriendsRef.get().await()
-            val alreadyFriends = alreadyFriendsDoc.documents.mapNotNull { it.getString("sender") }
-
+            val alreadyFriends1 = alreadyFriendsDoc.documents.mapNotNull { it.getString("senderEmail") }
+            val alreadyFriends2 = alreadyFriendsDoc.documents.mapNotNull { it.getString("receiverEmail") }
 
 
             val friendRequests = fetchFriendRequests(user)
@@ -520,9 +545,6 @@ class UserRepo@Inject constructor(
             }
 
 
-
-
-
             // Αν ακόμα δεν έχουμε 40 προτάσεις, φέρνουμε τυχαία άτομα
             if (suggestions.size < 40) {
                 val randomQuery = firestore.collection("users")
@@ -539,7 +561,7 @@ class UserRepo@Inject constructor(
 
             suggestions.removeIf { it.email in alreadySendingExistsRequests }
             suggestions.removeAll(friendRequests)
-            suggestions.removeIf { it.email in alreadyFriends }
+            suggestions.removeIf { it.email in alreadyFriends1 || it.email in alreadyFriends2 }
 
 
 
@@ -551,7 +573,6 @@ class UserRepo@Inject constructor(
 
         return emptyList()
     }
-
 
 
     suspend fun saveUserToFirestore(user: UserDataModel) {
@@ -595,34 +616,38 @@ class UserRepo@Inject constructor(
 
     }
 
-    suspend fun uploadProfilePicture(imageUri: String): uploadDownloadResource<Unit>{
+    suspend fun uploadProfilePicture(imageUri: String): uploadDownloadResource<Unit> {
         return try {
-            _userDataProvider.userData?.email?.let { firestore.collection("users").document(it).update("profilePictureUrl", imageUri).await() }
+            _userDataProvider.userData?.email?.let {
+                firestore.collection("users").document(it).update("profilePictureUrl", imageUri)
+                    .await()
+            }
             uploadDownloadResource.Success(Unit)
-        }catch (e: Exception){
+        } catch (e: Exception) {
             uploadDownloadResource.Error(e)
         }
     }
 
-    suspend fun uploadBackgroundPicture(imageUri: String): uploadDownloadResource<Unit>{
+    suspend fun uploadBackgroundPicture(imageUri: String): uploadDownloadResource<Unit> {
         return try {
-            _userDataProvider.userData?.email?.let { firestore.collection("users").document(it).update("backGroundPictureUrl", imageUri).await() }
+            _userDataProvider.userData?.email?.let {
+                firestore.collection("users").document(it).update("backGroundPictureUrl", imageUri)
+                    .await()
+            }
             uploadDownloadResource.Success(Unit)
-        }catch (e: Exception){
+        } catch (e: Exception) {
             uploadDownloadResource.Error(e)
         }
     }
-
-
 
 
     suspend fun uploadImageAndGetUrl(imageUri: Uri, type: String): String? {
         return try {
             val storageRef = storage.reference
-            val imageRef = if(type == "profile") {
+            val imageRef = if (type == "profile") {
 
                 storageRef.child("profilePictures/Profile/${_userDataProvider.userData?.email}.jpg")
-            }else{
+            } else {
                 storageRef.child("profilePictures/BackGround/${_userDataProvider.userData?.email}.jpg")
             }
             // Ανέβασμα της εικόνας
@@ -644,8 +669,6 @@ class UserRepo@Inject constructor(
     }
 
 
-
-
     suspend fun saveUserInformation(user: UserDataProvider): uploadDownloadResource<Unit> {
         val userData = user.userData
         return if (userData != null) {
@@ -653,18 +676,196 @@ class UserRepo@Inject constructor(
             try {
                 if (email != null) {
                     firestore.collection("users")
-                        .document(email) // Το email είναι το document ID
-                        .set(userData) //Ανανέωση όλου του document μιας και το userData εως εδω κρατάει όλη την απαιτούμενη πληροφορια
+                        .document(email)
+                        .set(userData)
                         .await()
-                    uploadDownloadResource.Success(Unit) // Επιστροφή επιτυχίας
+                    uploadDownloadResource.Success(Unit)
                 } else {
                     uploadDownloadResource.Error(Exception("Email is null"))
                 }
             } catch (e: Exception) {
-                uploadDownloadResource.Error(e) // Επιστροφή σφάλματος
+                uploadDownloadResource.Error(e)
             }
         } else {
             uploadDownloadResource.Error(Exception("UserData is null"))
         }
     }
+
+    suspend fun fetchNotifications(
+        user: UserDataModel,
+        onNewNotification: (Any?) -> Unit
+    ): List<NotificationModel> {
+        user.email ?: run {
+            Log.d("UserRepo", "Sender email is null.")
+            return emptyList()
+        }
+
+        return try {
+            // Ανακτάς τα δεδομένα από τις δύο συλλογές
+            val friendRequestNotificationsRef = firestore.collection("Notifications")
+                .document(user.email)
+                .collection("FriendRequestNotifications")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+
+            val acceptRequestNotificationsRef = firestore.collection("Notifications")
+                .document(user.email)
+                .collection("acceptedRequestNotification")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+
+            Log.d("UserRepo", "acceptRequestNotificationsRef: $acceptRequestNotificationsRef")
+
+            // Ανακτάς τα δεδομένα (το initial fetching)
+            val friendRequestSnapshot = friendRequestNotificationsRef.get().await()
+            val acceptRequestSnapshot = acceptRequestNotificationsRef.get().await()
+
+            // Μετατρέπεις τα δεδομένα σε αντικείμενα, αν υπάρχουν
+            val friendRequestNotifications =
+                if (!friendRequestSnapshot.isEmpty) friendRequestSnapshot.toObjects(
+                    FriendRequestNotifications::class.java
+                ) else emptyList()
+
+            val acceptRequestNotifications =
+                if (!acceptRequestSnapshot.isEmpty) acceptRequestSnapshot.toObjects(
+                    AcceptRequestNotification::class.java
+                ) else emptyList()
+            acceptRequestNotifications.forEach { notification ->
+                Log.d("UserRepo", "Notification1: $notification")
+            }
+
+            val testRef = firestore.collection("Notifications")
+                .document(user.email)
+                .collection("acceptedRequestNotification")
+
+            testRef.get().addOnSuccessListener { snapshot ->
+                Log.d("UserRepo", "Snapshot size: ${snapshot.size()}")
+                if (snapshot.isEmpty) {
+                    Log.d("UserRepo", "No notifications found.")
+                } else {
+                    Log.d("UserRepo", "Found notifications: ${snapshot.documents}")
+                }
+            }.addOnFailureListener {
+                Log.e("UserRepo", "Error fetching notifications", it)
+            }
+
+            Log.d("UserRepo", "acceptRequestNotifications: $acceptRequestNotifications")
+
+            // Συνδυασμός ειδοποιήσεων από FriendRequest και AcceptRequest
+            val allNotifications = friendRequestNotifications + acceptRequestNotifications
+
+            // Αρχικοποιείς το count των unread ειδοποιήσεων
+            val unreadCount =
+                allNotifications.count { it.viewStatus == "Unread" } // Αυτός είναι ο αριθμός των unread ειδοποιήσεων.
+
+            // Επιστρέφεις το count μέσω callback
+            onNewNotification(unreadCount)
+
+            // Αρχικοποιείς το listener για real-time updates
+            listenForNewNotifications(user, onNewNotification)
+            Log.d("UserRepo", "All notifications: $allNotifications")
+
+            // Επιστρέφεις όλες τις ειδοποιήσεις
+            convertUnreadNotificationsToCount(allNotifications, user)
+            return allNotifications
+
+        } catch (e: Exception) {
+            Log.e("UserRepo", "Error fetching notifications: ${e.message}", e)
+            return emptyList()
+        }
+    }
+
+    private fun convertUnreadNotificationsToCount(
+        notifications: List<NotificationModel>,
+        user: UserDataModel
+    ) {
+        val email = user.email ?: return
+        val firestore = FirebaseFirestore.getInstance()
+
+        notifications.forEach { notification ->
+            if (notification.viewStatus == "Unread") {
+                try {
+                    when (notification) {
+                        is FriendRequestNotifications -> {
+                            val docId = notification.senderEmail
+                            val docRef = firestore.collection("Notifications")
+                                .document(email)
+                                .collection("FriendRequestNotifications")
+                                .document(docId)
+
+                            docRef.update("viewStatus", "Read")
+                                .addOnSuccessListener {
+                                    Log.d("UserRepo", "FriendRequest marked as Read: $docId")
+                                }
+                                .addOnFailureListener {
+                                    Log.e("UserRepo", "Failed to update FriendRequest: $docId", it)
+                                }
+                        }
+
+                        is AcceptRequestNotification -> {
+                            val docId = notification.receiverEmail
+                            val docRef = firestore.collection("Notifications")
+                                .document(email)
+                                .collection("acceptedRequestNotification")
+                                .document(docId)
+
+                            docRef.update("viewStatus", "Read")
+                                .addOnSuccessListener {
+                                    Log.d("UserRepo", "AcceptRequest marked as Read: $docId")
+                                }
+                                .addOnFailureListener {
+                                    Log.e("UserRepo", "Failed to update AcceptRequest: $docId", it)
+                                }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("UserRepo", "Exception during update", e)
+                }
+            }
+        }
+    }
+
+
+    fun listenForNewNotifications(user: UserDataModel, onNewNotification: (Any?) -> Unit) {
+        user.email?.let { email ->
+
+            var friendUnreadCount = 0
+            var acceptUnreadCount = 0
+
+            val friendRequestNotificationsRef = firestore.collection("Notifications")
+                .document(email)
+                .collection("FriendRequestNotifications")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+
+            val acceptRequestNotificationsRef = firestore.collection("Notifications")
+                .document(email)
+                .collection("acceptedRequestNotification")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+
+            friendRequestNotificationsRef.addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    Log.e("UserRepo", "Error listening to FriendRequestNotifications", exception)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    friendUnreadCount = snapshot.toObjects(FriendRequestNotifications::class.java)
+                        .count { it.viewStatus == "Unread" }
+                    onNewNotification(friendUnreadCount + acceptUnreadCount)
+                }
+            }
+
+            acceptRequestNotificationsRef.addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    Log.e("UserRepo", "Error listening to AcceptRequestNotifications", exception)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    acceptUnreadCount = snapshot.toObjects(AcceptRequestNotification::class.java)
+                        .count { it.viewStatus == "Unread" }
+                    onNewNotification(friendUnreadCount + acceptUnreadCount)
+                }
+            }
+        }
+    }
+
 }

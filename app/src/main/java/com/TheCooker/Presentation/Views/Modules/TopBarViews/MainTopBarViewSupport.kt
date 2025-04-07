@@ -35,6 +35,7 @@ import com.TheCooker.Presentation.Views.Modules.DrawerModule.Views.LogOutAlertDi
 import com.TheCooker.Domain.Layer.UseCase.GoogleIntents.GoogleClient
 import com.TheCooker.Presentation.Views.Modules.LoginModule.ViewModels.LoginViewModel
 import com.TheCooker.Common.Layer.NavGraphs.TopNavGraph
+import com.TheCooker.Common.Layer.NavGraphs.TopNavGraphSharedViewModel
 import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Domain.Layer.Models.ScreenModels.TopBarsModel
 import com.TheCooker.Domain.Layer.UseCase.Location.Permissions.LocationUtils
@@ -45,6 +46,7 @@ import com.TheCooker.Presentation.Views.Modules.SearchModule.Views.BottomSheetMe
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsDetailViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CategoryViewModel
+import com.TheCooker.Presentation.Views.Modules.ViewModels.SharedViewModel
 import com.example.cooker.ListView.DrawerContent
 
 import kotlinx.coroutines.launch
@@ -66,6 +68,7 @@ fun MainTopBarViewSupport(
     mealsDetailViewModel: MealsDetailViewModel,
     mealsViewModel: MealsViewModel,
     categoryViewModel: CategoryViewModel,
+
     ) {
 
     val locationViewModel: LocationViewModel = hiltViewModel()
