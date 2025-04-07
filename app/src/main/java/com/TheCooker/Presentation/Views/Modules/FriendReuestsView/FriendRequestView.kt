@@ -256,6 +256,7 @@ fun PendingRequest(pendingRequest: UserDataModel, scope: CoroutineScope, viewMod
                                 }
                                 scope.launch {
                                     viewModel.acceptFriendRequest(pendingRequest)
+                                    Log.d("FriendRequestItem", "Friend request accepted for ${pendingRequest.email}")
                                 }
                             },
                             shape = RoundedCornerShape(8.dp),
