@@ -8,9 +8,9 @@ import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
 import com.TheCooker.DI.Module.UserDataProvider
 import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Domain.Layer.UseCase.Location.LocationData
-import com.TheCooker.Presentation.Views.Modules.NotificationModule.Views.AcceptRequestNotification
-import com.TheCooker.Presentation.Views.Modules.NotificationModule.Views.FriendRequestNotifications
-import com.TheCooker.Presentation.Views.Modules.NotificationModule.Views.NotificationModel
+import com.TheCooker.Domain.Layer.Models.NotificationsModels.AcceptRequestNotification
+import com.TheCooker.Domain.Layer.Models.NotificationsModels.FriendRequestNotifications
+import com.TheCooker.Domain.Layer.Models.NotificationsModels.NotificationModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FieldValue
@@ -576,7 +576,13 @@ class UserRepo@Inject constructor(
 
 
     suspend fun saveUserToFirestore(user: UserDataModel) {
+
         firestore.collection("users").document(user.email.toString()).set(user).await()
+    }
+
+    suspend fun saveFcmTokenToFirestore(userId: String, token: String) {
+        val userDocRef = firestore.collection("users").document(userId)
+        userDocRef.update("fcmToken", token)
     }
 
     suspend fun login(email: String, password: String): LoginResults<Boolean> =

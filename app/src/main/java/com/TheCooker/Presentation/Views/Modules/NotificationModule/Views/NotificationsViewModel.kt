@@ -7,7 +7,11 @@ import com.TheCooker.Common.Layer.Resources.LoginResults
 import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
 import com.TheCooker.DI.Module.UserDataProvider
 import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
+import com.TheCooker.Domain.Layer.Models.NotificationsModels.AcceptRequestNotification
+import com.TheCooker.Domain.Layer.Models.NotificationsModels.FriendRequestNotifications
+import com.TheCooker.Domain.Layer.Models.NotificationsModels.NotificationModel
 import com.TheCooker.dataLayer.Repositories.UserRepo
+import com.google.firebase.Timestamp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +49,26 @@ class NotificationsViewModel @Inject constructor(
         }
 
     }
+
+
+    fun formatTimeAgo(timestamp: Timestamp): String {
+        val timeMillis = timestamp.toDate().time
+        val now = System.currentTimeMillis()
+        val diff = now - timeMillis
+
+        val seconds = diff / 1000
+        val minutes = seconds / 60
+        val hours = minutes / 60
+        val days = hours / 24
+
+        return when {
+            seconds < 60 -> "just now"
+            minutes < 60 -> "$minutes minute${if (minutes != 1L) "s" else ""} ago"
+            hours < 24 -> "$hours hour${if (hours != 1L) "s" else ""} ago"
+            else -> "$days day${if (days != 1L) "s" else ""} ago"
+        }
+    }
+
 
 
     suspend fun fetchUserWhoSentTheFriendRequest(email: String): LoginResults<UserDataModel> {

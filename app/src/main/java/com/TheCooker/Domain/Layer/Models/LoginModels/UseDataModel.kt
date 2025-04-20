@@ -18,4 +18,5 @@ data class UserDataModel(
     var countryFromWhichUserConnected: String? = null,
     var cityFromWhichUserConnected: String? = null,
     var connectedAddress: String? = null,
+    var fcmToken: String? = null,
 ) : Serializable

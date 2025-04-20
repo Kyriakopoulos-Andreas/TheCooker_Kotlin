@@ -321,7 +321,7 @@ fun PendingRequest(pendingRequest: UserDataModel, scope: CoroutineScope, viewMod
 fun FriendRequestItem(suggestion: UserDataModel, scope: CoroutineScope, viewModel: FriendRequestViewModel, context: Context) {
     // Αποθήκευση της κατάστασης για το κάθε suggestion
     val friendRequestSentState = viewModel.friendRequestSentState.collectAsState()
-
+    var isSending by remember { mutableStateOf(false) }
     // Χρησιμοποιούμε το userId ή email για να κρατάμε ξεχωριστά την κατάσταση για κάθε χρήστη
     val friendRequestSent = friendRequestSentState.value[suggestion.email] ?: false
 
@@ -375,10 +375,14 @@ fun FriendRequestItem(suggestion: UserDataModel, scope: CoroutineScope, viewMode
                                     return@Button
                                 }
                                 scope.launch {
+                                    isSending = true
                                     Log.d("FriendRequestItem", "Sending friend request for ${suggestion.email}")
                                     viewModel.sendFriendRequest(suggestion)
+                                    isSending = false
                                 }
+
                             },
+                            enabled = !isSending,
                             shape = RoundedCornerShape(8.dp),
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                                 contentColor = Color.White,
@@ -409,7 +413,8 @@ fun FriendRequestItem(suggestion: UserDataModel, scope: CoroutineScope, viewMode
                             ),
                             modifier = Modifier
                                 .width(130.dp)
-                                .height(33.dp)
+                                .height(33.dp),
+                            enabled = !isSending,
                         ) {
                             Text(
                                 "Remove",

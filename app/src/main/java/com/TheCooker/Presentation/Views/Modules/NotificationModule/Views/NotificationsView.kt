@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,14 +46,12 @@ import coil.compose.AsyncImage
 import com.TheCooker.Common.Layer.Check.isInternetAvailable
 import com.TheCooker.Common.Layer.Resources.LoginResults
 import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
-import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Presentation.Views.Modules.FriendReuestsView.FriendRequestViewModel
-import com.TheCooker.Presentation.Views.Modules.NotificationModule.Views.AcceptRequestNotification
-import com.TheCooker.Presentation.Views.Modules.NotificationModule.Views.FriendRequestNotifications
+import com.TheCooker.Domain.Layer.Models.NotificationsModels.AcceptRequestNotification
+import com.TheCooker.Domain.Layer.Models.NotificationsModels.FriendRequestNotifications
 import com.TheCooker.Presentation.Views.Modules.NotificationModule.Views.NotificationsViewModel
 import com.TheCooker.R
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 
@@ -111,7 +108,7 @@ fun NotificationView(){
             items(notificationsList.size) { index ->
                 val notification = notificationsList[index]
                 when (notification) {
-                    is AcceptRequestNotification -> AcceptRequestNotificationItem(notification)
+                    is AcceptRequestNotification -> AcceptRequestNotificationItem(notification, notificationsViewModel)
                     is FriendRequestNotifications -> FriendRequestNotificationItem(
                         notification = notification,
                         scope = scope,
@@ -176,9 +173,26 @@ fun FriendRequestNotificationItem(notification: FriendRequestNotifications, scop
                 verticalArrangement = Arrangement.Center
             ) {
 
-                Text(text = notification.toString(), fontSize = 18.sp, color = Color.White, modifier = Modifier.padding(start = 12.dp))
+                Text(text = notification.toString(),
+                    fontSize = 18.sp,
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 12.dp))
 
-                Spacer(modifier = Modifier.padding(bottom = 24.dp))
+                val timeAgo = remember(notification.timestamp) { notification.timestamp?.let {
+                    notificationViewModel.formatTimeAgo(
+                        it
+                    )
+                } }
+
+                if (timeAgo != null) {
+                    Text(
+                        text = timeAgo,
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(start = 12.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.padding(bottom = 16.dp))
 
 
                 Row(
@@ -288,7 +302,7 @@ fun FriendRequestNotificationItem(notification: FriendRequestNotifications, scop
 
 
 @Composable
-fun AcceptRequestNotificationItem(notification: AcceptRequestNotification){
+fun AcceptRequestNotificationItem(notification: AcceptRequestNotification, notificationViewModel: NotificationsViewModel){
 
     Column(
         modifier = Modifier
@@ -327,7 +341,22 @@ fun AcceptRequestNotificationItem(notification: AcceptRequestNotification){
                     color = Color.White
                 )
             }
-            Spacer(modifier = Modifier.padding(bottom = 24.dp))
+
+            val timeAgo = remember(notification.timestamp) { notification.timestamp?.let {
+                notificationViewModel.formatTimeAgo(
+                    it
+                )
+            } }
+
+            if (timeAgo != null) {
+                Text(
+                    text = timeAgo,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(start = 12.dp, top = 4.dp)
+                )
+            }
+            Spacer(modifier = Modifier.padding(bottom = 16.dp))
 
         }
     }

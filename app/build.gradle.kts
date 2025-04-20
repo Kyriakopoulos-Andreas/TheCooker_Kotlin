@@ -61,6 +61,7 @@ android {
 
 dependencies {
 
+    implementation ("com.google.firebase:firebase-messaging:24.1.1")
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -77,6 +78,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.firebase:firebase-messaging-ktx:24.1.1")
     kapt("androidx.hilt:hilt-compiler:1.0.0-alpha01")
     kapt("com.google.dagger:hilt-compiler:2.52")
     //implementation("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")

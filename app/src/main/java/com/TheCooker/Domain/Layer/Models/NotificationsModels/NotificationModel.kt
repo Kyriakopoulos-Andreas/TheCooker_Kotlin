@@ -1,4 +1,4 @@
-package com.TheCooker.Presentation.Views.Modules.NotificationModule.Views
+package com.TheCooker.Domain.Layer.Models.NotificationsModels
 
 import com.google.firebase.Timestamp
 

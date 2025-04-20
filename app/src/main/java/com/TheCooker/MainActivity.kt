@@ -1,10 +1,12 @@
 package com.TheCooker
 
+import android.content.ContentValues.TAG
 import com.TheCooker.Presentation.Views.Modules.theme.TheCookerTheme
 
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 
 import androidx.activity.compose.setContent
@@ -28,6 +30,7 @@ import com.TheCooker.Presentation.Views.Modules.ViewModels.SplashScreenViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsDetailViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CategoryViewModel
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
 
 import javax.inject.Inject
@@ -45,6 +48,8 @@ private val viewModel: SplashScreenViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen().setKeepOnScreenCondition { false }
+
+
 
         scheduleMonthlySync(this)
         setContent {

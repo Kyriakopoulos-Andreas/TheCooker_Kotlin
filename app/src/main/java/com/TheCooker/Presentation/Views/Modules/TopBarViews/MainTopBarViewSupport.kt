@@ -1,5 +1,6 @@
 package com.TheCooker.Presentation.Views.Modules.TopBarViews
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -103,8 +104,15 @@ fun MainTopBarViewSupport(
         onResult = { permissions ->
             val coarseGranted = permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
             val fineGranted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+            val notificationGranted = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                permissions[android.Manifest.permission.POST_NOTIFICATIONS] ?: false
+            } else {
+                true
+            }
 
-            if (coarseGranted || fineGranted) {
+
+
+            if ((coarseGranted || fineGranted) && notificationGranted) {
                 Toast.makeText(context, "Permission Accepted", Toast.LENGTH_LONG).show()
 
                 // Request location updates
@@ -140,19 +148,27 @@ fun MainTopBarViewSupport(
 
 
 
+
+
     LaunchedEffect(Unit) {
+        loginViewModel.updateFcmToken()
+        val permissionsToRequest = mutableListOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
         if (!LocationUtils.hasLocationPermission(context)) {
-            requestPermissionLauncher.launch(
-                arrayOf(
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            )
+            requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
         } else {
             locationViewModel.requestLocation(context)
             Log.d("UserLocation", locationViewModel.location.value.toString())
         }
     }
+
 
     LaunchedEffect(locationViewModel.location.value) {
         val location = locationViewModel.location.value
