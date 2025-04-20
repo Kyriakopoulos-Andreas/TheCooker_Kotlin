@@ -22,6 +22,8 @@ import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Domain.Layer.UseCase.GoogleIntents.GoogleClient
 import com.TheCooker.R
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -318,6 +320,17 @@ class LoginViewModel @Inject constructor(
             _lastNameError.value = "✔"
             _lastNameBool.value = true
         }
+    }
+
+    fun updateFcmToken() {
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val token = task.result
+                    viewModelScope.launch {
+                        _userRepo.saveFcmTokenToFirestore(_userDataProvider.userData?.email.toString(), token)
+                    }
+                }
+            }
     }
 
     fun validRegPassword(createRequest: Boolean) {
