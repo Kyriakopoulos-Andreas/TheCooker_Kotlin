@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "553957427178",
+    "project_id": "thecooker-1c3a7",
+    "storage_bucket": "thecooker-1c3a7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:553957427178:android:a3c1d97b9c15d4a5285493",
+        "android_client_info": {
+          "package_name": "com.TheCooker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYk1wMk_stp796uDFirrkZrVsDFu6u41o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
