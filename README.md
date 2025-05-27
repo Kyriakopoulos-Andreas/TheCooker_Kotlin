@@ -40,12 +40,16 @@ Edit their bio, profile picture, background picture, update or delete post.
 Showcase their cooking style and personality through their food posts
 
 
- ![User Profile Demo](https://i.imgur.com/Pq83oqz.gif)
+![P](https://i.postimg.cc/NF60F2rb/post-prof.gif) [![Update-Info-Profile-ezgif-com-optimize.gif](https://i.postimg.cc/wxGXrtVs/Update-Info-Profile-ezgif-com-optimize.gif)](https://postimg.cc/V5X0rk2Y)
+
+ ![A](https://i.postimg.cc/50ZvYbhP/aaaee.gif) 
 
 
 
 
 
 This feature helps users build their own culinary identity within the app and makes it easy for others to follow and get inspired by their creations.
+
+
 
 
