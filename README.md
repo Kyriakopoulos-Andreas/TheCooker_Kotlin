@@ -23,3 +23,29 @@ Users can log in to TheCooker in two ways:
   ![Login Demo](https://i.postimg.cc/8CtrxtRs/google-sign-in.gif)    ![Demo GIF](https://i.postimg.cc/YCt2DZ3B/screen-20250526-012704-ezgif-com-video-to-gif-converter.gif)
 
 This ensures flexibility and accessibility for all users from the very beginning.
+
+👤 User Profile
+
+Each user has a personal profile — similar to a Facebook timeline, but focused on food and cooking.
+
+In their profile, users can:
+
+View and manage all their posted recipes
+
+See the number of likes or comments each recipe has received
+
+Edit their bio, profile picture, background picture, update or delete post.
+
+
+Showcase their cooking style and personality through their food posts
+
+
+ ![User Profile Demo](https://i.imgur.com/Pq83oqz.gif)
+
+
+
+
+
+This feature helps users build their own culinary identity within the app and makes it easy for others to follow and get inspired by their creations.
+
+
