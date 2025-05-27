@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,20 +43,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.TheCooker.Common.Layer.Check.isInternetAvailable
 import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
 import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Presentation.Views.Modules.Dividers.ThinYellowDivider
 import com.TheCooker.Presentation.Views.Modules.FriendRequestModule.ViewModels.FriendRequestViewModel
+import com.TheCooker.Presentation.Views.Modules.TopBarViews.TopBarRoute
 import com.TheCooker.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun FriendRequestView(){
-    val viewModel = hiltViewModel<FriendRequestViewModel>()
+fun FriendRequestView(
+    navController: NavController,
+    viewModel: FriendRequestViewModel
+){
+
     val scope = rememberCoroutineScope();
     var suggestions by remember { mutableStateOf<List<UserDataModel>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -143,7 +149,7 @@ fun FriendRequestView(){
                 Spacer(modifier = Modifier.height(16.dp))
             }
             items(friendRequests.size) { index ->
-                PendingRequest(pendingRequest = friendRequests[index], scope, viewModel, context)
+                PendingRequest(pendingRequest = friendRequests[index], scope, viewModel, context, navController)
             }
             item{
                 ThinYellowDivider()
@@ -167,7 +173,7 @@ fun FriendRequestView(){
             }
 
             items(suggestions.size) { index ->
-                FriendRequestItem(suggestion = suggestions[index], scope, viewModel, context)
+                FriendRequestItem(suggestion = suggestions[index], scope, viewModel, context, navController)
             }
         }else{
             item {
@@ -196,7 +202,11 @@ fun NoSuggestions(modifier: Modifier = Modifier) {
 
 
 @Composable
-fun PendingRequest(pendingRequest: UserDataModel, scope: CoroutineScope, viewModel: FriendRequestViewModel, context: Context) {
+fun PendingRequest(pendingRequest: UserDataModel,
+                   scope: CoroutineScope,
+                   viewModel: FriendRequestViewModel,
+                   context: Context,
+                   navController: NavController) {
     // Αποθήκευση της κατάστασης για το κάθε suggestion
     val friendRequestSentState = viewModel.friendRequestSentState.collectAsState()
 
@@ -223,8 +233,12 @@ fun PendingRequest(pendingRequest: UserDataModel, scope: CoroutineScope, viewMod
                 AsyncImage(
                     model = pendingRequest.profilePictureUrl,
                     contentDescription = "Profile Picture",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    modifier = Modifier.fillMaxSize().clickable {
+                        navController.currentBackStackEntry?.savedStateHandle?.set("user", pendingRequest)
+                        navController.navigate("Profile?from=friend_request") {
+                        }
+                    },
+                    contentScale = ContentScale.Crop,
                 )
             }
 
@@ -319,7 +333,7 @@ fun PendingRequest(pendingRequest: UserDataModel, scope: CoroutineScope, viewMod
 }
 
 @Composable
-fun FriendRequestItem(suggestion: UserDataModel, scope: CoroutineScope, viewModel: FriendRequestViewModel, context: Context) {
+fun FriendRequestItem(suggestion: UserDataModel, scope: CoroutineScope, viewModel: FriendRequestViewModel, context: Context, navController: NavController) {
     // Αποθήκευση της κατάστασης για το κάθε suggestion
     val friendRequestSentState = viewModel.friendRequestSentState.collectAsState()
     var isSending by remember { mutableStateOf(false) }
@@ -346,7 +360,14 @@ fun FriendRequestItem(suggestion: UserDataModel, scope: CoroutineScope, viewMode
                 AsyncImage(
                     model = suggestion.profilePictureUrl,
                     contentDescription = "Profile Picture",
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().clickable {
+                            navController.currentBackStackEntry?.savedStateHandle?.set("user", suggestion)
+                            navController.navigate("Profile?from=friend_request") {
+//                                popUpTo("Profile") { inclusive = false }
+                              launchSingleTop = true
+                            }
+
+                    },
                     contentScale = ContentScale.Crop
                 )
             }

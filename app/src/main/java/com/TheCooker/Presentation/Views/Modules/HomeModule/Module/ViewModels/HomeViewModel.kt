@@ -7,6 +7,7 @@ import com.TheCooker.Common.Layer.Resources.LoginResults
 import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
 import com.TheCooker.Common.Layer.Resources.uploadDownloadResourceWithPagination
 import com.TheCooker.DI.Module.UserDataProvider
+import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.PostCommentModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealDetailModel
 import com.TheCooker.Presentation.Views.Modules.SharedModule.CommonActionLikePost
@@ -14,6 +15,7 @@ import com.TheCooker.dataLayer.Repositories.RecipeRepo
 import com.TheCooker.dataLayer.Repositories.UserRepo
 import com.google.firebase.firestore.ListenerRegistration
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -68,6 +70,7 @@ class HomeViewModel @Inject constructor(
 
 
 
+
     @Override
     override  fun resetLikedUsers() {
         _likedUsers.value = emptyList()
@@ -84,11 +87,26 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    override fun updateCommentLikeLoadingState(commentId: String, isLoading: Boolean) {
+        val updatedShares = _randomShares.value.map { share ->
+            val updatedComments = share.comments?.map { comment ->
+                if (comment.commentId == commentId) {
+                    comment.copy(isLikeButtonLoading = isLoading)
+                } else comment
+            }
+            share.copy(comments = updatedComments)
+        }
+
+        _randomShares.value = updatedShares
+    }
 
     override fun togglePostLike(share: UserMealDetailModel) {
         userDataProvider.userData?.uid ?: return
         val postId = share.recipeId ?: return
         val hasLiked = _postLikes.value[postId] == true
+        updateButtonStateForPostLikes(postId, true)
+
+
 
         Log.d("togglePostLike", "hasLiked: $hasLiked")
 
@@ -118,11 +136,26 @@ class HomeViewModel @Inject constructor(
 
     @Override
     override fun toggleLikeForComment(commentId: String, liked: Boolean) {
-        // Ενημερώνουμε την κατάσταση liked για το συγκεκριμένο σχόλιο
+
+     //  updateCommentLikeLoadingState(commentId, true)
         val updatedLikes = _commentsLikes.value.toMutableMap()
         updatedLikes[commentId] = liked
         _commentsLikes.value = updatedLikes
+
     }
+
+    @Override
+    override fun updateButtonStateForPostLikes(postId: String, isLoading: Boolean) {
+        val currentList = _randomShares.value.toMutableList()
+        val index = currentList.indexOfFirst { it.recipeId == postId }
+
+        if (index != -1) {
+            val oldItem = currentList[index]
+            currentList[index] = oldItem.copy(isLikeButtonLoading = isLoading)
+            _randomShares.value = currentList
+        }
+    }
+
 
 
 
@@ -144,8 +177,8 @@ class HomeViewModel @Inject constructor(
     }
 
     @Override
-    override  fun startListeningToPostLikes(recipeId: String) {
-        if (likePostNumberListeners.containsKey(recipeId)) return // Υπάρχει ήδη
+    override  fun startListeningPostLikesCount(recipeId: String) {
+        if (likesCountPostListeners.containsKey(recipeId)) return // Υπάρχει ήδη
         val listener = recipeRepo.listenToPostLikesCount(recipeId){
             val updatedShares = _randomShares.value.map { share ->
                 if (share.recipeId == recipeId) {
@@ -154,7 +187,7 @@ class HomeViewModel @Inject constructor(
             }
             _randomShares.value = updatedShares
         }
-        likePostNumberListeners[recipeId] = listener
+        likesCountPostListeners[recipeId] = listener
     }
 
     override suspend fun updateComment(comment: PostCommentModel) {
@@ -186,6 +219,12 @@ class HomeViewModel @Inject constructor(
         commentListeners[recipeId] = listener
     }
 
+    override fun startListeningPostLikes(recipeId: String, onChange: (List<String>) -> Unit) {
+        if(likesPostListeners.containsKey(recipeId)) return
+        val listener = recipeRepo.listenPostLikes(recipeId, onChange)
+        likesPostListeners[recipeId] = listener
+    }
+
     override fun onCleared() {
         super.onCleared()
         commentListeners.forEach { (_, listener) -> listener.remove() }
@@ -194,14 +233,38 @@ class HomeViewModel @Inject constructor(
         likeCommentNumberListeners.forEach { (_, listener) -> listener.remove() }
         likeCommentNumberListeners.clear()
 
-        likePostNumberListeners.forEach { (_, listener) -> listener.remove() }
-        likePostNumberListeners.clear()
+        likesCountPostListeners.forEach { (_, listener) -> listener.remove() }
+        likesCountPostListeners.clear()
+
+        likesPostListeners.forEach { (_, listener) -> listener.remove() }
+        likesPostListeners.clear()
     }
 
     @Override
     override suspend fun postLike(share: UserMealDetailModel): Boolean{
         when(val response = recipeRepo.likePost(share, userDataProvider.userData?.uid ?: "")){
             is uploadDownloadResource.Success -> {
+                when(val notificationResponse =
+                    userDataProvider.userData?.let { share.creatorData?.let { it1 ->
+                        userRepo.sendPostLikeNotification(it,
+                            it1,
+                            share.recipeId.toString()
+                        )
+                    } }){
+                    is uploadDownloadResource.Success -> {
+                        Log.d("HomeViewModel", "Notification sent successfully")
+                    }
+                    is uploadDownloadResource.Error -> {
+                        Log.d(
+                            "HomeViewModel",
+                            "Error sending notification: ${notificationResponse.exception}"
+                        )
+                    }
+
+                    null -> {
+                        Log.d("HomeViewModel", "LikeNotification results is null")
+                    }
+                }
                 Log.d("HomeViewModel", "Post liked successfully")
                 return true
             }
@@ -235,6 +298,27 @@ class HomeViewModel @Inject constructor(
     override suspend fun unLikePost(share: UserMealDetailModel): Boolean {
         when (val response = recipeRepo.unLikePost(share, userDataProvider.userData?.uid ?: "")) {
             is uploadDownloadResource.Success -> {
+                when(val notificationDeleteResponse =  userDataProvider.userData?.let { share.creatorData?.let { it1 ->
+                    userRepo.deleteLikeNotification(it,
+                        it1,
+                        share.recipeId.toString()
+                    )
+                } }){
+                    is uploadDownloadResource.Success -> {
+                        Log.d("HomeViewModel12", "Notification deleted successfully")
+                    }
+                    is uploadDownloadResource.Error -> {
+                        Log.d(
+                            "HomeViewModel",
+                            "Error deleting notification: ${notificationDeleteResponse.exception}"
+                        )
+                    }
+
+                    null -> {
+                        Log.d("HomeViewModel", "LikeNotification results is null")
+                    }
+                }
+
                 Log.d("HomeViewModel", "Post unliked successfully")
                 return true
             }
@@ -261,9 +345,22 @@ class HomeViewModel @Inject constructor(
     }
 
     @Override
-    override suspend fun deleteComment(comment: String) {
+    override suspend fun deleteComment(comment: String, postId: String) {
         when (val response = recipeRepo.deleteComment(comment)) {
             is uploadDownloadResource.Success -> {
+
+                when(val commentDeleteResponse = userRepo.deleteCommentNotification(sender = userDataProvider.userData!!, postId = postId, commentId = comment)) {
+                    is uploadDownloadResource.Success -> {
+                        Log.d("HomeViewModel", "Comment notification deleted successfully")
+                    }
+
+                    is uploadDownloadResource.Error -> {
+                        Log.d(
+                            "HomeViewModel",
+                            "Error deleting comment notification: ${commentDeleteResponse.exception}"
+                        )
+                    }
+                }
                 Log.d("HomeViewModel", "Comment deleted successfully")
 
             }
@@ -275,6 +372,9 @@ class HomeViewModel @Inject constructor(
     }
 
 
+    fun checkIfOneUserIsTheMainUser(user: UserDataModel): Boolean {
+        return user.uid == userDataProvider.userData?.uid
+    }
 
     private var paginationIndex = 0
 
@@ -333,7 +433,6 @@ class HomeViewModel @Inject constructor(
                 val newFetchedRecipes = response.data
                 updateLikes(newFetchedRecipes)
 
-
                 Log.d("HomeViewModel", "Fetched recipes count: ${newFetchedRecipes.size}")
                 Log.d("HomeViewModel", "Fetched recipe IDs: ${newFetchedRecipes.map { it.recipeId }}")
 
@@ -342,8 +441,6 @@ class HomeViewModel @Inject constructor(
                 Log.d("HomeViewModel", "Current _randomShares recipe IDs: ${currentShares.map { it.recipeId }}")
 
                 val currentRecipeIds = currentShares.mapNotNull { it.recipeId }.toSet()
-
-                // Φιλτράρουμε τα νέα για να βρούμε μόνο αυτά που δεν υπάρχουν ήδη
                 val newOnlyRecipes = newFetchedRecipes.filter { it.recipeId !in currentRecipeIds }
 
                 Log.d("HomeViewModel", "Newly detected recipes (not in _randomShares): ${newOnlyRecipes.size}")
@@ -390,10 +487,10 @@ class HomeViewModel @Inject constructor(
                             recipesWithCreators.add(enrichedRecipe)
                         }
 
-                        enrichedRecipe.recipeId?.let { it ->
-                            startListeningToCommentCount(it)
-                            startListeningToPostLikes(it)
-                            startListeningToComments(it) { newComments ->
+                        enrichedRecipe.recipeId?.let { recipeId ->
+                            startListeningToCommentCount(recipeId)
+                            startListeningPostLikesCount(recipeId)
+                            startListeningToComments(recipeId) { newComments ->
                                 val userId = userDataProvider.userData?.uid
                                 val enrichedComments = newComments.map { comment ->
                                     comment.copy(isLiked = comment.whoLikeIt?.contains(userId) == true)
@@ -408,16 +505,32 @@ class HomeViewModel @Inject constructor(
                                     _randomShares.value = currentSharesLive
                                 }
                             }
+
+
+                            startListeningPostLikes(recipeId) { newLikes ->
+                                Log.d("HomeViewModelLikes", "New likes: $newLikes")
+                                val currentSharesLive = _randomShares.value.toMutableList()
+                                val index = currentSharesLive.indexOfFirst { it.recipeId == recipe.recipeId }
+
+                                if (index != -1) {
+                                    val updatedShare = currentSharesLive[index].copy(
+                                        whoLikeIt = newLikes,
+                                        countLikes = newLikes.size,
+                                        isLikeButtonLoading = false
+
+                                    )
+                                    Log.d("HomeViewModelLikes", "Updated share: $updatedShare")
+                                    currentSharesLive[index] = updatedShare
+                                    _randomShares.value = currentSharesLive
+                                }
+                            }
                         }
                     }
                 }
 
                 _commentsLikes.value = initialLikedComments
-
                 val finalList = recipesWithCreators.shuffled()
-
                 _openCommentsPostId.value = null
-
 
                 Log.d("HomeViewModel", "Final list assigned to _randomShares. Size: ${finalList.size}")
                 _randomShares.value = finalList.map { it.copy() }
@@ -429,6 +542,7 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
 }
 
 

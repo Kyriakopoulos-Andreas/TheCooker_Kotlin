@@ -2,20 +2,20 @@ package com.TheCooker.Domain.Layer.Models.NotificationsModels
 
 import com.google.firebase.Timestamp
 
-class FriendRequestNotifications(
+class CommentNotification (
     override var sender: String,
     override var timestamp: Timestamp?,
     override var status: String,
     override var viewStatus: String,
     @JvmField val senderImageUrl: String = "",
-    @JvmField val senderEmail: String = ""
+    @JvmField val senderEmail: String = "",
+    @JvmField val postId: String = "",
+    @JvmField val comment: String = "",
+    @JvmField val commentId: String = ""
 ) : NotificationModel(sender = sender,receiverEmail = "", timestamp =timestamp, status =status, viewStatus = viewStatus, receiver = "") {
 
     constructor() : this(sender = "", timestamp = Timestamp.now(), status = "", viewStatus = "")
-//    @Override
-//    override fun toString(): String {
-//        return "${this.sender.userName} has sent you a friend request!"
-//    }
+
     override  fun getProfilePictureUrl(): String {
         return senderImageUrl
     }
@@ -26,6 +26,6 @@ class FriendRequestNotifications(
 
     @Override
     override fun toString(): String {
-        return "${this.sender} has sent you a friend request."
+        return "${this.sender} comment to tour post: ${this.comment}"
     }
 }

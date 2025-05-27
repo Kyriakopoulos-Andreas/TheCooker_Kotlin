@@ -28,6 +28,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.TheCooker.Domain.Layer.Models.ScreenModels.TopBarMenuModel
 import com.TheCooker.Domain.Layer.Models.ScreenModels.DrawerScreensModel
 import com.TheCooker.Presentation.Views.Modules.DrawerModule.Views.Options
@@ -45,6 +46,7 @@ import com.TheCooker.Presentation.Views.Modules.ProfileModule.Views.ProfileView
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealDetailModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealModel
 import com.TheCooker.Presentation.Views.Modules.FriendRequestModule.FriendRequestView
+import com.TheCooker.Presentation.Views.Modules.FriendRequestModule.ViewModels.FriendRequestViewModel
 import com.TheCooker.Presentation.Views.Modules.HomeModule.Module.ViewModels.HomeViewModel
 import com.TheCooker.Presentation.Views.Modules.ProfileModule.ViewModels.ProfileViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CreateMealViewModel
@@ -93,6 +95,7 @@ fun TopNavGraph(
     val userMealState by mealsViewModel.userMealState.observeAsState(MealsViewModel.UserMealsState())
     val loading by mealsViewModel.loading.observeAsState(false)
 
+    val friendRequestViewModel = hiltViewModel<FriendRequestViewModel>()
 
 
 
@@ -151,22 +154,47 @@ fun TopNavGraph(
             }
             composable(route = "CreateMeal?recipeId={recipeId}") { backStackEntry ->
                 var recipeId = backStackEntry.arguments?.getString("recipeId")
-                val postUpdate = navController.currentBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("PostRecipe")
-                if (recipeId != null) {
-                    Log.d("CheckRecipeId", recipeId)
+                val postUpdate = navController
+                    .previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.get<UserMealDetailModel?>("PostRecipe")
+
+                Log.d("PostUpdate", "Retrieved PostRecipe: $postUpdate")
+
+                if (postUpdate != null) {
+                    recipeId = postUpdate.recipeId
 
                 }
 
-                if(topBarState.value.currentRoute == TopBarRoute.MealView){
-                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.UpdateMealOnSearch)
-                    topBarState.value = topBarState.value.copy(previousRoute = TopBarRoute.MealView)
+                var hasUpdatedTopBar by remember { mutableStateOf(false) }
+
+                if (!hasUpdatedTopBar) {
+                    when {
+                        topBarState.value.currentRoute == TopBarRoute.MealDetailView -> {
+                            topBarState.value = topBarState.value.copy(
+                                currentRoute = TopBarRoute.UpdateMealOnSearch,
+                                previousRoute = TopBarRoute.MealDetailView
+                            )
+                        }
+                        topBarState.value.currentRoute == TopBarRoute.DrawerProfile -> {
+                            topBarState.value = topBarState.value.copy(
+                                currentRoute = TopBarRoute.UpdatePostOnProfile,
+                                previousRoute = TopBarRoute.DrawerProfile
+                            )
+                        }
+
+                        postUpdate != null -> {
+                            recipeId = null
+                            topBarState.value = topBarState.value.copy(
+                                currentRoute = TopBarRoute.UpdatePostOnProfile,
+                                previousRoute = TopBarRoute.PostProfileView
+                            )
+                        }
+                    }
+
+                    hasUpdatedTopBar = true
                 }
 
-                if(postUpdate != null){
-                    recipeId = null
-                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.UpdatePostOnProfile)
-                    topBarState.value = topBarState.value.copy(previousRoute = TopBarRoute.PostProfileView)
-                }
 
 
                 Log.d("PostUpdate", postUpdate.toString())
@@ -177,6 +205,8 @@ fun TopNavGraph(
                     categoryId = sharedCategoryId ,
                     saveNavigateBack = {
                         navController.popBackStack()
+                        Log.d("backFromUpdateOnNav", "RecipeId: $recipeId")
+
                     },
                     navController = navController,
                     combineMeals = combinedMeals,
@@ -188,7 +218,72 @@ fun TopNavGraph(
                 )
                 }
 
+            composable(route = "MealDetailView") {
+                val navBackStackEntry = navController.previousBackStackEntry
+                var detail = navController.currentBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("updatedMeal")
+                Log.d("DetailOnNav", detail.toString())
+                LaunchedEffect(detail) {
+                    if (detail != null) {
+                        Log.d("DetailOnNav", "MealDetail: $detail")
+                        detailViewModel.setDetailsForPost(detail!!)
+                    } else {
+                        Log.d("DetailOnNav", "MealDetail is NULL, possible navigation timing issue.")
+                    }
+                }
 
+
+                val postDetail = remember {
+                    navBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("PostRecipe")
+                }
+                Log.d("PostDetail", postDetail.toString())
+
+
+
+                if(postDetail != null){
+                    detail = postDetail
+                    detailViewModel.setDetailsForPost(postDetail)
+                }
+                Log.d("DetailOnNav", detail.toString())
+
+                navController.previousBackStackEntry?.savedStateHandle?.set("updatedRecipe", detail)
+
+                Log.d("DetailOnNav", detail.toString())
+
+                var hasUpdatedTopBarState by remember { mutableStateOf(false) }
+
+                if (!hasUpdatedTopBarState) {
+                    if (topBarState.value.currentRoute == TopBarRoute.DrawerProfile) {
+                        topBarState.value = topBarState.value.copy(
+                            currentRoute = TopBarRoute.PostProfileView,
+                            previousRoute = TopBarRoute.DrawerProfile
+                        )
+                    } else if (topBarState.value.currentRoute == TopBarRoute.Home) {
+                        topBarState.value = topBarState.value.copy(
+                            currentRoute = TopBarRoute.HomeViewPostView,
+                            previousRoute = TopBarRoute.Home
+                        )
+                    }else if (topBarState.value.currentRoute == TopBarRoute.MealView) {
+                        Log.d("TestRouteOnSupport", topBarState.value.currentRoute.toString())
+                        topBarState.value = topBarState.value.copy(
+                            currentRoute = TopBarRoute.MealDetailView,
+                            previousRoute = TopBarRoute.MealView
+                        )
+                    }
+                    else {
+                        topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.MealDetailView)
+                    }
+
+                    hasUpdatedTopBarState = true
+                }
+
+
+
+
+                MealDetailView(
+                    detailViewModel = detailViewModel,
+                    updateDetails = detail
+                )
+            }
 
 
 
@@ -304,30 +399,45 @@ fun TopNavGraph(
 
 
 
+
+
             composable(route = "MealsView") {
-                // Ανάκτηση των Data απο την στοιβα του navController
+
+
+                // Ανάκτηση δεδομένων από previousBackStackEntry
                 val mealsBeforeUpdate = navController.previousBackStackEntry?.savedStateHandle?.get<List<UserMealModel>>("meals") ?: emptyList()
                 val categoryId = navController.previousBackStackEntry?.savedStateHandle?.get<String>("categoryId") ?: ""
 
                 val mealsAfterUpdate = navController.previousBackStackEntry?.savedStateHandle?.get<List<UserMealModel>>("mealsAfterUpdate") ?: emptyList()
-                val meals = mealsAfterUpdate.ifEmpty { mealsBeforeUpdate }
+                val mealsFromNav = mealsAfterUpdate.ifEmpty { mealsBeforeUpdate }
 
-
-
-
-
-
-
+                // Το meals που θα χρησιμοποιούμε τελικά προέρχεται από το ViewModel
+                val userMealState by mealsViewModel.updatedMeals.collectAsState()
 
                 var shouldNavigate by remember { mutableStateOf(false) }
 
+                // Μόνο την πρώτη φορά, αν το ViewModel είναι άδειο, στείλε τα meals από το navController
+                LaunchedEffect(key1 = Unit) {
+                    if (userMealState.isEmpty() && mealsFromNav.isNotEmpty()) {
+                        mealsViewModel.setUpdatedMeals(mealsFromNav)
+                    }
+                }
 
-                topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.Home)
+
+                var hasUpdatedMealView by remember { mutableStateOf(false) }
+
+                if (!hasUpdatedMealView) {
+                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.MealView)
+                    hasUpdatedMealView = true
+                }
+
+
+
                 MealsView(
                     apiMealsState = MealsViewModel.ApiMealsState(list = mealState.list),
-                    meals = meals,
+                    meals = userMealState, // πλέον χρησιμοποιούμε τα meals από το ViewModel
                     navigateToDetails = { meal ->
-                        detailViewModel.fetchDetails(meal.id?: "")
+                        detailViewModel.fetchDetails(meal.id ?: "")
                         shouldNavigate = true
                     },
                     createMeal = {
@@ -335,12 +445,9 @@ fun TopNavGraph(
                         navController.navigate("CreateMeal")
                     },
                     navController = navController,
-                    userMealsState = userMealState,
                     mealsViewModel = mealsViewModel,
                     createMealViewModel = createMealViewModel,
-
-
-                    )
+                )
 
                 LaunchedEffect(detailState.list) {
                     if (shouldNavigate && detailViewModel.mealsDetailState.value!!.list.isNotEmpty()) {
@@ -351,48 +458,8 @@ fun TopNavGraph(
                 }
             }
 
-            composable(route = "MealDetailView") {
-                val navBackStackEntry = navController.previousBackStackEntry
-                var detail = navBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("updatedMeal")
-                Log.d("DetailOnNav", detail.toString())
 
 
-                val postDetail = remember {
-                    navBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("PostRecipe")
-                }
-                Log.d("PostDetail", postDetail.toString())
-
-
-
-                if(postDetail != null){
-                    detail = postDetail
-                    detailViewModel.setDetailsForPost(postDetail)
-                }
-
-
-                navController.previousBackStackEntry?.savedStateHandle?.set("updatedRecipe", detail)
-
-                Log.d("DetailOnNav", detail.toString())
-
-                if(topBarState.value.currentRoute == TopBarRoute.DrawerProfile){
-                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.MealView)
-                    topBarState.value = topBarState.value.copy(previousRoute = TopBarRoute.DrawerProfile)
-                }
-
-                if(topBarState.value.currentRoute == TopBarRoute.Home){
-                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.HomeViewPostView)
-                    topBarState.value = topBarState.value.copy(previousRoute = TopBarRoute.Home)
-                }
-
-                    //ΠΡΕΠΕΙ ΝΑ ΟΡΙΣΕΙΣ ΤΟ ΤΟΠ ΜΠΑΡ ΣΤΑΤΕ ΚΑΙ ΓΙΑ ΤΟ SEARCH VIEW!!!!!!
-                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.MealView)
-
-
-                MealDetailView(
-                    detailViewModel = detailViewModel,
-                    updateDetails = detail
-                )
-            }
 
             composable(route = TopBarMenuModel.HomeView.route) { backStackEntry ->
                 // Ελέγξτε αν το HomeView είναι ήδη στο back stack
@@ -408,13 +475,20 @@ fun TopNavGraph(
                 val profileBackStackEntry = navController.previousBackStackEntry
                     ?.takeIf { it.destination.route == "Profile" }
 
+                var hasUpdatedHome by remember { mutableStateOf(false) }
+
+                if (!hasUpdatedHome) {
+                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.Home)
+                    hasUpdatedHome = true
+                }
+
+
                 // Αν υπάρχει, χρησιμοποιούμε το ήδη υπάρχον ProfileViewModel, αλλιώς δημιουργούμε νέο
                 val profileViewModel = profileBackStackEntry?.let {
                     hiltViewModel<ProfileViewModel>(it)
                 } ?: hiltViewModel<ProfileViewModel>(backStackEntry)
 
-                // Ρύθμιση της κατάστασης της topBar
-                topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.Home)
+
 
                 // Παράδοση των ViewModels στο HomeView
                 HomeView(
@@ -425,14 +499,57 @@ fun TopNavGraph(
             }
 
 
-            composable(route = "Profile") {
-                    backStackEntry ->
-                val postRecipe = navController.previousBackStackEntry?.savedStateHandle?.get<UserMealDetailModel?>("PostRecipe")
-                Log.d("PostRecipeOnProfile", postRecipe.toString())
-                navController.currentBackStackEntry?.savedStateHandle?.set("PostRecipe", postRecipe)
+            composable(
+                route = "Profile?from={from}",
+                arguments = listOf(navArgument("from") { defaultValue = "drawer" })
+            ) { backStackEntry ->
 
-                topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.DrawerProfile)
-                ProfileView(navigator = navController,)
+                val previousBackStackEntry = navController.previousBackStackEntry
+                val from = remember { backStackEntry.arguments?.getString("from") ?: "drawer" }
+
+                val user = remember {
+                    previousBackStackEntry?.savedStateHandle?.get<UserDataModel?>("user")
+                }
+
+                val returningFrom = remember { backStackEntry.savedStateHandle?.get<String>("returning_from") }
+
+
+                var hasUpdated by remember { mutableStateOf(false) }
+
+                LaunchedEffect(returningFrom) {
+                    Log.d("TopBarState", "returningFrom: $returningFrom")
+                    if (!hasUpdated) {
+
+                        topBarState.value = topBarState.value.copy(
+                            currentRoute = if (returningFrom == "likes") {
+                                TopBarRoute.DrawerProfile
+                            } else {
+                                when (from) {
+                                    "friend_request" -> TopBarRoute.JoinOnProfileFromFriendRequestView
+                                    "friend_request_FromHome" -> TopBarRoute.JoinOnProfileFromHome
+                                    "drawer" -> TopBarRoute.DrawerProfile
+                                    else -> TopBarRoute.DrawerProfile
+                                }
+                            }
+                        )
+
+                        backStackEntry.savedStateHandle?.remove<String>("returning_from")
+                        hasUpdated = true
+                    }
+                }
+
+
+                LaunchedEffect(Unit) {
+                    previousBackStackEntry?.savedStateHandle?.remove<UserDataModel?>("user")
+                }
+
+                val profileViewModel = hiltViewModel<ProfileViewModel>()
+
+                ProfileView(
+                    navigator = navController,
+                    user = user,
+                    profileViewModel = profileViewModel
+                )
             }
 
             composable(route = "PostLikesView") {
@@ -441,30 +558,49 @@ fun TopNavGraph(
                 val source = remember { previousBackStackEntry?.savedStateHandle?.get<String>("source") }
                 val post = remember { previousBackStackEntry?.savedStateHandle?.get<UserMealDetailModel>("post") }
 
+
+                var hasUpdated by remember { mutableStateOf(false) }
+
                 LaunchedEffect(Unit) {
-                    previousBackStackEntry?.savedStateHandle?.remove<String>("source")
-                    previousBackStackEntry?.savedStateHandle?.remove<UserMealDetailModel>("post")
+                    if (!hasUpdated) {
+                        previousBackStackEntry?.savedStateHandle?.remove<String>("source")
+                        previousBackStackEntry?.savedStateHandle?.remove<UserMealDetailModel>("post")
+                        previousBackStackEntry?.savedStateHandle?.remove<UserMealDetailModel>("friend_request_FromHome")
+                        hasUpdated = true
+                    }
                 }
 
+                var hasUpdatedHomeViewModel by remember { mutableStateOf(false) }
+
                 val homeViewModel = if (source == "home") {
-                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.HomeViewPostLikes)
+                    if (!hasUpdatedHomeViewModel) {
+                        topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.HomeViewPostLikes)
+                        hasUpdatedHomeViewModel = true
+                    }
+
                     val backStackEntry = navController.getBackStackEntry("HomeView")
                     hiltViewModel<HomeViewModel>(backStackEntry)
-                }else null
+                } else null
 
-                val profileViewModel = if (source == "profile") {
-                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.ProfileViewPostLikes)
+                val viewModel = if (source == "profile") {
+                    Log.d("TestRouteLikesComposable", topBarState.value.currentRoute.toString())
+
+                    if (!hasUpdated) {
+                        topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.ProfileViewPostLikes)
+                        hasUpdated = true
+                    }
+
                     val backStackEntry = navController.getBackStackEntry("Profile")
                     hiltViewModel<ProfileViewModel>(backStackEntry)
-                }else null
-
+                } else null
 
                 PostLikesView(
                     homeViewModel = homeViewModel,
-                    profileViewModel = profileViewModel,
+                    profileViewModel = viewModel,
                     share = post
                 )
             }
+
 
             composable("CommentLikesView") {
 
@@ -482,17 +618,30 @@ fun TopNavGraph(
                 }
 
                 // ViewModels (βάσει του source)
+                var hasUpdatedHomePostCommentLikes by remember { mutableStateOf(false) }
+
                 val homeViewModel = if (source == "home") {
-                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.HomeViewPostCommentLikes)
+                    if (!hasUpdatedHomePostCommentLikes) {
+                        topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.HomeViewPostCommentLikes)
+                        hasUpdatedHomePostCommentLikes = true
+                    }
+
                     val backStackEntry = navController.getBackStackEntry("HomeView")
                     hiltViewModel<HomeViewModel>(backStackEntry)
                 } else null
 
+                var hasUpdatedProfilePostCommentLikes by remember { mutableStateOf(false) }
+
                 val profileViewModel = if (source == "profile") {
-                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.ProfileViewPostCommentLikes)
+                    if (!hasUpdatedProfilePostCommentLikes) {
+                        topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.ProfileViewPostCommentLikes)
+                        hasUpdatedProfilePostCommentLikes = true
+                    }
+
                     val backStackEntry = navController.getBackStackEntry("Profile")
                     hiltViewModel<ProfileViewModel>(backStackEntry)
                 } else null
+
 
                 CommentLikesView(
                     homeViewModel = homeViewModel,
@@ -508,17 +657,29 @@ fun TopNavGraph(
                 val comment = remember { previousBackStackEntry?.savedStateHandle?.get<PostCommentModel>("comment") }
                 val source = remember { previousBackStackEntry?.savedStateHandle?.get<String>("source") }
 
+                var hasUpdatedHomeViewModel by remember { mutableStateOf(false) }
+                var hasUpdatedProfileViewModel by remember { mutableStateOf(false) }
+
                 val homeViewModel = if (source == "home") {
-                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.CommentUpdateProfile)
+                    if (!hasUpdatedHomeViewModel) {
+                        topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.CommentUpdateProfile)
+                        hasUpdatedHomeViewModel = true // ✅ Εξασφαλίζουμε ότι ενημερώνεται μόνο μία φορά
+                    }
+
                     val backStackEntry = navController.getBackStackEntry("HomeView")
                     hiltViewModel<HomeViewModel>(backStackEntry)
                 } else null
 
                 val profileViewModel = if (source == "profile") {
-                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.CommentUpdateHomeView)
+                    if (!hasUpdatedProfileViewModel) {
+                        topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.CommentUpdateHomeView)
+                        hasUpdatedProfileViewModel = true // ✅ Εξασφαλίζουμε ότι ενημερώνεται μόνο μία φορά
+                    }
+
                     val backStackEntry = navController.getBackStackEntry("Profile")
                     hiltViewModel<ProfileViewModel>(backStackEntry)
                 } else null
+
 
                 CommentUpdateView(
                     comment = comment,
@@ -532,13 +693,23 @@ fun TopNavGraph(
 
 
             composable(route = TopBarMenuModel.FriendRequestView.route) {
-                FriendRequestView()
+
+                FriendRequestView(navController, friendRequestViewModel)
             }
+
+
 
 
             composable(route = TopBarMenuModel.NotificationView.route) {
+                var hasUpdatedNotificationView by remember { mutableStateOf(false) }
+                if (!hasUpdatedNotificationView) {
+                    topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.FriendRequestView)
+                    hasUpdatedNotificationView = true
+                }
+
                 NotificationView()
             }
+
         }
     }
 }

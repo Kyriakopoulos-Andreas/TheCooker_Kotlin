@@ -14,7 +14,8 @@ data class PostCommentModel (
     var countLikes: Int? = 0,
     var whoLikeIt: MutableList<String>?= null,
     var senderObj: UserDataModel?,
-    var isLiked: Boolean = false
+    var isLiked: Boolean = false,
+    var isLikeButtonLoading: Boolean = false
 ) : Serializable{
     constructor() : this("", "", "", "", 0, null, 0, null, null)
 

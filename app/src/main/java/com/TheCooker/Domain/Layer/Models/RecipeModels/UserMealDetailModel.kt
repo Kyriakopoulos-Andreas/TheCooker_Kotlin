@@ -22,7 +22,8 @@ data class UserMealDetailModel(
     var comments: List<PostCommentModel>? = null,
     var countComments: Int = 0,
     var countLikes: Int = 0,
-    var whoLikeIt: List<String>? = null
+    var whoLikeIt: List<String>? = null,
+    val isLikeButtonLoading: Boolean = false
 
 ) : Parcelable, MealItem {
     override val id: String? get() = recipeId
@@ -71,7 +72,9 @@ data class UserMealDetailModel(
         parcel.readString(),
         parcel.readString(),
         parcel.readLong(),
-        parcel.readInt() != 0
+        parcel.readInt() != 0,
+        isLikeButtonLoading = parcel.readInt() != 0,
+
 
     ){
         countComments = parcel.readInt()
@@ -96,6 +99,7 @@ data class UserMealDetailModel(
         parcel.writeInt(countComments)
         parcel.writeInt(countLikes)
         parcel.writeStringList(whoLikeIt ?: emptyList())
+        parcel.writeInt(if (isLikeButtonLoading) 1 else 0)
     }
 
     override fun describeContents(): Int {

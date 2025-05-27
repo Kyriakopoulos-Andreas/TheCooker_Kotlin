@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
 import com.TheCooker.Common.Layer.Resources.uploadDownloadResourceWithPagination
 import com.TheCooker.DI.Module.UserDataProvider
+import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.PostCommentModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealDetailModel
 import com.TheCooker.Presentation.Views.Modules.SharedModule.CommonActionLikePost
@@ -20,6 +21,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -36,11 +40,9 @@ class ProfileViewModel @Inject constructor(
     private val _recipeRepo: RecipeRepo
 ) : CommonActionLikePost() {
 
-    init {
-        viewModelScope.launch {
-            fetchShares()
-        }
-    }
+
+
+
     val userDataProvider: State<UserDataProvider> get() = mutableStateOf(_userDataProvider)
 
     private val _information = mutableStateOf(false)
@@ -103,6 +105,79 @@ class ProfileViewModel @Inject constructor(
     private val _likedComments = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val likedComments: StateFlow<Map<String, Boolean>> get() = _likedComments
 
+    private val _user = MutableStateFlow<UserDataModel?>(null)
+    val user: StateFlow<UserDataModel?> get() = _user
+
+    private val _isFriend = MutableStateFlow<Boolean>(false)
+    val isFriend: StateFlow<Boolean> get() = _isFriend
+
+    private val _owner = MutableStateFlow<Boolean>(false)
+    val owner: StateFlow<Boolean> get() = _owner
+
+
+    private val _friendshipState = MutableStateFlow(FriendshipStatus.FRIENDS) // Ξεκινά ως φίλοι
+    val friendshipState: StateFlow<FriendshipStatus> = _friendshipState
+
+    enum class FriendshipStatus {
+        FRIENDS,
+        NOT_FRIENDS,
+        PENDING
+    }
+
+
+    fun setProfileOwner(owner: Boolean){
+        _owner.value = owner
+    }
+
+    init {
+        viewModelScope.launch {
+            user
+                .filterNotNull()
+                .distinctUntilChanged()
+                .collect { nonNullUser ->
+                    fetchShares(nonNullUser)
+                }
+        }
+    }
+
+    fun setUserData(user: UserDataModel){
+        _user.value = user
+    }
+
+
+
+    fun setLoggedInProfile(){
+        _user.value = _userDataProvider.userData
+    }
+
+
+
+    fun setUserInfo(user: UserDataModel){
+
+        _country.value = user.country.toString().takeIf {
+            it.isNotBlank()
+        } ?: ""
+        _city.value = user.city.toString().takeIf {
+            it.isNotBlank()
+        }.toString()
+
+        _chefLevel.value = user.chefLevel.toString().takeIf {
+            it.isNotBlank()
+        }.toString()
+
+        _specialties.value = user.specialties.toString().takeIf {
+            it.isNotBlank()
+        }.toString()
+
+        val goldenChefHatsValue = user.goldenChefHats
+
+        if (goldenChefHatsValue != null && goldenChefHatsValue > 0) {
+            _goldenChefHats.intValue = goldenChefHatsValue
+        }
+
+
+    }
+
     override val commentTobeDeletedOrUpdated = mutableStateOf<PostCommentModel?>(null)
 
 
@@ -156,7 +231,11 @@ class ProfileViewModel @Inject constructor(
     }
 
     override fun checkIfIsUserComment(): Boolean{
-        return commentTobeDeletedOrUpdated.value?.senderObj?.uid == userDataProvider.value.userData?.uid
+        if(commentTobeDeletedOrUpdated.value?.senderObj?.uid == userDataProvider.value.userData?.uid){
+            return true
+        }else{
+            return false
+        }
     }
 
     override suspend fun updateComment(comment: PostCommentModel) {
@@ -202,7 +281,7 @@ class ProfileViewModel @Inject constructor(
         commentListeners[recipeId] = listener
     }
 
-    private fun startListeningToCommentLikes(recipeId: String) {
+    fun startListeningToCommentLikes(recipeId: String) {
         if (commentLikeListeners.containsKey(recipeId)) return
 
         val listener = _recipeRepo.listenToCommentsForPost(recipeId) { newComments ->
@@ -258,7 +337,7 @@ class ProfileViewModel @Inject constructor(
 
     @Override
     override suspend fun commentLike(comment: PostCommentModel): Boolean{
-        when(val response = _recipeRepo.commentLike(comment, _userDataProvider.userData?.uid ?: "")){
+        when(val response = _recipeRepo.commentLike(comment, _userDataProvider.userData?.uid ?: "")){ //!!!!!!!!!!!!
             is uploadDownloadResource.Success -> {
                 Log.d("ProfileViewModel", "Comment liked successfully")
                 return true
@@ -275,6 +354,18 @@ class ProfileViewModel @Inject constructor(
     override suspend fun postLike(share: UserMealDetailModel): Boolean{
         when(val response = _recipeRepo.likePost(share, userDataProvider.value.userData?.uid ?: "") ){
             is uploadDownloadResource.Success -> {
+                if(!owner.value){
+                    try {
+                        _userRepo.sendPostLikeNotification(
+                            sender = userDataProvider.value.userData!!,
+                            postId = share.recipeId ?: "",
+                            receiver = _user.value ?: return false
+
+                        )
+                    }catch (e: Exception){
+                        Log.d("HomeViewModel", "Error sending post like notification: ${e.message}")
+                    }
+                }
                 Log.d("HomeViewModel", "Post liked successfully")
                 return true
             }
@@ -287,8 +378,8 @@ class ProfileViewModel @Inject constructor(
     }
 
     @Override
-    override  fun startListeningToPostLikes(recipeId: String) {
-        if (likePostNumberListeners.containsKey(recipeId)) return // Υπάρχει ήδη
+    override  fun startListeningPostLikesCount(recipeId: String) {
+        if (likesCountPostListeners.containsKey(recipeId)) return // Υπάρχει ήδη
         val listener = _recipeRepo.listenToPostLikesCount(recipeId){
             val updatedShares = _shares.value.map { share ->
                 if (share.recipeId == recipeId) {
@@ -297,15 +388,56 @@ class ProfileViewModel @Inject constructor(
             }
             _shares.value = updatedShares
         }
-        likePostNumberListeners[recipeId] = listener
+        likesCountPostListeners[recipeId] = listener
 
 
+    }
+
+    override fun startListeningPostLikes(recipeId: String, onChange: (List<String>) -> Unit) {
+        if(likesPostListeners.containsKey(recipeId)) return
+        val listener = _recipeRepo.listenPostLikes(recipeId, onChange)
+        likesPostListeners[recipeId] = listener
+    }
+    @Override
+    override fun updateButtonStateForPostLikes(postId: String, isLoading: Boolean) {
+        val currentList = _shares.value.toMutableList()
+        val index = currentList.indexOfFirst { it.recipeId == postId }
+
+        if (index != -1) {
+            val oldItem = currentList[index]
+            currentList[index] = oldItem.copy(isLikeButtonLoading = isLoading)
+            _shares.value = currentList
+        }
+    }
+    override fun updateCommentLikeLoadingState(commentId: String, isLoading: Boolean) {
+        val updatedShares = _shares.value.map { share ->
+            val updatedComments = share.comments?.map { comment ->
+                if (comment.commentId == commentId) {
+                    comment.copy(isLikeButtonLoading = isLoading)
+                } else comment
+            }
+            share.copy(comments = updatedComments)
+        }
+
+        _shares.value = updatedShares
     }
 
     @Override
     override suspend fun unLikePost(share: UserMealDetailModel): Boolean {
         when (val response = _recipeRepo.unLikePost(share, userDataProvider.value.userData?.uid ?: "")) {
             is uploadDownloadResource.Success -> {
+                if(!owner.value){
+                    try {
+                        _userRepo.deleteLikeNotification(
+                            sender = userDataProvider.value.userData!!,
+                            postId = share.recipeId ?: "",
+                            receiver = _user.value ?: return false
+
+                        )
+                    }catch (e: Exception){
+                        Log.d("HomeViewModel", "Error sending post like notification: ${e.message}")
+                    }
+                }
                 Log.d("HomeViewModel", "Post unliked successfully")
                 return true
             }
@@ -321,6 +453,7 @@ class ProfileViewModel @Inject constructor(
     override suspend fun unLikeComment(comment: PostCommentModel): Boolean {
         when (val response = _recipeRepo.unLikeComment(comment)) {
             is uploadDownloadResource.Success -> {
+
                 Log.d("ProfileViewModel", "Comment unliked successfully")
                 return true
             }
@@ -365,10 +498,32 @@ class ProfileViewModel @Inject constructor(
                 Log.d("ProfileViewModel", result.toString())
                 when(result) {
                     is uploadDownloadResource.Success -> {
+
+                        when(val commentNotificationResponse = _userDataProvider.userData?.let {
+                            _userRepo.sendCommentNotification(sender = it,
+                                postId = postId,
+                                comment = _postCommentMessage.value.toString(),
+                                commentId = comment.commentId
+
+                            ) }) {
+                            is uploadDownloadResource.Success -> {
+                                Log.d("ProfileViewModel", "Comment notification sent successfully")
+                            }
+
+                            is uploadDownloadResource.Error -> {
+                                Log.d(
+                                    "ProfileViewModel",
+                                    "Error sending comment notification: ${commentNotificationResponse.exception}"
+                                )
+                            }
+
+                            null -> {
+                                Log.d("ProfileViewModel", "Comment notification sent successfully")
+                            }
+                        }
+
                         _postCommentMessage.value = "Comment Posted"
                         _postComment.value = null
-
-
                         _commentButtonState.value = false
 
                     }
@@ -411,7 +566,7 @@ class ProfileViewModel @Inject constructor(
             _userRepo.uploadImageAndGetUrl(imageUri, type)
         }
 
-       val result = if (type == "profile") {
+        val result = if (type == "profile") {
             _userDataProvider.userData?.profilePictureUrl = downloadUrl
             _userRepo.uploadProfilePicture(downloadUrl.toString())
         } else {
@@ -498,6 +653,24 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun checkIfIsProfileOwner(user: UserDataModel): Boolean{
+        return user.uid == _userDataProvider.userData?.uid
+    }
+
+
+    fun checkFriendship() {
+        viewModelScope.launch {
+            val isFriend = _user.value?.let {
+                _userRepo.checkFriendShip(_userDataProvider.userData!!, it)
+            } ?: false
+            _isFriend.value = isFriend
+
+            _friendshipState.emit(if (isFriend) FriendshipStatus.FRIENDS else FriendshipStatus.NOT_FRIENDS)
+            Log.d("FriendCheck", "Friendship status set to: $friendshipState")
+        }
+    }
+
+
 
 
 
@@ -507,7 +680,7 @@ class ProfileViewModel @Inject constructor(
         _userDataProvider.userData?.chefLevel = _chefLevel.value
         _userDataProvider.userData?.specialties = _specialties.value
         _userDataProvider.userData?.goldenChefHats = _goldenChefHats.intValue
-       val result = _userRepo.saveUserInformation(_userDataProvider)
+        val result = _userRepo.saveUserInformation(_userDataProvider)
 
 
         when(result){
@@ -521,19 +694,82 @@ class ProfileViewModel @Inject constructor(
     }
 
     @Override
-    override suspend fun deleteComment(comment: String) {
+    override suspend fun deleteComment(comment: String, postId: String) {
         when (val response = _recipeRepo.deleteComment(comment)) {
             is uploadDownloadResource.Success -> {
-                Log.d("HomeViewModel", "Comment deleted successfully")
+                when(val commentDeleteResponse = _userRepo.deleteCommentNotification(sender = _userDataProvider.userData!!, postId = postId, commentId = comment)){
+                    is uploadDownloadResource.Success -> {
+                        Log.d("ProfileViewModel", "Comment notification deleted successfully")
+                    }
+                    is uploadDownloadResource.Error -> {
+                        Log.d("ProfileViewModel", "Error deleting comment notification: ${commentDeleteResponse.exception}")
+                    }
+                }
+
+
+
+
+                Log.d("ProfileViewModel", "Comment deleted successfully")
 
             }
             is uploadDownloadResource.Error -> {
-                Log.d("HomeViewModel", "Error deleting comment: ${response.exception}")
+                Log.d("ProfileViewModel", "Error deleting comment: ${response.exception}")
 
             }
         }
 
     }
+
+
+    suspend fun deleteFriend() {
+        viewModelScope.launch {
+            try {
+                val result = _userDataProvider.userData?.let {
+                    _user.value?.let { receiver -> _userRepo.deleteFriend(it, receiver) }
+                } ?: false
+
+                if (result) {
+                    _friendshipState.emit(FriendshipStatus.NOT_FRIENDS)
+                }
+            } catch (e: Exception) {
+                Log.e("FriendRequestViewModel", "Error deleting friend: ${e.message}")
+            }
+        }
+    }
+
+    suspend fun sendFriendRequest() {
+        viewModelScope.launch {
+            try {
+                val result = _userDataProvider.userData?.let {
+                    _user.value?.let { receiver -> _userRepo.sendFriendRequest(it, receiver) }
+                } ?: false
+
+                if (result) {
+                    _friendshipState.emit(FriendshipStatus.PENDING)
+                }
+            } catch (e: Exception) {
+                Log.e("FriendRequestViewModel", "Error sending friend request: ${e.message}")
+            }
+        }
+    }
+
+    suspend fun removeFriendRequest() {
+        viewModelScope.launch {
+            try {
+                val result = _userDataProvider.userData?.let {
+                    _user.value?.let { receiver -> _userRepo.removeFriendRequest(receiver, it) }
+                } ?: false
+
+                if (result) {
+                    _friendshipState.emit(FriendshipStatus.NOT_FRIENDS)
+                }
+            } catch (e: Exception) {
+                Log.e("FriendRequestViewModel", "Error removing friend request: ${e.message}")
+            }
+        }
+    }
+
+
 
     private val _comments = MutableStateFlow<List<PostCommentModel>>(emptyList())
     val comments: StateFlow<List<PostCommentModel>> get() = _comments
@@ -560,6 +796,7 @@ class ProfileViewModel @Inject constructor(
         }
         commentLikeListeners[recipeId] = listener
     }
+
 
 
 
@@ -599,7 +836,7 @@ class ProfileViewModel @Inject constructor(
 
                 if (newUsers.isNotEmpty()) {
                     // Ενημερώνουμε τη λίστα των χρηστών
-                    _likedUsers.value += newUsers
+                    _likedUsers.value = (_likedUsers.value ?: emptyList()) + newUsers
                     // Ενημερώνουμε το paginationIndex
                     paginationIndex = response.lastVisible ?: paginationIndex
                     Log.d("Pagination", "Updated pagination index to: $paginationIndex")
@@ -617,12 +854,20 @@ class ProfileViewModel @Inject constructor(
             }
         }
     }
+    suspend fun startListeningToRecipeUpdate(recipeId: String, onUpdate: (UserMealDetailModel) -> Unit) {
+        _recipeRepo.listenToRecipeUpdates(recipeId, onUpdate)
+    }
 
 
 
+    suspend fun fetchShares(
+        user: UserDataModel
+    ) {
+        Log.d("ProfileViewModel", "Fetching shares for user: ${user.uid}")
 
-    suspend fun fetchShares() {
-        val fetchedResults = _recipeRepo.fetchRecipeShares()
+        val fetchedResults = _recipeRepo.fetchRecipeShares(
+            user
+        )
         Log.d("ProfileViewModel", "Shares fetched successfully")
 
         when (fetchedResults) {
@@ -645,7 +890,7 @@ class ProfileViewModel @Inject constructor(
 
                             val updatedComments = postComments.map { comment ->
                                 val isLiked = comment.whoLikeIt?.contains(currentUserId) == true
-                                initialLikedComments[comment.commentId] = isLiked // ✅ ενημέρωση map
+                                initialLikedComments[comment.commentId] = isLiked
                                 comment.copy(isLiked = isLiked)
                             }
 
@@ -661,17 +906,70 @@ class ProfileViewModel @Inject constructor(
                 Log.d("isLikedTest1", enrichedShares.toString())
 
                 _shares.value = enrichedShares
-                _likedComments.value = initialLikedComments // ✅ ενημέρωση StateFlow
+                _likedComments.value = initialLikedComments
                 Log.d("isLikedTest2", _shares.value.toString())
 
                 enrichedShares.forEach { share ->
-                    share.recipeId?.let { startListeningToCommentCount(it)
+                    share.recipeId?.let {
+                        startListeningToCommentCount(it)
                         startListeningToCommentLikes(it)
-                        startListeningToPostLikes(it)
-
-
+                        startListeningPostLikesCount(it)
                     }
                 }
+
+                enrichedShares.forEach { share ->
+                    val recipeId = share.recipeId ?: return@forEach
+
+                    startListeningToCommentCount(recipeId)
+                    startListeningToCommentLikes(recipeId)
+                    startListeningPostLikesCount(recipeId)
+
+                    startListeningPostLikes(recipeId) { newLikes ->
+                        val currentSharesLive = _shares.value.toMutableList() ?: return@startListeningPostLikes
+                        val index = currentSharesLive.indexOfFirst { it.recipeId == recipeId }
+
+                        if (index != -1) {
+                            val updatedShare = currentSharesLive[index].copy(
+                                whoLikeIt = newLikes,
+                                countLikes = newLikes.size,
+                                isLikeButtonLoading = false
+                            )
+                            currentSharesLive[index] = updatedShare
+                            _shares.value = currentSharesLive
+                        }
+                    }
+
+                    startListeningToRecipeUpdate(recipeId) { updatedRecipe ->
+                        val currentShares = _shares.value.toMutableList()
+                        val index = currentShares.indexOfFirst { it.recipeId == recipeId }
+
+                        if (index != -1) {
+                            val currentShare = currentShares[index]
+                            val mergedRecipe = currentShare.copy(
+                                recipeName = updatedRecipe.recipeName,
+                                steps = updatedRecipe.steps,
+                                recipeId = currentShare.recipeId,
+                                recipeIngredients = updatedRecipe.recipeIngredients,
+                                recipeImage = updatedRecipe.recipeImage,
+                                categoryId = updatedRecipe.categoryId,
+                                visibility = updatedRecipe.visibility,
+                                countComments = updatedRecipe.countComments,
+                                timestamp = updatedRecipe.timestamp,
+                                creatorId = updatedRecipe.creatorId,
+                                isUserRecipe = updatedRecipe.isUserRecipe,
+                                // preserve others
+                                countLikes = currentShare.countLikes,
+                                whoLikeIt = currentShare.whoLikeIt,
+                                comments = currentShare.comments,
+                                isLikeButtonLoading = currentShare.isLikeButtonLoading
+                            )
+                            currentShares[index] = mergedRecipe
+                            _shares.value = currentShares
+                        }
+                    }
+                }
+
+
                 Log.d("ProfileViewModel", "Shares enriched and set")
             }
 
@@ -686,21 +984,3 @@ class ProfileViewModel @Inject constructor(
 
 }
 
-//private val _comments = MutableStateFlow<List<PostCommentModel>>(emptyList())
-//val comments: StateFlow<List<PostCommentModel>> get() = _comments
-//
-//fun startListeningToComments(recipeId: String) {
-//    if (commentListeners.containsKey(recipeId)) return
-//    val listener = _recipeRepo.listenToCommentsForPost(recipeId) { newComments ->
-//        _comments.value = newComments  // Ενημερώνεις το StateFlow με τα νέα σχόλια
-//
-//        // Ενημέρωση των σχολίων στο shares
-//        _shares.value = _shares.value.map { share ->
-//            if (share.recipeId == recipeId) {
-//                // Ενημέρωση με τα νέα σχόλια για το συγκεκριμένο recipeId
-//                share.copy(comments = newComments)
-//            } else share
-//        }
-//    }
-//    commentListeners[recipeId] = listener
-//}

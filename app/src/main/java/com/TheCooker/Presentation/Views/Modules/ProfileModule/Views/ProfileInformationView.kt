@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.TheCooker.Common.Layer.Check.isInternetAvailable
+import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Presentation.Views.Modules.ProfileModule.ViewModels.ProfileViewModel
 import com.TheCooker.R
 import kotlinx.coroutines.launch
@@ -53,6 +54,7 @@ import okhttp3.internal.wait
 @Composable
 fun ProfileInformationView(
     profileViewModel: ProfileViewModel,
+    user:UserDataModel?
 ) {
     val info by remember { profileViewModel.information }
     val editProfile by remember { profileViewModel.editProfile }
@@ -62,7 +64,11 @@ fun ProfileInformationView(
     val context = LocalContext.current
 
 
-    val userInfo = listOfNotNull(
+    if(user != null){
+        profileViewModel.setUserInfo(user)
+    }
+
+        val userInfo = listOfNotNull(
         profileViewModel.country.value.takeIf { it.isNotBlank() }?.let { "Country" to it },
         profileViewModel.city.value.takeIf { it.isNotBlank() }?.let { "City" to it },
         profileViewModel.chefLevel.value.takeIf { it.isNotBlank() }?.let { "Chef Level" to it },

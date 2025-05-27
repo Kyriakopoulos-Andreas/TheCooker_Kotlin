@@ -51,31 +51,21 @@ fun TopMenu(
     scaffoldState: ScaffoldState,
     scope: CoroutineScope,
     previousRoute: MutableState<String?>,
+    sharedViewModel: SharedViewModel
 
-) {
-    var selectedItem by rememberSaveable {
-        mutableStateOf(2)
-    }
-    val sharedViewModel = hiltViewModel<SharedViewModel>()
+
+
+    ) {
+
+
+    val selectedItem by sharedViewModel.selectedBottomIndex.collectAsState()
     val notificationCount = sharedViewModel.unreadCount.collectAsState()
 
     LaunchedEffect(Unit) {
         sharedViewModel.startListening()
     }
 
-
-
     Log.d("TestSelectedIcon", selectedItem.toString())
-
-
-
-
-        val currentRoute = navController.currentBackStackEntry?.destination?.route
-        if (currentRoute?.contains("MealsView") == true) {  //Keep selected icon when navigate deeper to search view
-            selectedItem = 3
-        }
-
-
 
 
     NavigationBar(
@@ -107,9 +97,14 @@ fun TopMenu(
                                     scaffoldState.drawerState.open()
                                 }
                             } else {
-                                selectedItem = index
+                                sharedViewModel.setSelectedIndex(index)
                                 navController.navigate(screen.route) {
-
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+//                                    if(screen.route)
                                 }
                             }
                         },

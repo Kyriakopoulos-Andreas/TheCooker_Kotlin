@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,16 +40,20 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.common.C
 import coil.compose.AsyncImage
 import com.TheCooker.Common.Layer.Check.isInternetAvailable
 import com.TheCooker.Common.Layer.Resources.LoginResults
 import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
 import com.TheCooker.Presentation.Views.Modules.FriendRequestModule.ViewModels.FriendRequestViewModel
 import com.TheCooker.Domain.Layer.Models.NotificationsModels.AcceptRequestNotification
-import com.TheCooker.Domain.Layer.Models.NotificationsModels.FriendRequestNotifications
+import com.TheCooker.Domain.Layer.Models.NotificationsModels.CommentNotification
+import com.TheCooker.Domain.Layer.Models.NotificationsModels.FriendRequestNotification
+import com.TheCooker.Domain.Layer.Models.NotificationsModels.LikeNotification
 import com.TheCooker.Presentation.Views.Modules.NotificationModule.Views.ViewModels.NotificationsViewModel
 import com.TheCooker.R
 import kotlinx.coroutines.CoroutineScope
@@ -109,7 +114,14 @@ fun NotificationView(){
                 val notification = notificationsList[index]
                 when (notification) {
                     is AcceptRequestNotification -> AcceptRequestNotificationItem(notification, notificationsViewModel)
-                    is FriendRequestNotifications -> FriendRequestNotificationItem(
+
+                    is CommentNotification -> CommentNotificationItem(notification, notificationsViewModel)
+
+                    is LikeNotification -> {
+                        LikeNotificationItem(notification, notificationsViewModel)
+
+                    }
+                    is FriendRequestNotification -> FriendRequestNotificationItem(
                         notification = notification,
                         scope = scope,
                         friendRequestViewModel = friendRequestViewModel,
@@ -121,13 +133,129 @@ fun NotificationView(){
         }
 
     }
-
-
 }
+
+@Composable
+fun CommentNotificationItem(notification: CommentNotification, notificationViewModel: NotificationsViewModel){
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp, 8.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top
+        ) {
+            Box(
+                contentAlignment = Alignment.TopEnd,
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+            ) {
+                AsyncImage(
+                    model = notification.getProfilePictureUrl(),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .padding(start = 12.dp)
+                    .weight(1f)
+            ) {
+                Text(
+                    text = notification.toString(),
+                    fontSize = 18.sp,
+                    color = Color.White,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+
+                val timeAgo = remember(notification.timestamp) {
+                    notification.timestamp?.let {
+                        notificationViewModel.formatTimeAgo(it)
+                    }
+                }
+
+                if (!timeAgo.isNullOrBlank()) {
+                    Text(
+                        text = timeAgo,
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LikeNotificationItem(notification: LikeNotification, notificationViewModel: NotificationsViewModel){
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp, 8.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top
+        ) {
+            Box(
+                contentAlignment = Alignment.TopEnd,
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+            ) {
+                AsyncImage(
+                    model = notification.getProfilePictureUrl(),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .padding(start = 12.dp)
+                    .weight(1f)
+            ) {
+                Text(
+                    text = notification.toString(),
+                    fontSize = 18.sp,
+                    color = Color.White
+                )
+
+                val timeAgo = remember(notification.timestamp) {
+                    notification.timestamp?.let {
+                        notificationViewModel.formatTimeAgo(it)
+                    }
+                }
+
+                if (!timeAgo.isNullOrBlank()) {
+                    Text(
+                        text = timeAgo,
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+    }
+
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun FriendRequestNotificationItem(notification: FriendRequestNotifications, scope: CoroutineScope, friendRequestViewModel
+fun FriendRequestNotificationItem(notification: FriendRequestNotification, scope: CoroutineScope, friendRequestViewModel
 : FriendRequestViewModel, context: Context, notificationViewModel: NotificationsViewModel
 ){
     val friendRequestAccepted = friendRequestViewModel.friendRequestAcceptedState.collectAsState()
@@ -295,16 +423,8 @@ fun FriendRequestNotificationItem(notification: FriendRequestNotifications, scop
 }
 
 
-
-
-
-
-
-
-
 @Composable
-fun AcceptRequestNotificationItem(notification: AcceptRequestNotification, notificationViewModel: NotificationsViewModel){
-
+fun AcceptRequestNotificationItem(notification: AcceptRequestNotification, notificationViewModel: NotificationsViewModel) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -313,14 +433,13 @@ fun AcceptRequestNotificationItem(notification: AcceptRequestNotification, notif
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
+            verticalAlignment = Alignment.Top
         ) {
             Box(
                 contentAlignment = Alignment.TopEnd,
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape)
-                   
             ) {
                 AsyncImage(
                     model = notification.getProfilePictureUrl(),
@@ -330,38 +449,37 @@ fun AcceptRequestNotificationItem(notification: AcceptRequestNotification, notif
                 )
             }
 
-            Column(modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .clickable {
-                    // Handle notification click
-                }) {
+            Column(
+                modifier = Modifier
+                    .padding(start = 12.dp)
+                    .weight(1f)
+            ) {
                 Text(
                     text = notification.toString(),
                     fontSize = 18.sp,
                     color = Color.White
                 )
+
+                val timeAgo = remember(notification.timestamp) {
+                    notification.timestamp?.let {
+                        notificationViewModel.formatTimeAgo(it)
+                    }
+                }
+
+                if (!timeAgo.isNullOrBlank()) {
+                    Text(
+                        text = timeAgo,
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             }
-
-            val timeAgo = remember(notification.timestamp) { notification.timestamp?.let {
-                notificationViewModel.formatTimeAgo(
-                    it
-                )
-            } }
-
-            if (timeAgo != null) {
-                Text(
-                    text = timeAgo,
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(start = 12.dp, top = 4.dp)
-                )
-            }
-            Spacer(modifier = Modifier.padding(bottom = 16.dp))
-
         }
-    }
 
+        // Προσθέτει ομοιόμορφο spacing κάτω από το item
+        Spacer(modifier = Modifier.height(8.dp))
+    }
 }
 
 @Composable

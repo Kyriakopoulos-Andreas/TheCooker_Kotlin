@@ -34,7 +34,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -55,12 +58,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.TheCooker.Common.Layer.Check.isInternetAvailable
 import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
+import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Domain.Layer.Models.ProfileModels.ProfileModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.PostCommentModel
 import com.TheCooker.Domain.Layer.Models.RecipeModels.UserMealDetailModel
@@ -74,15 +77,56 @@ import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterialApi::class)
-@SuppressLint("ResourceAsColor")
+@SuppressLint("ResourceAsColor", "StateFlowValueCalledInComposition")
 @Composable
 fun ProfileView(navigator: NavController,
+                user: UserDataModel?,
+                profileViewModel: ProfileViewModel,
+
                 ) {
+    Log.d("ProfileView", user.toString())
+
+    LaunchedEffect(Unit) {
+        if (user != null) {
+            if(profileViewModel.checkIfIsProfileOwner(user)){
+                profileViewModel.setLoggedInProfile()
+                profileViewModel.setProfileOwner(true)
+
+            }else{
+                profileViewModel.setUserData(user)
+                profileViewModel.checkFriendship()
+                profileViewModel.setProfileOwner(false)
+
+            }
+        } else {
+            profileViewModel.setProfileOwner(true)
+            profileViewModel.setLoggedInProfile()
+        }
+    }
+
+    Log.d("UserOnProfile", user.toString())
+
+
+//    DisposableEffect(Unit) {
+//        onDispose {
+//            profileViewModel.resetUserData()
+//        }
+//    }
+
+    Log.d("ProfileView", user.toString())
     var imageUriProfile by remember { mutableStateOf<Uri?>(null) }
     var imageUriBackground by remember { mutableStateOf<Uri?>(null) }
-    val profileViewModel: ProfileViewModel = hiltViewModel()
-    val commentToBeDeletedOrUpdated by profileViewModel.commentToBeDeletedOrUpdate
 
+    val commentToBeDeletedOrUpdated by profileViewModel.commentToBeDeletedOrUpdate
+    val checkFriendShip = profileViewModel.isFriend.collectAsState()
+    val owner =profileViewModel.owner.collectAsState()
+    val userProfile by profileViewModel.user.collectAsState()
+
+    val friendshipStatus by profileViewModel.friendshipState.collectAsState()
+
+
+
+    //TODO check if user is friend
 
 
     LaunchedEffect(key1 = Unit) {
@@ -102,35 +146,46 @@ fun ProfileView(navigator: NavController,
     var selectedShare by remember { mutableStateOf<UserMealDetailModel?>(null) }
 
 
-    Log.d("PhotoIn", profileViewModel.userDataProvider.value.userData?.profilePictureUrl.toString())
+
     val context = LocalContext.current
 
 
-    val launcherProfilePic = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            profileViewModel.viewModelScope.launch {
-                val result = profileViewModel.updatePhoto(it, "profile")
-                when (result) {
-                    is uploadDownloadResource.Success -> {
-                        Log.d("Upload Image", "Success")
-                        imageUriProfile = it
-                        profileViewModel.userDataProvider.value.userData?.profilePictureUrl
-                    }
+        val launcherProfilePic = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent()
+        ) { uri: Uri? ->
+            uri?.let {
+                profileViewModel.viewModelScope.launch {
+                    val result = profileViewModel.updatePhoto(it, "profile")
+                    when (result) {
+                        is uploadDownloadResource.Success -> {
+                            Log.d("Upload Image", "Success")
+                            imageUriProfile = it
+                            profileViewModel.user.value?.profilePictureUrl = it.toString()
+                        }
 
-                    is uploadDownloadResource.Error -> {
-                        Toast.makeText(
-                            context,
-                            "Something goes wrong with uploading",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                        is uploadDownloadResource.Error -> {
+                            Toast.makeText(
+                                context,
+                                "Something goes wrong with uploading",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
 
+                    }
                 }
             }
         }
+
+
+    DisposableEffect(Unit) {
+        Log.d("ProfileViewLifecycle", "ProfileView entered composition")
+        onDispose {
+            Log.d("ProfileViewLifecycle", "ProfileView left composition")
+        }
     }
+
+
+
 
     val launcherBackgroundPic = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -142,7 +197,7 @@ fun ProfileView(navigator: NavController,
                     is uploadDownloadResource.Success -> {
                         Log.d("Upload Image", "Success")
                         imageUriBackground = it
-                        profileViewModel.userDataProvider.value.userData?.backGroundPictureUrl
+                        profileViewModel.user.value?.backGroundPictureUrl = it.toString()
                     }
 
                     is uploadDownloadResource.Error -> {
@@ -156,37 +211,29 @@ fun ProfileView(navigator: NavController,
             }
         }
     }
-
-
-    var userProfilePicExists by remember { mutableStateOf(false) }
-    var userBackgroundPicExists by remember { mutableStateOf(false) }
-
-    if (profileViewModel.userDataProvider.value.userData?.profilePictureUrl != null) {
-        userProfilePicExists = true
-    }
-
-    if (profileViewModel.userDataProvider.value.userData?.backGroundPictureUrl != null) {
-        userBackgroundPicExists = true
-    }
-
     var selectedItem by remember {
         mutableIntStateOf(0)
     }
 
 
+
+
+// Στο Composable:
+
+
     val painterProfileIm = when {
         imageUriProfile != null -> imageUriProfile
-        userProfilePicExists -> profileViewModel.userDataProvider.value.userData?.profilePictureUrl.toString()
+        userProfile?.profilePictureUrl?.isNotBlank() == true -> userProfile!!.profilePictureUrl.toString()
         else -> R.drawable.tt
     }
 
     val painterBackgroundIm = when {
         imageUriBackground != null -> imageUriBackground
-        userBackgroundPicExists -> profileViewModel.userDataProvider.value.userData?.backGroundPictureUrl.toString()
+        userProfile?.backGroundPictureUrl?.isNotBlank() == true -> userProfile!!.backGroundPictureUrl.toString()
         else -> R.drawable.profile_background
     }
 
-    // Εδώ χρησιμοποιούμε το DisposableEffect για να σταματήσουμε την παρακολούθηση όταν το Composable καταστραφεί
+
 
     val listState = rememberSaveable(saver = LazyListState.Saver) {
         LazyListState()
@@ -207,7 +254,7 @@ fun ProfileView(navigator: NavController,
                     }
 
                     coroutineScope.launch {
-                        commentToBeDeletedOrUpdated?.commentId?.let { profileViewModel.deleteComment(it) }
+                        commentToBeDeletedOrUpdated?.commentId?.let { profileViewModel.deleteComment(it, commentToBeDeletedOrUpdated!!.postId)  }
                         modalSheetStateForCommentSettings.hide()
                     }
 
@@ -256,85 +303,33 @@ fun ProfileView(navigator: NavController,
                         .padding(0.dp),
                     contentAlignment = Alignment.TopStart
                 ) {
+
+
+
+
                     AsyncImage(
                         model = painterBackgroundIm,
                         contentDescription = "Add Meal Image",
                         modifier = Modifier
                             .fillMaxSize()
                             .clickable {
-                                if (!isInternetAvailable(context = context)) {
-                                    Toast
-                                        .makeText(
-                                            context,
-                                            "No internet connection",
-                                            Toast.LENGTH_SHORT
-                                        )
-                                        .show()
-                                    return@clickable
+                                if (owner.value) {
+                                    if (!isInternetAvailable(context = context)) {
+                                        Toast
+                                            .makeText(
+                                                context,
+                                                "No internet connection",
+                                                Toast.LENGTH_SHORT
+                                            )
+                                            .show()
+                                        return@clickable
+                                    }
+                                    launcherBackgroundPic.launch("image/*")
                                 }
-                                launcherBackgroundPic.launch("image/*")
                             },
                         contentScale = ContentScale.Crop
                     )
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .align(Alignment.BottomEnd)
-                            .offset(
-                                x = (-9).dp,
-                                y = (-9).dp
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = Color(R.color.ProfileCameraAssetBackground),
-                                shape = CircleShape
-                            )
-                            .clip(CircleShape)
-                            .background(colorResource(id = R.color.darkGrey))
-                            .clickable {
-                                if (!isInternetAvailable(context = context)) {
-                                    Toast
-                                        .makeText(
-                                            context,
-                                            "No internet connection",
-                                            Toast.LENGTH_SHORT
-                                        )
-                                        .show()
-                                    return@clickable
-                                }
-                                launcherProfilePic.launch("image/*")
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_camera_alt_24),
-                            contentDescription = "Change Profile Image",
-                            modifier = Modifier.size(18.dp),
-                            tint = Color.White
-                        )
-                    }
-
-                    Box(
-                        contentAlignment = Alignment.BottomEnd,
-                        modifier = Modifier
-                            .size(120.dp)
-                            .offset(x = 16.dp, y = 120.dp)
-                            .clip(CircleShape)
-                            .border(
-                                width = 3.dp,
-                                color = Color(0xFF292929),
-                                shape = CircleShape
-                            )
-                    ) {
-                        AsyncImage(
-                            model = painterProfileIm,
-                            contentDescription = "ProfilePicture",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clickable { launcherProfilePic.launch("image/*") },
-                            contentScale = ContentScale.Crop
-                        )
-
+                    if(owner.value) {
                         Box(
                             modifier = Modifier
                                 .size(32.dp)
@@ -349,15 +344,86 @@ fun ProfileView(navigator: NavController,
                                     shape = CircleShape
                                 )
                                 .clip(CircleShape)
-                                .background(colorResource(id = R.color.darkGrey)),
+                                .background(colorResource(id = R.color.darkGrey))
+                                .clickable {
+                                    if (owner.value) {
+                                        if (!isInternetAvailable(context = context)) {
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    "No internet connection",
+                                                    Toast.LENGTH_SHORT
+                                                )
+                                                .show()
+                                            return@clickable
+                                        }
+                                        launcherProfilePic.launch("image/*")
+                                    }
+                                },
                             contentAlignment = Alignment.Center
                         ) {
+
                             Icon(
                                 painter = painterResource(id = R.drawable.baseline_camera_alt_24),
                                 contentDescription = "Change Profile Image",
                                 modifier = Modifier.size(18.dp),
                                 tint = Color.White
                             )
+
+                        }
+                    }
+
+                    Box(
+                        contentAlignment = Alignment.BottomEnd,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .offset(x = 16.dp, y = 120.dp)
+                            .clip(CircleShape)
+                            .border(
+                                width = 3.dp,
+                                color = Color(0xFF292929),
+                                shape = CircleShape
+                            )
+                    ) {
+                        val profileImage =
+                            if (!owner.value) user?.profilePictureUrl else painterProfileIm
+                        AsyncImage(
+                            model = profileImage,
+                            contentDescription = "ProfilePicture",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable {
+                                    if (user == null) {
+                                        launcherProfilePic.launch("image/*")
+                                    }
+                                },
+                            contentScale = ContentScale.Crop
+                        )
+                        if (owner.value) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .align(Alignment.BottomEnd)
+                                    .offset(
+                                        x = (-9).dp,
+                                        y = (-9).dp
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        color = Color(R.color.ProfileCameraAssetBackground),
+                                        shape = CircleShape
+                                    )
+                                    .clip(CircleShape)
+                                    .background(colorResource(id = R.color.darkGrey)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_camera_alt_24),
+                                    contentDescription = "Change Profile Image",
+                                    modifier = Modifier.size(18.dp),
+                                    tint = Color.White
+                                )
+                            }
                         }
                     }
                 }
@@ -367,7 +433,7 @@ fun ProfileView(navigator: NavController,
 
             item {
                 Row(modifier = Modifier.padding(start = 12.dp)) {
-                    profileViewModel.userDataProvider.value.userData?.userName.let {
+                    profileViewModel.user.value?.userName.let {
                         if (it != null) {
                             Text(
                                 text = it,
@@ -381,31 +447,81 @@ fun ProfileView(navigator: NavController,
 
             item { Spacer(modifier = Modifier.height(24.dp)) }
 
-            item {
-                Row(
-                    modifier = Modifier
-                        .padding(start = 64.dp, end = 64.dp)
-                        .fillMaxWidth()
-                ) {
-                    Button(
-                        onClick = {
-                            profileViewModel.setProfileManagement(edit = true)
-                            profileViewModel.setShowShares(false)
-                            profileViewModel.setInformation(false)
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                            contentColor = Color.White,
-                            containerColor = colorResource(id = R.color.yellow)
-                        )
+
+
+            if (owner.value) {
+                // Αν ο χρήστης είναι ο ιδιοκτήτης του προφίλ, εμφανίζεται το "Edit Profile"
+                item {
+                    Row(
+                        modifier = Modifier
+                            .padding(start = 64.dp, end = 64.dp)
+                            .fillMaxWidth()
                     ) {
-                        Text(
-                            text = "Edit Profile",
-                            fontWeight = FontWeight.Bold
-                        )
+                        Button(
+                            onClick = {
+                                profileViewModel.setProfileManagement(edit = true)
+                                profileViewModel.setShowShares(false)
+                                profileViewModel.setInformation(false)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                contentColor = Color.White,
+                                containerColor = colorResource(id = R.color.yellow)
+                            )
+                        ) {
+                            Text(
+                                text = "Edit Profile",
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            } else {
+                // Αν δεν είναι ο ιδιοκτήτης, τότε διαχειρίζεται την κατάσταση της φιλίας
+                item {
+                    Row(
+                        modifier = Modifier
+                            .padding(start = 64.dp, end = 64.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Button(
+                            onClick = {
+                                if (!isInternetAvailable(context)) {
+                                    Toast.makeText(
+                                        context,
+                                        "No internet connection. Please check your network settings.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@Button
+                                }
+
+                                coroutineScope.launch {
+                                    when (friendshipStatus) {
+                                        ProfileViewModel.FriendshipStatus.FRIENDS -> profileViewModel.deleteFriend()
+                                        ProfileViewModel.FriendshipStatus.NOT_FRIENDS -> profileViewModel.sendFriendRequest()
+                                        ProfileViewModel.FriendshipStatus.PENDING -> profileViewModel.removeFriendRequest()
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                contentColor = Color.White,
+                                containerColor = colorResource(id = R.color.yellow)
+                            )
+                        ) {
+                            Text(
+                                text = when (friendshipStatus) {
+                                    ProfileViewModel.FriendshipStatus.FRIENDS -> "Delete Friend"
+                                    ProfileViewModel.FriendshipStatus.NOT_FRIENDS -> "Add Friend"
+                                    ProfileViewModel.FriendshipStatus.PENDING -> "Remove Friend Request"
+                                },
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
+
 
             item { Spacer(modifier = Modifier.height(8.dp)) }
             item { BlackFatDivider() }
@@ -465,19 +581,22 @@ fun ProfileView(navigator: NavController,
 
             if (profileViewModel.information.value) {
                 item {
-                    ProfileInformationView(profileViewModel)
+                    ProfileInformationView(profileViewModel, user)
                 }
             }
-            if (profileViewModel.editProfile.value) {
-                item {
-                    selectedItem = 1
-                    ProfileInformationView(profileViewModel)
+            if(owner.value ) {
+                if (profileViewModel.editProfile.value) {
+                    item {
+                        selectedItem = 1
+                        ProfileInformationView(profileViewModel, null)
+                    }
                 }
             }
 
 
 
-
+                //ΕΔΩ ΘΑ ΠΑΙΞΕΙΣ ΓΙΑ ΤΟ ΜΟΝΟ ΑΝ ΕΙΝΑΙ ΦΙΛΟΙ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if(checkFriendShip.value || owner.value){
             if (profileViewModel.showShares.value) {
                 item {
                     SharesView(
@@ -485,28 +604,23 @@ fun ProfileView(navigator: NavController,
                         showModal = { share ->  // Get share from SharesView via lambda expression and use it to delete it or update it. Keep it in locale var
                             selectedShare = share
                             coroutineScope.launch {
-                                modalSheetState.show()
-                            }
-                        },
+                                modalSheetState.show() } },
                         hideModal = {
                             coroutineScope.launch {
                                 modalSheetState.hide()
-                            }
-                        },
+                            } },
                         navigator = navigator,
                         showModalForCommentSettings = {
                             coroutineScope.launch {
-                                modalSheetStateForCommentSettings.show()
-                            }
-                        },
+                                    modalSheetStateForCommentSettings.show()
+                            } },
                         fetchCommentIdForDeleteOrUpdate = { comment ->
-                            profileViewModel.setCommentToBeDeletedOrUpdated(comment)
+                                profileViewModel.setCommentToBeDeletedOrUpdated(comment)
                         }
-
-
-                        )
+                    )
                 }
             }
+                }
 
         }
     }
@@ -519,27 +633,36 @@ fun ProfileView(navigator: NavController,
                 modifier = Modifier.fillMaxWidth(),
                 onDeleteClick = {
                     if(!isInternetAvailable(context = context)){
-                       profileViewModel.setDeletePostResult("No internet connection")
+                        profileViewModel.setDeletePostResult("No internet connection")
                     }
                     coroutineScope.launch {
                         profileViewModel.deletePost(selectedShare)
 
                         modalSheetState.hide()
-                        profileViewModel.fetchShares()
+                        profileViewModel.user.value?.let { profileViewModel.fetchShares(it) }
                         Toast.makeText(context, profileViewModel.deletePostResult.value, Toast.LENGTH_SHORT).show()
                     }
 
-                                },
+                },
                 onUpdateClick = {
                     coroutineScope.launch {
                         if(!isInternetAvailable(context = context)){
                             profileViewModel.setDeletePostResult("No internet connection")
                         }
-                        Log.d("PostUpdate", selectedShare.toString())
-
-                        navigator.currentBackStackEntry?.savedStateHandle?.set<UserMealDetailModel?>("PostRecipe", selectedShare)
+                        navigator.currentBackStackEntry?.savedStateHandle?.set("PostRecipe", selectedShare)
                         navigator.navigate("CreateMeal")
+                        modalSheetState.hide()
+                    }
 
+                },
+                isOwner = profileViewModel.owner.value,
+                onHideClick = {
+                    coroutineScope.launch {
+                        modalSheetState.hide()
+                    }
+                },
+                onReportClick = {
+                    coroutineScope.launch {
                         modalSheetState.hide()
                     }
                 }

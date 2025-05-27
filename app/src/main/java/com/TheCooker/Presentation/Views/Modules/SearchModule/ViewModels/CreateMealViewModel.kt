@@ -323,6 +323,7 @@ class CreateMealViewModel @Inject constructor(
         categoryId: String?,
 
     ) {
+        Log.d("TestRecipeIdOnCreateMeal", "RecipeId: $recipeId")
         if (recipeId != null) {
             mealDetailViewModel.validateUpdate()
             delay(300)
@@ -345,16 +346,21 @@ class CreateMealViewModel @Inject constructor(
             mealDetailViewModel.updateRecipe(updatedRecipe, imageUri) {
                 val updateRecipeState = mealDetailViewModel.updateState.value
                 if (updateRecipeState?.isSaving == false &&
-                    updateRecipeState.imageUploaded == true &&
-                    updateRecipeState.onUpdateRecipe == false
+                    updateRecipeState.imageUploaded == true
+//                    updateRecipeState.onUpdateRecipe == false
                     ) {
                     Log.d("checkCombineMeals", combineMeals.toString())
                     mealsViewModel.updateRecipeOnLiveList(updatedRecipe, combineMeals)
                     // Ενημέρωση του savedStateHandle με την ενημερωμένη συνταγή
-                    navController.previousBackStackEntry?.savedStateHandle?.set(
-                        "updatedMeal",
-                        updatedRecipe)
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("updatedMeal", updatedRecipe)
+
+                    Log.d("SaveUpdatedMeal", "Updated meal stored: $updatedRecipe")
                     saveNavigateBack()
+
+
+
                     //TODO UPDATE CHECK
                     mealsViewModel.setBackFromUpdate(true)
 

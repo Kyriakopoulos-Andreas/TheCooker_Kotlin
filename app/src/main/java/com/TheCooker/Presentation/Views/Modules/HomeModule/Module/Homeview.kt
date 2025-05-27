@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,10 +22,15 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,9 +40,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,7 +65,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun HomeView(
     navController: NavController,
@@ -115,7 +124,7 @@ fun HomeView(
                     }
 
                     scope.launch {
-                        commentToBeDeleted?.commentId?.let { profileViewModel.deleteComment(it) }
+                        commentToBeDeleted?.commentId?.let { profileViewModel.deleteComment(it, commentToBeDeleted!!.postId) }
                         modalSheetStateComment.hide()
                     }
 
@@ -156,14 +165,73 @@ fun HomeView(
                 verticalArrangement = Arrangement.Top,
                 state = listState
             ) {
+
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(0.dp, bottom = 0.dp)
+                            .background(
+                                color = colorResource(id = R.color.darkGrey),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .shadow(2.dp, shape = RoundedCornerShape(8.dp))
+                            .padding(16.dp)
+                    ) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Discover Recipes & Chefs",
+                            style = TextStyle(
+                                fontSize = 24.sp,
+                                color = Color.White
+                            ),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        OutlinedTextField(
+                            value = "",
+                            onValueChange = {
+                                // viewModel.setSearchQuery(it)
+                            },
+                            singleLine = true,
+                            placeholder = { Text(
+                                "Search for recipes or people",
+                                color = colorResource(id = R.color.yellow)
+                                
+                                
+                                ) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search Icon",
+                                    tint = Color(0xFFFFC107)
+                                )
+                            },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                focusedBorderColor = Color(0xFFFFC107),
+                                unfocusedBorderColor = Color(0xAAFFC107),
+                                cursorColor = Color(0xFFFFC107),
+                                focusedLabelColor = Color(0xFFFFC107),
+                                unfocusedLabelColor = Color(0xFFFFC107),
+                                focusedSupportingTextColor = Color.White,
+                                containerColor = Color.Transparent
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+
+
+
                 items(
                     items = randomShares.value,
-                    key = { share -> share.recipeId ?: share.id ?: UUID.randomUUID().toString() }
+                    key = { share -> share.id ?: share.recipeId ?: "" }
                 ) { share ->
-
-
-
-
                     share.creatorData?.userName?.let {
 
                         Post(

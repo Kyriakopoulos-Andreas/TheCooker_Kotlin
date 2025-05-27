@@ -86,6 +86,7 @@ fun CommentCard(share: UserMealDetailModel,
                     } else {
                         profileViewModel.likedComments.collectAsState().value
                     }
+                    val viewModel = homeViewModel ?: profileViewModel
 
                     val liked = likedCommentsMap[comment.commentId] ?: false
                     val heartColor = if (liked) colorResource(id = R.color.yellow) else Color.White
@@ -112,7 +113,28 @@ fun CommentCard(share: UserMealDetailModel,
                                     contentDescription = "User Avatar",
                                     modifier = Modifier
                                         .size(40.dp)
-                                        .clip(CircleShape),
+                                        .clip(CircleShape).clickable {
+
+                                            if (homeViewModel != null) {
+                                                if(comment.senderObj?.let {
+                                                    Log.d("CommentOnCommentCard", "JoinOnMyPrfile")
+                                                        homeViewModel.checkIfOneUserIsTheMainUser(it)} == true){
+                                                    navigator.currentBackStackEntry?.savedStateHandle?.set("user", comment.senderObj)
+                                                    navigator.navigate("Profile?from=drawer") {
+
+                                                        launchSingleTop = true
+                                                    }
+
+                                                }else{
+                                                    navigator.currentBackStackEntry?.savedStateHandle?.set("user", comment.senderObj)
+                                                    navigator.navigate("Profile?from=friend_request_FromHome") {
+                                                        launchSingleTop = true
+                                                    }
+                                                }
+                                            }
+
+
+                                        },
                                     contentScale = ContentScale.Crop
                                 )
 
@@ -162,43 +184,39 @@ fun CommentCard(share: UserMealDetailModel,
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.Center
                                     ) {
-                                        IconButton(onClick = {
-                                            if (!isInternetAvailable(context)) return@IconButton
+                                        IconButton(
+                                            onClick = {
+                                                if (!isInternetAvailable(context)) return@IconButton
 
-                                            scope.launch(Dispatchers.IO) {
-
-                                                val result = if (!liked) {
-                                                    (homeViewModel ?: profileViewModel).commentLike(
-                                                        comment
-                                                    )
-                                                } else {
-                                                    (homeViewModel
-                                                        ?: profileViewModel).unLikeComment(comment)
-                                                }
-
-
-                                                withContext(Dispatchers.Main) {
-                                                    if (result) {
-                                                        (homeViewModel
-                                                            ?: profileViewModel).toggleLikeForComment(
-                                                            comment.commentId,
-                                                            !liked
-                                                        )
+                                                scope.launch(Dispatchers.IO) {
+                                                    val result = if (!liked) {
+                                                        (homeViewModel ?: profileViewModel).commentLike(comment)
                                                     } else {
-                                                        val errorMessage = if (!liked) {
-                                                            "Error liking comment"
+                                                        (homeViewModel ?: profileViewModel).unLikeComment(comment)
+                                                    }
+
+                                                    withContext(Dispatchers.Main) {
+                                                        if (result) {
+                                                            (homeViewModel ?: profileViewModel).toggleLikeForComment(
+                                                                comment.commentId,
+                                                                !liked
+                                                            )
+
                                                         } else {
-                                                            "Error unliking comment"
+                                                            val errorMessage = if (!liked) {
+                                                                "Error liking comment"
+                                                            } else {
+                                                                "Error unliking comment"
+                                                            }
+                                                            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+
                                                         }
-                                                        Toast.makeText(
-                                                            context,
-                                                            errorMessage,
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
                                                     }
                                                 }
                                             }
-                                        })
+//                                            enabled = !comment.isLikeButtonLoading
+                                        )
+
                                         {
 
                                             Icon(
@@ -270,7 +288,7 @@ fun CommentCard(share: UserMealDetailModel,
                     }
                 }
             } ?: item {
-                Text("No comments yet.")
+
             }
         }
 

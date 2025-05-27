@@ -51,6 +51,13 @@ class MealsViewModel @Inject constructor(
     private val _backFromDeleteFlagForFetch = MutableStateFlow<Boolean>(value = false)
     val backFromDeleteFlagForFetch: StateFlow<Boolean> get()  = _backFromDeleteFlagForFetch
 
+    private val _updatedMeals = MutableStateFlow<List<UserMealModel>>(emptyList())
+    val updatedMeals: StateFlow<List<UserMealModel>> = _updatedMeals
+
+    fun setUpdatedMeals(meals: List<UserMealModel>) {
+        _updatedMeals.value = meals
+    }
+
     fun setBackFromUpdate(value: Boolean) {
         _backFromUpdate.value = value
     }

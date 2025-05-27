@@ -127,7 +127,9 @@ fun CommentUpdateView(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Button(
-                            onClick = { /* Cancel */ },
+                            onClick = {
+                                navController.popBackStack()
+                            },
                             shape = RoundedCornerShape(0.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.Transparent,

@@ -336,6 +336,34 @@ class RecipeRepo@Inject constructor(
             }
     }
 
+    fun listenPostLikes(
+        recipeId: String,
+        onChange: (List<String>) -> Unit
+    ): ListenerRegistration {
+        Log.e("PostLikesListener", "RecipeId $recipeId")
+        Log.d("PostLikesListener", "Started listening to likes for recipeId: $recipeId")
+
+        return firestore.collection("recipes")
+            .document(recipeId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("PostLikesListener", "Error listening to likes for recipeId: $recipeId", error)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot == null || !snapshot.exists()) {
+                    Log.w("PostLikesListener", "Snapshot null or does not exist for recipeId: $recipeId")
+                    return@addSnapshotListener
+                }
+
+                val likes = snapshot.get("whoLikeIt") as? List<String> ?: emptyList()
+                Log.d("PostLikesListener", "Likes updated for recipeId: $recipeId -> ${likes.size} likes: $likes")
+
+                onChange(likes)
+            }
+    }
+
+
     fun listenToCommentsForPost(
         recipeId: String,
         onChange: (List<PostCommentModel>) -> Unit
@@ -447,11 +475,33 @@ class RecipeRepo@Inject constructor(
         }
     }
 
-    suspend fun fetchRecipeShares(): uploadDownloadResource<List<UserMealDetailModel>> {
+     fun listenToRecipeUpdates(
+        recipeId: String,
+        onUpdate: (UserMealDetailModel) -> Unit
+    ): ListenerRegistration {
+        return firestore
+            .collection("recipes")
+            .document(recipeId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("RecipeUpdateListener", "Listen failed", error)
+                    return@addSnapshotListener
+                }
+
+                snapshot?.toObject(UserMealDetailModel::class.java)?.let { updatedRecipe ->
+                    onUpdate(updatedRecipe)
+                }
+            }
+    }
+
+
+    suspend fun fetchRecipeShares(
+        userData: UserDataModel
+    ): uploadDownloadResource<List<UserMealDetailModel>> {
         return try {
             Log.d("RecipeRepo", "Trying to fetch recipe shares")
             val querySnapshot = firestore.collection("recipes")
-                .whereEqualTo("creatorId", userData.userData?.uid)
+                .whereEqualTo("creatorId", userData.uid)
                 .whereEqualTo("visibility", true)
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()

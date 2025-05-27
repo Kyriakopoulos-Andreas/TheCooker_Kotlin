@@ -26,12 +26,15 @@ abstract class CommonActionLikePost: ViewModel() {
     abstract  fun resetLikedUsers()
     abstract fun setOpenCommentsPostId(postId: String?)
     abstract fun getOpenCommentsPostId(): String?
-    abstract suspend fun deleteComment(comment: String)
+    abstract suspend fun deleteComment(comment: String, postId: String)
     abstract fun setCommentToBeDeletedOrUpdated(comment: PostCommentModel?)
     abstract fun getCommentToBeDeletedOrUpdated(): PostCommentModel?
     abstract suspend fun updateComment(comment: PostCommentModel)
     abstract fun checkIfIsUserComment(): Boolean
-    abstract  fun startListeningToPostLikes(recipeId: String)
+    protected abstract  fun startListeningPostLikesCount(recipeId: String)
+    protected abstract fun startListeningPostLikes(recipeId: String, onChange: (List<String>) -> Unit)
+    protected abstract fun updateButtonStateForPostLikes(postId: String, isLoading: Boolean)
+    abstract fun updateCommentLikeLoadingState(commentId: String, isLoading: Boolean)
 
 
     fun setUpdateComment(comment: String?){
@@ -54,7 +57,8 @@ abstract class CommonActionLikePost: ViewModel() {
 
     protected val _updateComment: MutableState<String?> = mutableStateOf("")
     val updateComment: State<String?> get() = _updateComment
-    protected val likePostNumberListeners = mutableMapOf<String, ListenerRegistration>()
+    protected val likesCountPostListeners = mutableMapOf<String, ListenerRegistration>()
+    protected val likesPostListeners = mutableMapOf<String, ListenerRegistration>()
 
     protected var lastVisibleUser: DocumentSnapshot? = null
 

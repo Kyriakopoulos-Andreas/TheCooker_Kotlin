@@ -8,7 +8,7 @@ import com.TheCooker.Common.Layer.Resources.uploadDownloadResource
 import com.TheCooker.DI.Module.UserDataProvider
 import com.TheCooker.Domain.Layer.Models.LoginModels.UserDataModel
 import com.TheCooker.Domain.Layer.Models.NotificationsModels.AcceptRequestNotification
-import com.TheCooker.Domain.Layer.Models.NotificationsModels.FriendRequestNotifications
+import com.TheCooker.Domain.Layer.Models.NotificationsModels.FriendRequestNotification
 import com.TheCooker.Domain.Layer.Models.NotificationsModels.NotificationModel
 import com.TheCooker.dataLayer.Repositories.UserRepo
 import com.google.firebase.Timestamp
@@ -41,7 +41,7 @@ class NotificationsViewModel @Inject constructor(
         if (currentFriendRequests is uploadDownloadResource.Success) {
             Log.d("NotificationsViewModel", "Removing notification: $notification")
             when(notification){
-                is FriendRequestNotifications -> {
+                is FriendRequestNotification -> {
                     val updatedList = currentFriendRequests.data.filterNot { it == notification }
                     _notifications.value = uploadDownloadResource.Success(updatedList)
                 }
@@ -77,7 +77,7 @@ class NotificationsViewModel @Inject constructor(
                 _userWhoSendTheFriendRequest.value = result
             }
         } catch (e: Exception) {
-            LoginResults.Error(e).also { _userWhoSendTheFriendRequest.value = it }
+            LoginResults.Error(e)
         }
     }
 

@@ -46,6 +46,7 @@ import com.TheCooker.Presentation.Views.Modules.SearchModule.Views.BottomSheetMe
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsDetailViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.CategoryViewModel
+import com.TheCooker.Presentation.Views.Modules.SharedModule.SharedViewModel
 import com.example.cooker.ListView.DrawerContent
 
 import kotlinx.coroutines.launch
@@ -97,6 +98,7 @@ fun MainTopBarViewSupport(
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val sharedViewModel = hiltViewModel<SharedViewModel>()
 
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
@@ -112,7 +114,7 @@ fun MainTopBarViewSupport(
 
 
             if ((coarseGranted || fineGranted) && notificationGranted) {
-                Toast.makeText(context, "Permission Accepted", Toast.LENGTH_LONG).show()
+//                Toast.makeText(context, "Permission Accepted", Toast.LENGTH_LONG).show()
 
                 // Request location updates
                 scope.launch {
@@ -164,7 +166,7 @@ fun MainTopBarViewSupport(
             requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
         } else {
             locationViewModel.requestLocation(context)
-            Log.d("UserLocation", locationViewModel.location.value.toString())
+            //Log.d("UserLocation", locationViewModel.location.value.toString())
         }
     }
 
@@ -175,10 +177,10 @@ fun MainTopBarViewSupport(
         if (location != null) {
             // Ενημερώσαμε την τοποθεσία, τώρα μπορείς να το δείξεις στο Toast
             Toast.makeText(context, "Fixed address: $location", Toast.LENGTH_LONG).show()
-            Log.d("UserLocation1", "Fixed address: $location")
+            //Log.d("UserLocation1", "Fixed address: $location")
         } else {
             // Η τοποθεσία δεν έχει ενημερωθεί ακόμα, μπορείς να δείξεις κάτι άλλο αν θες
-            Log.d("UserLocation", "Location is still null")
+            //Log.d("UserLocation", "Location is still null")
         }
     }
 
@@ -201,33 +203,35 @@ fun MainTopBarViewSupport(
     val onDrawerItemSelected: (String) -> Unit = { route ->
         previousRoute.value = currentRoute
         closeDrawer()
-        when(route){
-            "Profile" -> {
-                topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.PostProfileView)
-            }
-            "Calendar" -> {
-                topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.DrawerCalendar)
-            }
-            "Options" ->{
-                topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.DrawerOptions)
-            }
-            "Help" -> {
-                topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.DrawerHelp)
-            }
-            "Information" -> {
-                topBarState.value = topBarState.value.copy(currentRoute = TopBarRoute.DrawerInformation)
-            }
-            "LogOut" -> {
-                dialogOpenLogOut.value = true
-            }
+
+        when (route) {
+            "Profile" -> topBarState.value =
+                topBarState.value.copy(currentRoute = TopBarRoute.DrawerProfile)
+
+            "Calendar" -> topBarState.value =
+                topBarState.value.copy(currentRoute = TopBarRoute.DrawerCalendar)
+
+            "Options" -> topBarState.value =
+                topBarState.value.copy(currentRoute = TopBarRoute.DrawerOptions)
+
+            "Help" -> topBarState.value =
+                topBarState.value.copy(currentRoute = TopBarRoute.DrawerHelp)
+
+            "Information" -> topBarState.value =
+                topBarState.value.copy(currentRoute = TopBarRoute.DrawerInformation)
+
+            "LogOut" -> dialogOpenLogOut.value = true
         }
+
         navController.navigate(route) {
-            popUpTo(navController.graph.startDestinationId)
+            popUpTo(route) { inclusive = false }
             launchSingleTop = true
         }
     }
 
-    val userMealDetailExists = remember { mutableStateOf(false) }
+
+
+        val userMealDetailExists = remember { mutableStateOf(false) }
     val apiMealDetailExists = remember { mutableStateOf(false) }
 
 
@@ -265,10 +269,41 @@ fun MainTopBarViewSupport(
                                 navController = navController,
                                 scaffoldState = scaffoldState,
                                 scope = scope,
-                                previousRoute = previousRoute
+                                previousRoute = previousRoute,
+                                sharedViewModel = sharedViewModel
                             )
                             title.value = ""
                         }
+                        TopBarRoute.MealView -> {
+                            Log.d("TestRouteOnSupport", topBarState.value.currentRoute.toString())
+                            TopMenu(
+                                navBackStackEntry = navBackStackEntry,
+                                navController = navController,
+                                scaffoldState = scaffoldState,
+                                scope = scope,
+                                previousRoute = previousRoute,
+                                sharedViewModel = sharedViewModel
+                            )
+                            title.value = ""
+                        }
+
+
+                        TopBarRoute.FriendRequestView -> {
+                            Log.d("TestRouteOnSupport", topBarState.value.currentRoute.toString())
+                            TopMenu(
+                                navBackStackEntry = navBackStackEntry,
+                                navController = navController,
+                                scaffoldState = scaffoldState,
+                                scope = scope,
+                                previousRoute = previousRoute,
+                                sharedViewModel = sharedViewModel
+                            )
+                            title.value = ""
+                        }
+
+
+
+
                         TopBarRoute.DrawerCalendar -> {
                             SecondaryTopBarView(
                             title = title.value,
@@ -280,7 +315,7 @@ fun MainTopBarViewSupport(
                             false,
                             openBottomSheetMealDetailMenu = showModalSheet,
                             mealDetail = mealsDetailViewModel,
-                            mealsViewModel = mealsViewModel
+                            mealsViewModel = mealsViewModel, sharedViewModel = sharedViewModel
                         )
                         }
                         TopBarRoute.DrawerOptions -> {
@@ -294,7 +329,8 @@ fun MainTopBarViewSupport(
                                 false,
                                 openBottomSheetMealDetailMenu = showModalSheet,
                                 mealDetail = mealsDetailViewModel,
-                                mealsViewModel = mealsViewModel
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                             )
                         }
                         TopBarRoute.DrawerHelp -> {
@@ -308,7 +344,8 @@ fun MainTopBarViewSupport(
                                 false,
                                 openBottomSheetMealDetailMenu = showModalSheet,
                                 mealDetail = mealsDetailViewModel,
-                                mealsViewModel = mealsViewModel
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                             )
                         }
                         TopBarRoute.DrawerInformation -> {
@@ -322,7 +359,8 @@ fun MainTopBarViewSupport(
                                 false,
                                 openBottomSheetMealDetailMenu = showModalSheet,
                                 mealDetail = mealsDetailViewModel,
-                                mealsViewModel = mealsViewModel
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                             )
                         }
                         TopBarRoute.CreateMeal -> {
@@ -336,7 +374,8 @@ fun MainTopBarViewSupport(
                                 false,
                                 openBottomSheetMealDetailMenu = showModalSheet,
                                 mealDetail = mealsDetailViewModel,
-                                mealsViewModel = mealsViewModel
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                             )
                         }
 
@@ -351,7 +390,8 @@ fun MainTopBarViewSupport(
                                 false,
                                 openBottomSheetMealDetailMenu = showModalSheet,
                                 mealDetail = mealsDetailViewModel,
-                                mealsViewModel = mealsViewModel
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                             )
                         }
 
@@ -366,12 +406,13 @@ fun MainTopBarViewSupport(
                                 false,
                                 openBottomSheetMealDetailMenu = showModalSheet,
                                 mealDetail = mealsDetailViewModel,
-                                mealsViewModel = mealsViewModel
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                             )
 
                         }
 
-                        TopBarRoute.MealView -> {
+                        TopBarRoute.MealDetailView -> {
                             if (userMealDetailExists.value) {
                                 title.value = ""
                                 SecondaryTopBarView(
@@ -384,7 +425,8 @@ fun MainTopBarViewSupport(
                                     true,
                                     openBottomSheetMealDetailMenu = showModalSheet,
                                     mealDetail = mealsDetailViewModel,
-                                    mealsViewModel = mealsViewModel
+                                    mealsViewModel = mealsViewModel,
+                                    sharedViewModel = sharedViewModel
                                 )
                             } else if (apiMealDetailExists.value) {
                                 title.value = ""
@@ -399,7 +441,8 @@ fun MainTopBarViewSupport(
                                     false,
                                     openBottomSheetMealDetailMenu = showModalSheet,
                                     mealDetail = mealsDetailViewModel,
-                                    mealsViewModel = mealsViewModel
+                                    mealsViewModel = mealsViewModel,
+                                    sharedViewModel = sharedViewModel
                                 )
                             }
                         }
@@ -414,7 +457,8 @@ fun MainTopBarViewSupport(
                             isUserRecipe = true,
                             openBottomSheetMealDetailMenu = showModalSheet,
                             mealDetail = mealsDetailViewModel,
-                            mealsViewModel = mealsViewModel
+                            mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                         )
                         }
                         TopBarRoute.UpdatePostOnProfile -> {
@@ -428,7 +472,8 @@ fun MainTopBarViewSupport(
                             isUserRecipe = false,
                             openBottomSheetMealDetailMenu = showModalSheet,
                             mealDetail = mealsDetailViewModel,
-                            mealsViewModel = mealsViewModel
+                            mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                         )
                         }
                         TopBarRoute.UpdateMealOnSearch -> {
@@ -442,7 +487,8 @@ fun MainTopBarViewSupport(
                             isUserRecipe = false,
                             openBottomSheetMealDetailMenu = showModalSheet,
                             mealDetail = mealsDetailViewModel,
-                            mealsViewModel = mealsViewModel
+                            mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                         )
 
                         }
@@ -458,7 +504,8 @@ fun MainTopBarViewSupport(
                                 isUserRecipe = false,
                                 openBottomSheetMealDetailMenu = showModalSheet,
                                 mealDetail = mealsDetailViewModel,
-                                mealsViewModel = mealsViewModel
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                             )
                         }
 
@@ -473,9 +520,12 @@ fun MainTopBarViewSupport(
                                 isUserRecipe = false,
                                 openBottomSheetMealDetailMenu = showModalSheet,
                                 mealDetail = mealsDetailViewModel,
-                                mealsViewModel = mealsViewModel
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                             )
                         }
+
+
 
                         TopBarRoute.PostProfileView -> {
                             SecondaryTopBarView(
@@ -488,7 +538,8 @@ fun MainTopBarViewSupport(
                                 isUserRecipe = false,
                                 openBottomSheetMealDetailMenu = showModalSheet,
                                 mealDetail = mealsDetailViewModel,
-                                mealsViewModel = mealsViewModel
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                             )
                         }
 
@@ -503,7 +554,39 @@ fun MainTopBarViewSupport(
                                 isUserRecipe = false,
                                 openBottomSheetMealDetailMenu = showModalSheet,
                                 mealDetail = mealsDetailViewModel,
-                                mealsViewModel = mealsViewModel
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
+                            )
+                        }
+
+                        TopBarRoute.JoinOnProfileFromFriendRequestView -> {
+                            SecondaryTopBarView(
+                                title = "",
+                                topBar = topBarState.value,
+                                navController,
+                                scaffoldState,
+                                scope,
+                                previousRoute,
+                                isUserRecipe = false,
+                                openBottomSheetMealDetailMenu = showModalSheet,
+                                mealDetail = mealsDetailViewModel,
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
+                            )
+                        }
+                        TopBarRoute.JoinOnProfileFromHome -> {
+                            SecondaryTopBarView(
+                                title = "",
+                                topBar = topBarState.value,
+                                navController,
+                                scaffoldState,
+                                scope,
+                                previousRoute,
+                                isUserRecipe = false,
+                                openBottomSheetMealDetailMenu = showModalSheet,
+                                mealDetail = mealsDetailViewModel,
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                             )
                         }
 
@@ -518,7 +601,8 @@ fun MainTopBarViewSupport(
                                 isUserRecipe = false,
                                 openBottomSheetMealDetailMenu = showModalSheet,
                                 mealDetail = mealsDetailViewModel,
-                                mealsViewModel = mealsViewModel
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                             )
 
                         }
@@ -534,9 +618,12 @@ fun MainTopBarViewSupport(
                                 isUserRecipe = false,
                                 openBottomSheetMealDetailMenu = showModalSheet,
                                 mealDetail = mealsDetailViewModel,
-                                mealsViewModel = mealsViewModel
+                                mealsViewModel = mealsViewModel,
+                                sharedViewModel = sharedViewModel
                             )
                         }
+
+
 
 
                     }
@@ -581,85 +668,4 @@ fun MainTopBarViewSupport(
 }
 
 
-
-// Ένωσα τα 3 κομμάτια στο MenuView. Όταν καλείται η showModalSheet lambda μεσα στο ExtraTopBar τότε επιρεάζεται το BottomSheetMealDetailMenu και τρέχει το content
-//                    if (topBar.menuTopBarRoute) {                       // Για αυτό κάναμε wrap το scaffold μεσα στην BottomSheetMealDetailMenu. Ετσι έχουμε την δυνατότητα να επαναχρησιμοποιησουμε το sheet και σε αλλα μεροι χωρις να αλλάξει η δομη του GUI
-//                        TopMenu(
-//                            navBackStackEntry,
-//                            navController,
-//                            scaffoldState,
-//                            scope,
-//                            previousRoute
-//                        )
-//                        title.value = ""
-//                    } else if (topBar.drawerMenuRoute) {
-//                        SecondaryTopBarView(
-//                            title = title.value,
-//                            topBar = topBarState.value,
-//                            navController,
-//                            scaffoldState,
-//                            scope,
-//                            previousRoute,
-//                            false,
-//                            openBottomSheetMealDetailMenu = showModalSheet,
-//                            mealDetail = mealsDetailViewModel,
-//                            mealsViewModel = mealsViewModel
-//                        )
-//                    } else if (topBar.mealTopBarRoute) {
-//                        if (userMealDetailExists.value) {
-//                            title.value = ""
-//                            SecondaryTopBarView(
-//                                title = title.value,
-//                                topBar = topBarState.value,
-//                                navController,
-//                                scaffoldState,
-//                                scope,
-//                                previousRoute,
-//                                true,
-//                                openBottomSheetMealDetailMenu = showModalSheet,
-//                                mealDetail = mealsDetailViewModel,
-//                                mealsViewModel = mealsViewModel
-//                            )
-//                        }else if (apiMealDetailExists.value) {
-//                            title.value = ""
-//                            SecondaryTopBarView(
-//                                title = title.value,
-//                                topBar = topBarState.value,
-//                                navController,
-//                                scaffoldState,
-//                                scope,
-//                                previousRoute,
-//                                false,
-//                                openBottomSheetMealDetailMenu = showModalSheet,
-//                                mealDetail = mealsDetailViewModel,
-//                                mealsViewModel = mealsViewModel
-//                            )
-//                        }
-//                    } else if(topBar.postBarRoute){
-//                        SecondaryTopBarView(
-//                            title = "",
-//                            topBar = topBarState.value,
-//                            navController,
-//                            scaffoldState,
-//                            scope,
-//                            previousRoute,
-//                            isUserRecipe = true,
-//                            openBottomSheetMealDetailMenu = showModalSheet,
-//                            mealDetail = mealsDetailViewModel,
-//                            mealsViewModel = mealsViewModel
-//                        )
-//                    }else if(topBar.updatePostRoute){
-//                        SecondaryTopBarView(
-//                            title = "",
-//                            topBar = topBarState.value,
-//                            navController,
-//                            scaffoldState,
-//                            scope,
-//                            previousRoute,
-//                            isUserRecipe = true,
-//                            openBottomSheetMealDetailMenu = showModalSheet,
-//                            mealDetail = mealsDetailViewModel,
-//                            mealsViewModel = mealsViewModel
-//                        )
-//                    }
 

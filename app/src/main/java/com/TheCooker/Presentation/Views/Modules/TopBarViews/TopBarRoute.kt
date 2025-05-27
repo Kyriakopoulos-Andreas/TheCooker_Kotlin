@@ -2,6 +2,7 @@ package com.TheCooker.Presentation.Views.Modules.TopBarViews
 
 enum class TopBarRoute {
     Home,
+    MealDetailView,
     MealView,
     DrawerProfile,
     DrawerCalendar,
@@ -19,4 +20,7 @@ enum class TopBarRoute {
     CommentUpdateHomeView,
     ProfileViewPostLikes,
     HomeViewPostLikes,
+    JoinOnProfileFromFriendRequestView,
+    FriendRequestView,
+    JoinOnProfileFromHome
 }

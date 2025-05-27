@@ -53,23 +53,27 @@ fun SharesView(
     fetchCommentIdForDeleteOrUpdate: (PostCommentModel?) -> Unit,
 
 
-) {
+    ) {
 
 
 
 
     var selectedShare by remember { mutableStateOf<UserMealDetailModel?>(null) }
+    var modalTrigger by remember { mutableStateOf(0) }
 
+    fun onShareClick(share: UserMealDetailModel) {
+        selectedShare = share
+        modalTrigger++ // Force refresh
+    }
 
-
-
-    LaunchedEffect(selectedShare) {
+    LaunchedEffect(modalTrigger) {
         if (selectedShare != null) {
-        showModal(selectedShare)
+            showModal(selectedShare)
         } else {
             hideModal()
         }
     }
+
 
 
     val shares by profileViewModel.shares.collectAsState()
@@ -103,8 +107,8 @@ fun SharesView(
 
                 Post(
                     share = share,
-                    userName = profileViewModel.userDataProvider.value.userData?.userName ?: "Unknown",
-                    imageUri = profileViewModel.userDataProvider.value.userData?.profilePictureUrl,
+                    userName = profileViewModel.user.value?.userName ?: "Unknown",
+                    imageUri = profileViewModel.user.value?.profilePictureUrl,
                     profileViewModel = profileViewModel,
                     navigator = navigator,
                     onLikeClick = { /* Handle like click */ },
@@ -115,6 +119,7 @@ fun SharesView(
                     },
                     showModalForCommentSettings = { showModalForCommentSettings()},
                     showModalForPost = {
+                        onShareClick(share)
 
                     }
                 )
@@ -135,7 +140,11 @@ fun SharesView(
 fun PostMenuBottomSheetContent(
     modifier: Modifier,
     onDeleteClick: () -> Unit,
-    onUpdateClick: () -> Unit
+    onUpdateClick: () -> Unit,
+    onHideClick: () -> Unit,
+    onReportClick: () -> Unit,
+    isOwner: Boolean,
+
 ) {
     Log.d("PostMenuBottomSheetContent", "Called")
     Box(
@@ -156,16 +165,16 @@ fun PostMenuBottomSheetContent(
                 horizontalArrangement = Arrangement.Start
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.update_recipe),
+                    painter = painterResource(id = if(isOwner) R.drawable.update_recipe else R.drawable.hide),
                     contentDescription = "Update Post",
                     modifier = Modifier.padding(end = 8.dp),
                     tint = Color.White
                 )
                 Text(
-                    text = "Update Post",
+                    text = if(isOwner)"Update Post" else "Hide Post",
                     fontSize = 21.sp,
                     color = Color(0xFFFFC107),
-                    modifier = Modifier.clickable { onUpdateClick() }
+                    modifier = Modifier.clickable { if(isOwner) {onUpdateClick()} else {onHideClick()} }
                 )
             }
 
@@ -178,18 +187,18 @@ fun PostMenuBottomSheetContent(
             ) {
 
                 Icon(
-                    painter = painterResource(id = R.drawable.outline_delete_24),
+                    painter = painterResource(id = if(isOwner) R.drawable.outline_delete_24 else R.drawable.report),
                     contentDescription = "Delete Post",
                     modifier = Modifier.padding(end = 8.dp),
                     tint = Color.White
                 )
                 Text(
-                    text = "Delete Post",
+                    text = if(isOwner) "Delete Post" else "Report Post",
                     fontSize = 21.sp,
                     color = Color(0xFFFFC107),
-                    modifier = Modifier.clickable { onDeleteClick() }
-                    )
-                }
+                    modifier = Modifier.clickable { if(isOwner) {onDeleteClick()} else {onReportClick()} }
+                )
+            }
             Spacer(modifier = Modifier.weight(1f))
         }
     }

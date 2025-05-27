@@ -152,9 +152,9 @@ fun Post(
     }
 
 
-      val postLikes =  viewModel.postLikes.collectAsState().value
+    val postLikes =  viewModel.postLikes.collectAsState().value
 
-        profileViewModel.postLikes.collectAsState().value
+    profileViewModel.postLikes.collectAsState().value
 
 
 
@@ -201,7 +201,13 @@ fun Post(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color.Gray),
+                        .background(Color.Gray).clickable {
+                            navigator.currentBackStackEntry?.savedStateHandle?.set("user", share.creatorData)
+                            navigator.navigate("Profile?from=friend_request_FromHome") {
+//                                popUpTo("Profile") { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        },
                     contentScale = ContentScale.Crop
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -240,7 +246,7 @@ fun Post(
             }
         }
 
-        val imageModel = if (share.recipeImage == null || share.recipeImage == "android.resource://com.TheCooker/2131165489") {
+        val imageModel = if (share.recipeImage == null || share.recipeImage == "android.resource://com.TheCookerClean/2131165492") {
             R.drawable.testmeal
         } else {
             share.recipeImage
@@ -307,7 +313,11 @@ fun Post(
                     Log.d("PostWhoLikeIt", share.whoLikeIt.toString())
                     viewModel.togglePostLike(share)
 
-                }) {
+
+                },
+                    enabled = !share.isLikeButtonLoading
+
+                ) {
 
                     Icon(
                         imageVector = if (liked1) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder, // Χρησιμοποιούμε το εικονίδιο καρδιάς
@@ -341,6 +351,8 @@ fun Post(
                                 share
                             )
 
+
+
                             navigator.navigate("PostLikesView")
                         } else {
                             navigator.currentBackStackEntry?.savedStateHandle?.set(
@@ -351,6 +363,7 @@ fun Post(
                                 "post",
                                 share
                             )
+                            navigator.currentBackStackEntry?.savedStateHandle?.set("returning_from", "profile")
                             navigator.navigate("PostLikesView")
                         }
 
@@ -445,9 +458,9 @@ fun Post(
 
                                             share.recipeId?.let { recipeId ->
                                                 profileViewModel.createPostComment(recipeId)
-                                                    if(profileViewModel.postCommentResult.value != null){
-                                                        Toast.makeText(context, profileViewModel.postCommentResult.value, Toast.LENGTH_SHORT).show()
-                                                    }
+                                                if(profileViewModel.postCommentResult.value != null){
+                                                    Toast.makeText(context, profileViewModel.postCommentResult.value, Toast.LENGTH_SHORT).show()
+                                                }
 
                                             }
 

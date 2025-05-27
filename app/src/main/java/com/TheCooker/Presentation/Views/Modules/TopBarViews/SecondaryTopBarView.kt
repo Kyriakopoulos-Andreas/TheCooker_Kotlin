@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsDetailViewModel
 import com.TheCooker.Presentation.Views.Modules.SearchModule.ViewModels.MealsViewModel
+import com.TheCooker.Presentation.Views.Modules.SharedModule.SharedViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -52,7 +53,8 @@ fun SecondaryTopBarView(
     isUserRecipe: Boolean,
     openBottomSheetMealDetailMenu: () -> Unit,
     mealDetail: MealsDetailViewModel,
-    mealsViewModel: MealsViewModel
+    mealsViewModel: MealsViewModel,
+    sharedViewModel: SharedViewModel
 ) {
     val backFromUpdate by mealsViewModel.backFromUpdate.collectAsState()
 
@@ -64,7 +66,8 @@ fun SecondaryTopBarView(
             navController = navController,
             scope = scope,
             previousRoute = previousRoute.value,
-            backFromUpdate = backFromUpdate
+            backFromUpdate = backFromUpdate,
+            sharedViewModel = sharedViewModel
         )
     }
 
@@ -92,7 +95,8 @@ fun SecondaryTopBarView(
                         navController = navController,
                         scope = scope,
                         previousRoute = previousRoute.value,
-                        backFromUpdate = backFromUpdate
+                        backFromUpdate = backFromUpdate,
+                        sharedViewModel = sharedViewModel
                     )
                 }) {
                     Icon(
@@ -104,7 +108,7 @@ fun SecondaryTopBarView(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                if (topBar.currentRoute == TopBarRoute.MealView && isUserRecipe && topBar.previousRoute != TopBarRoute.DrawerProfile) {
+                if (topBar.currentRoute == TopBarRoute.MealDetailView && isUserRecipe && topBar.previousRoute != TopBarRoute.DrawerProfile) {
                     TextButton(
                         onClick = { /* Share logic */ },
                         modifier = Modifier
@@ -157,96 +161,143 @@ fun handleBackPress(
     navController: NavHostController,
     scope: CoroutineScope,
     previousRoute: String?,
-    backFromUpdate: Boolean
+    backFromUpdate: Boolean,
+    sharedViewModel: SharedViewModel?
 ) {
     scope.launch {
         when (topBar.currentRoute) {
             TopBarRoute.UpdateMealOnSearch -> {
-                Log.d("TestRoute1", topBar.currentRoute.toString() )
-                topBar.currentRoute = TopBarRoute.MealView
+                Log.d("TestRoute", topBar.currentRoute.toString() )
+                sharedViewModel?.setSelectedIndex(2)
+                topBar.currentRoute = TopBarRoute.MealDetailView
                 navController.popBackStack()
             }
             TopBarRoute.DrawerProfile -> {
-                Log.d("TestRoute2", topBar.currentRoute.toString() )
+                Log.d("TestRoute", topBar.currentRoute.toString())
                 topBar.currentRoute = TopBarRoute.Home
-                previousRoute.let { route ->
-                    Log.d("PreviousRoute", "Previous route: $route")
-                    if (route != null) {
-                        navController.navigate(route) {
-                            //                        popUpTo(navController.graph.startDestinationId)
-                            launchSingleTop = true
 
-                        }
+                previousRoute?.let { route ->
+                    Log.d("PreviousRoute", "Previous route: $route")
+                    when (route) {
+                        "SearchView" -> sharedViewModel?.setSelectedIndex(3)
+                        "HomeView" -> sharedViewModel?.setSelectedIndex(2)
+                        "FriendRequestView" -> sharedViewModel?.setSelectedIndex(1)
+                        "NotificationView" -> sharedViewModel?.setSelectedIndex(4)
+                    }
+
+
+                    if (navController.popBackStack(route, inclusive = false)) {
+                        Log.d("Navigation", "Navigating back to $route")
+                    } else {
+                        navController.navigate(route)
                     }
                 }
             }
 
+
             TopBarRoute.CreateMeal -> {
-                Log.d("TestRoute3", topBar.currentRoute.toString() )
-                if(topBar.previousRoute == TopBarRoute.MealView){
-                    topBar.currentRoute = TopBarRoute.MealView
+                Log.d("TestRoute", topBar.currentRoute.toString() )
+                if(topBar.previousRoute == TopBarRoute.MealDetailView){
+                    topBar.currentRoute = TopBarRoute.MealDetailView
                     navController.popBackStack()
 
                 }
             }
 
             TopBarRoute.PostProfileView -> {
-                Log.d("TestRoute3", topBar.currentRoute.toString() )
+                Log.d("TestRoute", topBar.currentRoute.toString() )
+                topBar.previousRoute = TopBarRoute.PostProfileView
                 topBar.currentRoute = TopBarRoute.DrawerProfile
                 navController.popBackStack()
             }
 
             TopBarRoute.CommentUpdateProfile -> {
-                Log.d("TestRoute4", topBar.currentRoute.toString() )
+                Log.d("TestRoute", topBar.currentRoute.toString() )
                 topBar.currentRoute = TopBarRoute.DrawerProfile
                 navController.popBackStack()
             }
 
             TopBarRoute.CommentUpdateHomeView -> {
-                Log.d("TestRoute4", topBar.currentRoute.toString() )
+                Log.d("TestRoute", topBar.currentRoute.toString() )
                 topBar.currentRoute = TopBarRoute.Home
                 navController.popBackStack()
             }
 
             TopBarRoute.HomeViewPostCommentLikes -> {
-                Log.d("TestRoute5", topBar.currentRoute.toString() )
+                Log.d("TestRoute", topBar.currentRoute.toString() )
                 topBar.currentRoute = TopBarRoute.Home
+                sharedViewModel?.setSelectedIndex(2)
                 navController.popBackStack()
                 Log.d("TestRoute4AfterJump", topBar.currentRoute.toString() )
             }
-            TopBarRoute.MealView -> {
-                Log.d("TestRoute6", topBar.currentRoute.toString() )
+            TopBarRoute.MealDetailView -> {
+                Log.d("TestRoute", topBar.currentRoute.toString() )
                 topBar.currentRoute = TopBarRoute.Home
+                sharedViewModel?.setSelectedIndex(3)
                 navController.popBackStack()
                 Log.d("TestRoute4AfterJump", topBar.currentRoute.toString() )
             }
 
             TopBarRoute.UpdatePostOnProfile -> {
-                Log.d("TestRoute7", topBar.currentRoute.toString() )
+                Log.d("TestRoute", topBar.currentRoute.toString() )
                 topBar.currentRoute = TopBarRoute.DrawerProfile
+                sharedViewModel?.setSelectedIndex(-1)
                 navController.popBackStack()
             }
 
             TopBarRoute.ProfileViewPostCommentLikes -> {
-                Log.d("TestRoute8", topBar.currentRoute.toString() )
+                Log.d("TestRoute", topBar.currentRoute.toString() )
                 topBar.currentRoute = TopBarRoute.DrawerProfile
+                sharedViewModel?.setSelectedIndex(-1)
                 navController.popBackStack()
             }
             TopBarRoute.HomeViewPostLikes -> {
-                Log.d("TestRoute9", topBar.currentRoute.toString() )
+                Log.d("TestRoute", topBar.currentRoute.toString() )
+                sharedViewModel?.setSelectedIndex(2)
                 topBar.currentRoute = TopBarRoute.Home
                 navController.popBackStack()
             }
             TopBarRoute.ProfileViewPostLikes -> {
-                Log.d("TestRoute10", topBar.currentRoute.toString() )
+                Log.d("TestRoute", topBar.currentRoute.toString() )
+                topBar.previousRoute = TopBarRoute.ProfileViewPostLikes
+                sharedViewModel?.setSelectedIndex(-1)
                 topBar.currentRoute = TopBarRoute.DrawerProfile
+                navController.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.set("returning_from", "likes")
+
                 navController.popBackStack()
             }
             TopBarRoute.HomeViewPostView, -> {
-                Log.d("TestRoute11", topBar.currentRoute.toString() )
+                Log.d("TestRoute", topBar.currentRoute.toString() )
+                sharedViewModel?.setSelectedIndex(2)
                 topBar.currentRoute = TopBarRoute.Home
                 navController.popBackStack()
             }
+
+            TopBarRoute.JoinOnProfileFromFriendRequestView -> {
+                Log.d("TestRoute", topBar.currentRoute.toString() )
+                sharedViewModel?.setSelectedIndex(1)
+                topBar.currentRoute = TopBarRoute.Home
+                Log.d("TestRoute4AfterJump", topBar.currentRoute.toString() )
+                navController.popBackStack()
+            }
+
+            TopBarRoute.JoinOnProfileFromHome -> {
+                Log.d("TestRoute", topBar.currentRoute.toString() )
+                sharedViewModel?.setSelectedIndex(2)
+                topBar.currentRoute = TopBarRoute.Home
+                Log.d("TestRoute4AfterJump", topBar.currentRoute.toString() )
+                navController.popBackStack()
+            }
+
+            TopBarRoute.FriendRequestView -> {
+                Log.d("TestRoute", topBar.currentRoute.toString() )
+                sharedViewModel?.setSelectedIndex(2)
+                topBar.currentRoute = TopBarRoute.Home
+                navController.popBackStack()
+            }
+
             else -> {
                 if (backFromUpdate) {
                     Log.d("TestRoute5", topBar.currentRoute.toString() )

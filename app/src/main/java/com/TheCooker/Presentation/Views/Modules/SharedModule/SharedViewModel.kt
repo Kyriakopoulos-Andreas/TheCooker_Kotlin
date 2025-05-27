@@ -17,6 +17,13 @@ class SharedViewModel  @Inject constructor(
     private val _unreadCount = MutableStateFlow(0)
     val unreadCount: StateFlow<Int> = _unreadCount
 
+    private val _selectedBottomIndex = MutableStateFlow(2) // default στο "Home"
+    val selectedBottomIndex: StateFlow<Int> = _selectedBottomIndex
+
+    fun setSelectedIndex(index: Int) {
+        _selectedBottomIndex.value = index
+    }
+
     fun startListening() {
         user.userData?.let {
             userRepository.listenForNewNotifications(it) { count ->

@@ -168,9 +168,11 @@ fun CreateMeal(
             if (postForUpdate != null) {
                 Log.d("TestPostLaunch" , "Test")
                 mealDetailViewModel.setDetailsForPost(postForUpdate)
+                mealDetailViewModel.updatePostState(true)
             }
         }
     }
+
 
 
 
@@ -679,6 +681,7 @@ fun CreateMeal(
                             if (recipeId != null || updatePostState) {
                                 if(stepOfCompletionUpdate == true) {
                                     Log.d("TestUpdatePostSAVE", "Test")
+                                    //mealDetailViewModel.updatePostState(false)
                                     createMealViewModel.saveOrUpdateRecipe(
                                         visibility = false,
                                         recipeId = if(updatePostState) postForUpdate?.recipeId.toString() else recipeId,
@@ -705,6 +708,7 @@ fun CreateMeal(
                                 }
 
                             } else {
+                                mealDetailViewModel.validateUpdate()
                                 if (stepOfCompletionSave == true) {
                                     Log.d("TestSavePostSAVE", "Test2")
                                     createMealViewModel.saveOrUpdateRecipe(
