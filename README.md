@@ -200,8 +200,6 @@ Dagger Hilt for scalable and lifecycle-aware Dependency Injection
 
 Retrofit + Gson for seamless communication with external APIs like TheMealDB
 
-Coil for efficient image loading and caching
-
 WorkManager for background tasks like image uploads and scheduled syncs
 
 ### ☁️ Firebase Integration
@@ -223,7 +221,7 @@ Users receive friend suggestions based on geographic proximity, enhancing commun
 ### 🎨 UI & UX
 Built with Material 3 Guidelines using androidx.compose.material3
 
-Uses ConstraintLayout and Compose Navigation for a flexible, user-friendly design flow
+Uses Compose Navigation for a flexible, user-friendly design flow
 
 Implements Compose LiveData bindings, Hilt Navigation, and SplashScreen API for smooth user experience
 
